@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2025 Aiven Oy and project contributors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+    SPDX-License-Identifier: Apache-2
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.aiven.commons</groupId>
+    <artifactId>aiven-commons</artifactId>
+    <version>2</version>
+  </parent>
+
+  <groupId>io.aiven</groupId>
+  <artifactId>amqp-connector-for-kafka-connect</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>AMQP Connector for Kafka Connect</name>
+
+  <!--    <url>https://github.com/Aiven-Open/bigquery-connector-for-apache-kafka</url>-->
+
+  <inceptionYear>2025</inceptionYear>
+
+  <!--    <organization>-->
+  <!--        <name>Aiven</name>-->
+  <!--        <url>https://www.aiven.io</url>-->
+  <!--    </organization>-->
+
+  <!--    <licenses>-->
+  <!--        <license>-->
+  <!--            <name>Apache License 2.0</name>-->
+  <!--            <url>https://www.apache.org/licenses/LICENSE-2.0</url>-->
+  <!--            <distribution>repo</distribution>-->
+  <!--        </license>-->
+  <!--    </licenses>-->
+
+  <!--    <scm>-->
+  <!--        <connection>scm:git:git://github.com/Aiven-Open/bigquery-connector-for-apache-kafka.git</connection>-->
+  <!--        <developerConnection>scm:git:git@github.com:Aiven-Open/bigquery-connector-for-apache-kafka.git</developerConnection>-->
+  <!--        <url>https://github.com/Aiven-Open/bigquery-connector-for-apache-kafka</url>-->
+  <!--        <tag>HEAD</tag>-->
+  <!--    </scm>-->
+
+  <developers>
+    <developer>
+      <id>claudenw</id>
+      <name>Claude Warren</name>
+      <email>claude@xenei.com</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Dublin</timezone>
+    </developer>
+  </developers>
+  <modules>
+    <module>common</module>
+    <module>source</module>
+    <module>sink</module>
+  </modules>
+
+  <properties>
+    <latestRelease>0.0.1-SNAPSHOT</latestRelease>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>17</java.version>
+  </properties>
+
+  <!--    <repositories>-->
+  <!--        <repository>-->
+  <!--            <id>confluent</id>-->
+  <!--            <url>https://packages.confluent.io/maven/</url>-->
+  <!--        </repository>-->
+  <!--    </repositories>-->
+
+  <!--    <pluginRepositories>-->
+  <!--        <pluginRepository>-->
+  <!--            <id>confluent</id>-->
+  <!--            <url>https://packages.confluent.io/maven/</url>-->
+  <!--        </pluginRepository>-->
+  <!--        <pluginRepository>-->
+  <!--            <id>jitpack.io</id>-->
+  <!--            <url>https://jitpack.io</url>-->
+  <!--        </pluginRepository>-->
+  <!--    </pluginRepositories>-->
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.qpid</groupId>
+        <artifactId>protonj2-client</artifactId>
+        <version>1.0.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.15.3</version>
+      </dependency>
+      <!-- Source: https://mvnrepository.com/artifact/de.huxhorn.sulky/de.huxhorn.sulky.ulid -->
+      <dependency>
+        <groupId>de.huxhorn.sulky</groupId>
+        <artifactId>de.huxhorn.sulky.ulid</artifactId>
+        <version>8.3.0</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>collections</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-config</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-source-connector-framework</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>timing</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>version</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_${kafka.scala.version}</artifactId>
+        <version>${kafka.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_${kafka.scala.version}</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-api</artifactId>
+        <version>${kafka.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>${kafka.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>compile</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.re2j</groupId>
+        <artifactId>re2j</artifactId>
+        <version>${com.google.re2j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <type>maven-plugin</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>protonj2-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-source-connector-framework</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>timing</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>version</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>connect-api</artifactId>
+      <version>${kafka.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.uuid</groupId>
+      <artifactId>java-uuid-generator</artifactId>
+      <version>4.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build></build>
+
+  <profiles>
+    <profile>
+      <id>ci</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-failsafe-plugin</artifactId>
+              <configuration>
+                <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                <parallel>classes</parallel>
+                <useUnlimitedThreads>true</useUnlimitedThreads>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+</project>
