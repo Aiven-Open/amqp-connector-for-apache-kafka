@@ -27,8 +27,6 @@
 
   <artifactId>amqp-source-connector-for-kafka-connect</artifactId>
 
-  <properties></properties>
-
   <dependencies>
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>

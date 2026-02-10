@@ -16,36 +16,29 @@
 
         SPDX-License-Identifier: Apache-2
  */
-
 package io.aiven.kafka.connect.amqp.source;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-//import io.aiven.commons.kafka.source.config.SourceCommonConfig;
-//import io.aiven.commons.kafka.source.task.Context;
-//import io.aiven.commons.kafka.source.transformer.Transformer;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
-import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.commons.kafka.connector.source.AbstractSourceRecord;
+import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.transformer.Transformer;
 import io.aiven.kafka.connect.amqp.common.config.AmqpHeaderProperties;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceFragment;
-import org.apache.commons.io.function.IOSupplier;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
-import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -61,19 +54,14 @@ public class AmqpTransformer extends Transformer {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTransformer.class);
 	private final AmqpSourceConfig amqpSourceConfig;
 	private final ObjectMapper mapper = new ObjectMapper();
-	private SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12,
-			OptionPreset.PLAIN_JSON);
-	private SchemaGeneratorConfig config = configBuilder.build();
-	private SchemaGenerator generator = new SchemaGenerator(config);
+	private final SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
+			SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
+	private final SchemaGeneratorConfig config = configBuilder.build();
+	private final SchemaGenerator generator = new SchemaGenerator(config);
 
 	public AmqpTransformer(final AmqpSourceConfig amqpSourceConfig) {
+		super(amqpSourceConfig);
 		this.amqpSourceConfig = amqpSourceConfig;
-	}
-
-	@Override
-	public StreamSpliterator createSpliterator(final IOSupplier<InputStream> inputStreamIOSupplier,
-			final long streamLength, final Context<?> context, final SourceCommonConfig sourceConfig) {
-		throw new IllegalStateException();
 	}
 
 	private byte[] asBytes(Object object) {
@@ -83,11 +71,12 @@ public class AmqpTransformer extends Transformer {
 		return null;
 	}
 
-	public SchemaAndValue createRecords(Function<AmqpSourceFragment.Section, Stream<String>> dataProvider,
+	private SchemaAndValue createRecord(Function<AmqpSourceFragment.Section, Stream<String>> dataProvider,
 			Message<?> message) {
+
 		ObjectNode root = mapper.createObjectNode();
 		SchemaBuilder valueSchema = SchemaBuilder.struct();
-		for (AmqpHeaderProperties property : dataProvider.apply(AmqpSourceFragment.Section.HEADER)
+		for (AmqpHeaderProperties property : amqpSourceConfig.getValues(AmqpSourceFragment.Section.HEADER)
 				.map(AmqpHeaderProperties::valueOf).toList()) {
 			if (property.getSchema() == null) {
 				valueSchema.field(property.getSchemaName(), SchemaBuilder.OPTIONAL_BYTES_SCHEMA);
@@ -172,22 +161,27 @@ public class AmqpTransformer extends Transformer {
 		return new SchemaAndValue(valueSchema, root);
 	}
 
-	public SchemaAndValue getValueData(AmqpSourceRecord amqpSourceRecord) {
+	@Override
+	public <T extends AbstractSourceRecord<?, ?, ?, T>> Stream<SchemaAndValue> generateRecords(
+			NativeSourceData<?, ?, ?, T> sourceData, T sourceRecord) {
+		AmqpSourceRecord amqpSourceRecord = (AmqpSourceRecord) sourceRecord;
 		try {
-			return createRecords(k -> amqpSourceConfig.getValues(k),
-					amqpSourceRecord.getNativeItem().getDelivery().message());
+			return Stream.of(createRecord(amqpSourceConfig::getValues,
+					amqpSourceRecord.getNativeItem().getDelivery().message()));
 		} catch (ClientException e) {
-			throw new ConnectException(String.format("Unable to read message: %s", e.getMessage()), e);
+			LOGGER.error("Unable to retrieve message: {}", e.getMessage(), e);
+			return Stream.empty();
 		}
 	}
 
 	@Override
-	public SchemaAndValue getKeyData(Object nativeKey, String topic, SourceCommonConfig sourceConfig) {
+	public SchemaAndValue generateKeyData(AbstractSourceRecord<?, ?, ?, ?> sourceRecord) {
+		AmqpSourceRecord amqpSourceRecord = (AmqpSourceRecord) sourceRecord;
 		try {
-			return createRecords(k -> amqpSourceConfig.getKeys(k),
-					amqpSourceRecord.getNativeItem().getDelivery().message());
+			return createRecord(amqpSourceConfig::getKeys, amqpSourceRecord.getNativeItem().getDelivery().message());
 		} catch (ClientException e) {
-			throw new ConnectException(String.format("Unable to read message: %s", e.getMessage()), e);
+			LOGGER.error("Unable to retrieve message: {}", e.getMessage(), e);
+			return null;
 		}
 	}
 
@@ -230,11 +224,11 @@ public class AmqpTransformer extends Transformer {
 				} else if (o instanceof BigDecimal bd) {
 					schemaBuilder.field(s,
 							SchemaBuilder.struct().name("BigDecimal").field("value", Schema.STRING_SCHEMA));
-					root.put(s, root.objectNode().put("value", bd.toString()));
+					root.set(s, root.objectNode().put("value", bd.toString()));
 				} else if (o instanceof BigInteger bi) {
 					schemaBuilder.field(s,
 							SchemaBuilder.struct().name("BigInteger").field("value", Schema.STRING_SCHEMA));
-					root.put(s, root.objectNode().put("value", bi.toString()));
+					root.set(s, root.objectNode().put("value", bi.toString()));
 				}
 			} else if (o instanceof String) {
 				schemaBuilder.field(s, Schema.STRING_SCHEMA);
