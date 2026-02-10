@@ -1,88 +1,93 @@
- package io.aiven.kafka.connect.amqp.source;
+/*
+         Copyright 2026 Aiven Oy and project contributors
 
- import de.huxhorn.sulky.ulid.ULID;
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
 
- import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
- import io.aiven.commons.kafka.connector.source.AbstractSourceTask;
- import io.aiven.commons.kafka.connector.source.OffsetManager;
- import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
- import io.aiven.commons.kafka.connector.source.transformer.Transformer;
- import io.aiven.commons.timing.Backoff;
- import io.aiven.commons.timing.BackoffConfig;
- import io.aiven.commons.version.VersionInfo;
- import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
- import org.apache.commons.collections4.IteratorUtils;
- import org.apache.kafka.connect.source.SourceRecord;
- import org.apache.qpid.protonj2.client.Delivery;
- import org.slf4j.Logger;
- import org.slf4j.LoggerFactory;
+        http://www.apache.org/licenses/LICENSE-2.0
 
- import java.util.Iterator;
- import java.util.Map;
- import java.util.Objects;
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 
- public class AmqpSourceTask extends AbstractSourceTask {
-  /** The logger to write to */
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
- private Iterator<AmqpSourceRecord> amqpSourceRecordIterator;
-  private AmqpSourceConfig amqpSourceConfig;
- private Transformer transformer;
- private OffsetManager<AmqpOffsetManagerEntry> offsetManager;
-private AmqpSourceData amqpSourceData;
+        SPDX-License-Identifier: Apache-2
+ */
+package io.aiven.kafka.connect.amqp.source;
 
- @Override
- protected Iterator<SourceRecord> getIterator(BackoffConfig config) {
-//  return new AbstractSourceRecordIterator<AmqpNativeInfo, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord>(config,
-//          transformer, offsetManager, amqpSourceData);
-  final Iterator<SourceRecord> inner = new Iterator<>() {
-   /**
-    * The backoff for Amazon retryable exceptions
-    */
-   final Backoff backoff = new Backoff(config);
+import de.huxhorn.sulky.ulid.ULID;
 
-   @Override
-   public boolean hasNext() {
-    return amqpSourceRecordIterator.hasNext();
-   }
+import io.aiven.commons.kafka.connector.source.AbstractSourceRecordIterator;
+import io.aiven.commons.kafka.connector.source.AbstractSourceTask;
+import io.aiven.commons.kafka.connector.source.OffsetManager;
+import io.aiven.commons.kafka.connector.source.transformer.Transformer;
+import io.aiven.commons.timing.BackoffConfig;
+import io.aiven.commons.version.VersionInfo;
+import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-   @Override
-   public SourceRecord next() {
-    final AmqpSourceRecord amqpSourceRecord = amqpSourceRecordIterator.next();
-    return amqpSourceRecord.getSourceRecord(amqpSourceConfig.getErrorsTolerance(), offsetManager);
-   }
-  };
-  return IteratorUtils.filteredIterator(inner, Objects::nonNull);
- }
+import java.util.Iterator;
+import java.util.Map;
 
- @Override
- protected AmqpSourceConfig configure(Map<String, String> props) {
+public class AmqpSourceTask extends AbstractSourceTask {
+	/** The logger to write to */
+	private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
 
-   LOGGER.info("AMQP Source task started.");
-   this.amqpSourceConfig = new AmqpSourceConfig(props);
-   this.transformer = amqpSourceConfig.getTransformer();
-   this.offsetManager = new OffsetManager<>(context);
-   this.amqpSourceData = new AmqpSourceData(amqpSourceConfig);
-   setSourceRecordIterator(
-           new AmqpSourceRecordIterator(amqpSourceConfig, offsetManager, transformer, amqpSourceData));
-   return amqpSourceConfig;
+	private AmqpSourceConfig amqpSourceConfig;
+	private Transformer transformer;
+	private OffsetManager<AmqpOffsetManagerEntry> offsetManager;
+	private AmqpSourceData amqpSourceData;
 
- }
+	private AbstractSourceRecordIterator<ULID.Value, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord> sourceRecordIterator;
+	@Override
+	protected Iterator<SourceRecord> getIterator(BackoffConfig config) {
+		return IteratorUtils.transformedIterator(sourceRecordIterator, amqpSourceRecord -> amqpSourceRecord
+				.getSourceRecord(amqpSourceConfig.getErrorsTolerance(), offsetManager));
+	}
 
-  /**
-   * Used in testing.
-   * @param iterator the iterator to use.
-   */
- void setSourceRecordIterator(AmqpSourceRecordIterator iterator) {
-  this.amqpSourceRecordIterator = iterator;
- }
+	@Override
+	protected AmqpSourceConfig configure(Map<String, String> props) {
+		LOGGER.info("AMQP Source task started.");
+		this.amqpSourceConfig = new AmqpSourceConfig(props);
+		this.transformer = amqpSourceConfig.getTransformer();
+		this.offsetManager = new OffsetManager<>(context);
+		try {
+			this.amqpSourceData = new AmqpSourceData(amqpSourceConfig);
+		} catch (ClientException e) {
+			throw new RuntimeException(e);
+		}
+		setSourceRecordIterator(
+				new AbstractSourceRecordIterator<ULID.Value, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord>(
+						amqpSourceConfig, transformer, offsetManager, amqpSourceData));
 
- @Override
- protected void closeResources() {
+		return amqpSourceConfig;
+	}
 
- }
+	/**
+	 * Used in testing.
+	 * 
+	 * @param iterator
+	 *            the iterator to use.
+	 */
+	void setSourceRecordIterator(
+			AbstractSourceRecordIterator<ULID.Value, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord> iterator) {
+		this.sourceRecordIterator = iterator;
+	}
 
- @Override
- public String version() {
- return new VersionInfo(this.getClass()).getVersion();
- }
- }
+	@Override
+	protected void closeResources() {
+
+	}
+
+	@Override
+	public String version() {
+		return new VersionInfo(this.getClass()).getVersion();
+	}
+}

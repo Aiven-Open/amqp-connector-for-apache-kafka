@@ -16,25 +16,23 @@
 
         SPDX-License-Identifier: Apache-2
  */
+package io.aiven.kafka.connect.amqp.source.config;
 
-package io.aiven.kafka.connect.amqp.source.exception;
+import io.aiven.commons.kafka.config.ExtendedConfigKey;
+import org.apache.kafka.common.config.ConfigDef;
+import org.junit.jupiter.api.Test;
 
-import org.apache.kafka.connect.errors.ConnectException;
+public class AmqpSourceConfigDefTest {
 
-/**
- * Class for exceptions that occur while converting between AMQP and Kafka
- * Connect schemas and records.
- */
-public class ConversionConnectException extends ConnectException {
-	public ConversionConnectException(String msg) {
-		super(msg);
-	}
+	@Test
+	void sinceTest() {
+		AmqpSourceConfigDef def = new AmqpSourceConfigDef();
 
-	public ConversionConnectException(String msg, Throwable thr) {
-		super(msg, thr);
-	}
-
-	public ConversionConnectException(Throwable thr) {
-		super(thr);
+		for (String keyName : def.configKeys().keySet()) {
+			ConfigDef.ConfigKey key = def.configKeys().get(keyName);
+			if (key instanceof ExtendedConfigKey exKey) {
+				System.out.printf("%s: %s%n", keyName, exKey.getSince());
+			}
+		}
 	}
 }

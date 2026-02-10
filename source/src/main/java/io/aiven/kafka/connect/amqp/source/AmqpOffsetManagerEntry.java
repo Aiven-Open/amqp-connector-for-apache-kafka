@@ -1,3 +1,21 @@
+/*
+         Copyright 2026 Aiven Oy and project contributors
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
+
+        SPDX-License-Identifier: Apache-2
+ */
 package io.aiven.kafka.connect.amqp.source;
 
 import de.huxhorn.sulky.ulid.ULID;
@@ -8,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * THe OffsetManager Entry for the AMQP messages
+ */
 public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<AmqpOffsetManagerEntry> {
 	private final ULID.Value primaryKey;
 	private int recordCount;
@@ -15,8 +36,7 @@ public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<
 
 	private static final String PRIMARY_KEY = "ulid";
 	private static final String RECORD_COUNT = "recordCount";
-	private static final List<String> RESTRICTED =  List.of(PRIMARY_KEY, RECORD_COUNT);
-
+	private static final List<String> RESTRICTED = List.of(PRIMARY_KEY, RECORD_COUNT);
 
 	AmqpOffsetManagerEntry(ULID.Value primaryKey) {
 		Objects.requireNonNull(primaryKey, "primaryKey may not be null.");
@@ -38,6 +58,7 @@ public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<
 		Map<String, Object> result = new HashMap<>(properties);
 		result.put(PRIMARY_KEY, primaryKey);
 		result.put(RECORD_COUNT, recordCount);
+		return result;
 	}
 
 	@Override

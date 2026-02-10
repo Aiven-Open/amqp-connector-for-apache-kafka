@@ -1,5 +1,24 @@
+/*
+         Copyright 2026 Aiven Oy and project contributors
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
+
+        SPDX-License-Identifier: Apache-2
+ */
 package io.aiven.kafka.connect.amqp.source;
 
+import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
@@ -17,13 +36,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class AmqpSourceData implements NativeSourceData<AmqpNativeInfo, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord> {
+public class AmqpSourceData
+		implements
+			NativeSourceData<ULID.Value, AmqpNativeInfo, AmqpOffsetManagerEntry, AmqpSourceRecord> {
 	private final Receiver receiver;
 	private final int streamLimit;
 
-	AmqpSourceData(AmqpSourceConfig sourceConfig) {
-		this.receiver = sourceConfig.getReceiver();
-		streamLimit = sourceConfig.getStreamLimit();
+	AmqpSourceData(AmqpSourceConfig sourceConfig) throws ClientException {
+		this.receiver = sourceConfig.getReceiver(sourceConfig.getConnection(sourceConfig.getClient()));
+		streamLimit = 500; // sourceConfig.getStreamLimit();
 	}
 
 	@Override
@@ -32,7 +53,7 @@ public class AmqpSourceData implements NativeSourceData<AmqpNativeInfo, AmqpNati
 	}
 
 	@Override
-	public Stream<AmqpNativeInfo> getNativeItemStream(AmqpNativeInfo ignore) {
+	public Stream<AmqpNativeInfo> getNativeItemStream(ULID.Value ignore) {
 		try {
 			long waiting = receiver.queuedDeliveries();
 			int limit = (int) Math.min(waiting, streamLimit);
@@ -55,45 +76,44 @@ public class AmqpSourceData implements NativeSourceData<AmqpNativeInfo, AmqpNati
 	}
 
 	@Override
-	public IOSupplier<InputStream> getInputStream(AmqpSourceRecord amqpNativeRecord) {
+	public IOSupplier<InputStream> getInputStream(AmqpSourceRecord amqpSourceRecord) {
 		return () -> {
-            try {
-                return amqpNativeRecord.getNativeItem().getDelivery().rawInputStream();
-            } catch (ClientException e) {
-                throw new IOException(e);
-            }
-        };
-	}
-
-
-
-	@Override
-	public AmqpNativeInfo getNativeKey(AmqpNativeInfo amqpNativeInfo) {
-		return amqpNativeInfo;
+			try {
+				return amqpSourceRecord.getNativeItem().getDelivery().rawInputStream();
+			} catch (ClientException e) {
+				throw new IOException(e);
+			}
+		};
 	}
 
 	@Override
-	public AmqpNativeInfo parseNativeKey(String keyString) {
-		return null;
+	public ULID.Value getNativeKey(AmqpNativeInfo amqpNativeInfo) {
+		return amqpNativeInfo.getNativeKey();
+	}
+
+	@Override
+	public ULID.Value parseNativeKey(String keyString) {
+		return ULID.parseULID(keyString);
 	}
 
 	@Override
 	public AmqpSourceRecord createSourceRecord(AmqpNativeInfo amqpNativeInfo) {
-		return new AmqpSourceRecord(amqpNativeInfo, createOffsetManagerEntry(amqpNativeInfo));
+		return new AmqpSourceRecord(amqpNativeInfo);
 	}
 
 	@Override
 	public AmqpOffsetManagerEntry createOffsetManagerEntry(AmqpNativeInfo amqpNativeInfo) {
-		return new AmqpOffsetManagerEntry(amqpNativeInfo.getULID());
+		return new AmqpOffsetManagerEntry(amqpNativeInfo.getNativeKey());
 	}
 
 	@Override
-	public OffsetManager.OffsetManagerKey getOffsetManagerKey(AmqpNativeInfo amqpNativeInfo) {
-		return new AmqpOffsetManagerEntry(amqpNativeInfo.getULID()).getManagerKey();
+	public OffsetManager.OffsetManagerKey getOffsetManagerKey(ULID.Value nativeKey) {
+		return new AmqpOffsetManagerEntry(nativeKey).getManagerKey();
 	}
 
 	@Override
-	public Optional<Context<AmqpNativeInfo>> extractContext(AmqpNativeInfo amqpNativeInfo) {
-		return Optional.empty();
+	public Optional<Context<ULID.Value>> extractContext(AmqpNativeInfo nativeItem) {
+		return Optional.of(new Context<ULID.Value>(nativeItem.getNativeKey()));
 	}
+
 }
