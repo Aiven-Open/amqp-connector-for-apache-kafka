@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.aiven</groupId>
-    <artifactId>amqp-connector-for-kafka-connect</artifactId>
+    <groupId>io.aiven.kafka.connect</groupId>
+    <artifactId>connectors-for-amqp</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>amqp-connector-sink-for-kafka-connect</artifactId>
-
+  <artifactId>sink-connector-for-amqp</artifactId>
+  <name>Aiven sink connector for AMQP on Apache Kafka</name>
   <properties>
     <maven.compiler.source>23</maven.compiler.source>
     <maven.compiler.target>23</maven.compiler.target>

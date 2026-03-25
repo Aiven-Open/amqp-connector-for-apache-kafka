@@ -20,30 +20,51 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.aiven</groupId>
-    <artifactId>amqp-connector-for-kafka-connect</artifactId>
+    <groupId>io.aiven.kafka.connect</groupId>
+    <artifactId>connectors-for-amqp</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>amqp-source-connector-for-kafka-connect</artifactId>
+  <artifactId>source-connector-for-amqp</artifactId>
+  <name>Aiven source connector for AMQP on Apache Kafka</name>
 
   <dependencies>
     <dependency>
-      <groupId>de.huxhorn.sulky</groupId>
-      <artifactId>de.huxhorn.sulky.ulid</artifactId>
-      <version>8.3.0</version>
-      <scope>compile</scope>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.aiven</groupId>
-      <artifactId>amqp-connector-common-for-kafka-connect</artifactId>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.rabbitmq</groupId>
+      <artifactId>amqp-client</artifactId>
+      <version>5.26.0</version>
+    </dependency>
+    <dependency>
+      <groupId>de.huxhorn.sulky</groupId>
+      <artifactId>de.huxhorn.sulky.ulid</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.kafka.connect</groupId>
+      <artifactId>connectors-common-for-amqp</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
-      <artifactId>kafka-source-connector-framework</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-      <scope>compile</scope>
+      <artifactId>framework-common-for-connectors</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-source-connectors</artifactId>
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
@@ -51,7 +72,7 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
-      <artifactId>strings</artifactId>
+      <artifactId>common-util</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -67,5 +88,56 @@
       <artifactId>jsonschema-generator</artifactId>
     </dependency>
   </dependencies>
+
+  <build>
+
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>auto-clean</id>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <phase>clean</phase>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>src/main/java/io/aiven/kafka/connect/amqp/source</directory>
+                  <includes>
+                    <include>AmqpVersionInfo.java</include>
+                  </includes>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-version-info</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/main/filtered-source</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

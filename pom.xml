@@ -26,12 +26,12 @@
     <version>3-SNAPSHOT</version>
   </parent>
 
-  <groupId>io.aiven</groupId>
-  <artifactId>amqp-connector-for-kafka-connect</artifactId>
+  <groupId>io.aiven.kafka.connect</groupId>
+  <artifactId>connectors-for-amqp</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>AMQP Connector for Kafka Connect</name>
+  <name>Aiven connectors for AMQP on Apache Kafka</name>
 
   <!--    <url>https://github.com/Aiven-Open/bigquery-connector-for-apache-kafka</url>-->
 
@@ -67,6 +67,7 @@
       <timezone>Europe/Dublin</timezone>
     </developer>
   </developers>
+
   <modules>
     <module>common</module>
     <module>source</module>
@@ -75,95 +76,105 @@
 
   <properties>
     <latestRelease>0.0.1-SNAPSHOT</latestRelease>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>17</java.version>
+    <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
+    <proton.version>1.1.0</proton.version>
+    <jackson.version>2.21.2</jackson.version>
+    <aiven.common.util.version>0.1.0-SNAPSHOT</aiven.common.util.version>
+    <aiven.kafka.config.version>0.1.0-SNAPSHOT</aiven.kafka.config.version>
+    <aiven.kafak.framework.version>0.1.0-SNAPSHOT</aiven.kafak.framework.version>
+    <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
   </properties>
 
-  <!--    <repositories>-->
-  <!--        <repository>-->
-  <!--            <id>confluent</id>-->
-  <!--            <url>https://packages.confluent.io/maven/</url>-->
-  <!--        </repository>-->
-  <!--    </repositories>-->
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>Maven</id>
+      <url>https://repo1.maven.org/maven2/</url>
+    </repository>
 
-  <!--    <pluginRepositories>-->
-  <!--        <pluginRepository>-->
-  <!--            <id>confluent</id>-->
-  <!--            <url>https://packages.confluent.io/maven/</url>-->
-  <!--        </pluginRepository>-->
-  <!--        <pluginRepository>-->
-  <!--            <id>jitpack.io</id>-->
-  <!--            <url>https://jitpack.io</url>-->
-  <!--        </pluginRepository>-->
-  <!--    </pluginRepositories>-->
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <url>https://central.sonatype.com/repository/maven</url>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+      <id>central-snapshot</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.qpid</groupId>
-        <artifactId>protonj2-client</artifactId>
-        <version>1.0.0</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.16.2</version>
-      </dependency>
-      <dependency>
-        <groupId>com.github.victools</groupId>
-        <artifactId>jsonschema-generator</artifactId>
-        <version>4.38.0</version>
-      </dependency>
-      <!-- Source: https://mvnrepository.com/artifact/de.huxhorn.sulky/de.huxhorn.sulky.ulid -->
-      <dependency>
-        <groupId>de.huxhorn.sulky</groupId>
-        <artifactId>de.huxhorn.sulky.ulid</artifactId>
-        <version>8.3.0</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
         <groupId>io.aiven.commons</groupId>
-        <artifactId>collections</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <artifactId>common-util</artifactId>
+        <version>${aiven.common.util.version}</version>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>kafka-config</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${aiven.kafka.config.version}</version>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
-        <artifactId>strings</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-text</artifactId>
-        <version>1.14.0</version>
+        <artifactId>framework-for-connectors</artifactId>
+        <version>${aiven.kafak.framework.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
-        <artifactId>kafka-source-connector-framework</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <artifactId>framework-for-source-connectors</artifactId>
+        <version>${aiven.kafak.framework.version}</version>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
-        <artifactId>timing</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <artifactId>framework-common-for-connectors</artifactId>
+        <version>${aiven.kafak.framework.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>version</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <groupId>de.huxhorn.sulky</groupId>
+        <artifactId>de.huxhorn.sulky.ulid</artifactId>
+        <version>${huxhorn.sulky.version}</version>
       </dependency>
-
       <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <scope>test</scope>
+        <groupId>org.apache.qpid</groupId>
+        <artifactId>protonj2-client</artifactId>
+        <version>${proton.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>org.apache.qpid</groupId>
+        <artifactId>protonj2</artifactId>
+        <version>${proton.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+        <scope>compile</scope>
+      </dependency>
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
@@ -225,7 +236,6 @@
         <type>test-jar</type>
         <scope>compile</scope>
       </dependency>
-
       <dependency>
         <groupId>com.google.re2j</groupId>
         <artifactId>re2j</artifactId>
@@ -234,27 +244,31 @@
       <dependency>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>${plugin.resources}</version>
         <type>maven-plugin</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>${commons.collection4.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>de.huxhorn.sulky</groupId>
+      <artifactId>de.huxhorn.sulky.ulid</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.qpid</groupId>
       <artifactId>protonj2-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.aiven.commons</groupId>
-      <artifactId>kafka-source-connector-framework</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.aiven.commons</groupId>
-      <artifactId>timing</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.aiven.commons</groupId>
-      <artifactId>version</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -279,7 +293,7 @@
     <dependency>
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
-      <version>4.1.0</version>
+      <version>${fasterxml.uuid.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -287,7 +301,33 @@
     </dependency>
   </dependencies>
 
-  <build></build>
+  <!--  <repositories>-->
+  <!--    &lt;!&ndash; This repo is for avro converter &ndash;&gt;-->
+  <!--    <repository>-->
+  <!--      <releases>-->
+  <!--        <enabled>true</enabled>-->
+  <!--      </releases>-->
+  <!--      <snapshots>-->
+  <!--        <enabled>false</enabled>-->
+  <!--      </snapshots>-->
+  <!--      <id>confluent</id>-->
+  <!--      <url>https://packages.confluent.io/maven/</url>-->
+  <!--    </repository>-->
+  <!--    &lt;!&ndash; used to pickup our snapshots &ndash;&gt;-->
+  <!--    <repository>-->
+  <!--      <releases>-->
+  <!--        <enabled>false</enabled>-->
+  <!--      </releases>-->
+  <!--      <snapshots>-->
+  <!--        <enabled>true</enabled>-->
+  <!--        <updatePolicy>always</updatePolicy>-->
+  <!--        <checksumPolicy>fail</checksumPolicy>-->
+  <!--      </snapshots>-->
+  <!--      <id>central-snapshot</id>-->
+  <!--      <url>https://central.sonatype.com/repository/maven-snapshots/</url>-->
+  <!--      <layout>default</layout>-->
+  <!--    </repository>-->
+  <!--  </repositories>-->
 
   <profiles>
     <profile>

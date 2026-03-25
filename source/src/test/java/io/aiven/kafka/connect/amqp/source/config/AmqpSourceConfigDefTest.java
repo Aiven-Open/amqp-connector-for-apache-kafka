@@ -18,21 +18,19 @@
  */
 package io.aiven.kafka.connect.amqp.source.config;
 
-import io.aiven.commons.kafka.config.ExtendedConfigKey;
-import org.apache.kafka.common.config.ConfigDef;
+import io.aiven.commons.kafka.config.docs.ConfigDefBeanFactory;
+import io.aiven.commons.kafka.config.docs.ExtendedConfigKeyBean;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AmqpSourceConfigDefTest {
 
 	@Test
 	void sinceTest() {
-		AmqpSourceConfigDef def = new AmqpSourceConfigDef();
-
-		for (String keyName : def.configKeys().keySet()) {
-			ConfigDef.ConfigKey key = def.configKeys().get(keyName);
-			if (key instanceof ExtendedConfigKey exKey) {
-				System.out.printf("%s: %s%n", keyName, exKey.getSince());
-			}
+		for (ExtendedConfigKeyBean bean : new ConfigDefBeanFactory().open(AmqpSourceConfigDef.class.getName())
+				.configKeys()) {
+			assertThat(bean.since()).as(bean.getName()).isIn("1.0.0", "Kafka 0.9.0.0");
 		}
 	}
 }

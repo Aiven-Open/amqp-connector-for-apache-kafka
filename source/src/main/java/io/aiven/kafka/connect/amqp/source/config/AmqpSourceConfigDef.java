@@ -5,7 +5,7 @@
         you may not use this file except in compliance with the License.
         You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+        https://www.apache.org/licenses/LICENSE-2.0
 
         Unless required by applicable law or agreed to in writing,
         software distributed under the License is distributed on an
@@ -26,17 +26,23 @@ import org.apache.kafka.common.config.ConfigValue;
 
 import java.util.Map;
 
+/**
+ * The configuration file for the AMQP source.
+ */
 public final class AmqpSourceConfigDef extends SourceCommonConfig.SourceCommonConfigDef {
 
-	private AmqpSourceFragment sourceFragment;
-
-	AmqpSourceConfigDef() {
+	/**
+	 * Constructor.
+	 */
+	public AmqpSourceConfigDef() {
 		super();
 		AmqpFragment.update(this);
-		AmqpSourceFragment.update(this);
 		applyOverrideMap();
 	}
 
+	/**
+	 * Applies "since" overrides.
+	 */
 	private void applyOverrideMap() {
 		SinceInfoMapBuilder mapBuilder = new SinceInfoMapBuilder();
 		mapBuilder.put("io.aiven.commons:kafka-source-connector-framework:[,1.0.0]", "1.0.0");
@@ -44,7 +50,7 @@ public final class AmqpSourceConfigDef extends SourceCommonConfig.SourceCommonCo
 	}
 
 	/**
-	 * Validates the Salesforce configuration is correct and meets requirements
+	 * Validates the AMQP configuration is correct and meets requirements
 	 *
 	 * @param valueMap
 	 *            the map of configuration names to values.

@@ -5,7 +5,7 @@
         you may not use this file except in compliance with the License.
         You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+        https://www.apache.org/licenses/LICENSE-2.0
 
         Unless required by applicable law or agreed to in writing,
         software distributed under the License is distributed on an
@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * THe OffsetManager Entry for the AMQP messages
+ * The OffsetManager Entry for the AMQP messages
  */
-public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<AmqpOffsetManagerEntry> {
+public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry {
 	private final ULID.Value primaryKey;
 	private int recordCount;
 	private final Map<String, Object> properties;
@@ -43,6 +43,21 @@ public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<
 		this.primaryKey = primaryKey;
 		this.properties = new HashMap<>();
 		this.recordCount = 0;
+	}
+
+	AmqpOffsetManagerEntry(Map<String, Object> props) {
+		Object keyProp = props.get(PRIMARY_KEY);
+		Objects.requireNonNull(keyProp, PRIMARY_KEY + " value not set.");
+		primaryKey = keyProp instanceof ULID.Value ? (ULID.Value) keyProp : ULID.parseULID(keyProp.toString());
+		Object recCount = props.get(RECORD_COUNT);
+		if (recCount == null) {
+			recordCount = 0;
+		} else if (recCount instanceof String recStr) {
+			recordCount = Integer.parseInt(recStr);
+		} else if (recCount instanceof Number number) {
+			recordCount = number.intValue();
+		}
+		properties = new HashMap<>(props);
 	}
 
 	@Override
@@ -93,11 +108,5 @@ public class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry<
 	@Override
 	public long getRecordCount() {
 		return recordCount;
-	}
-
-	@Override
-	public int compareTo(AmqpOffsetManagerEntry other) {
-		int result = primaryKey.compareTo(other.primaryKey);
-		return result == 0 ? Integer.compare(recordCount, other.recordCount) : result;
 	}
 }

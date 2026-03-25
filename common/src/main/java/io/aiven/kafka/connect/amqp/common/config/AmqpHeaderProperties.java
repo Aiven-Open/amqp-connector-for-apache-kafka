@@ -19,9 +19,11 @@
 package io.aiven.kafka.connect.amqp.common.config;
 
 import org.apache.kafka.connect.data.Schema;
-import io.aiven.commons.strings.CasedString;
+import io.aiven.commons.util.strings.CasedString;
+import org.apache.kafka.connect.data.SchemaBuilder;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * The properties found in the message object that are not otherwise handled
@@ -29,7 +31,7 @@ import java.util.Locale;
  */
 public enum AmqpHeaderProperties {
 	/** the currently set Message Id or null if none set. */
-	MESSAGE_ID(null),
+	MESSAGE_ID(Schema.OPTIONAL_BYTES_SCHEMA),
 	/** the currently set User ID or null if none set. */
 	USER_ID(Schema.OPTIONAL_BYTES_SCHEMA),
 	/**
@@ -45,7 +47,7 @@ public enum AmqpHeaderProperties {
 	 */
 	REPLY_TO(Schema.OPTIONAL_STRING_SCHEMA),
 	/** the currently assigned correlation ID or null if none set. */
-	CORRELATION_ID(null),
+	CORRELATION_ID(SchemaBuilder.OPTIONAL_BYTES_SCHEMA),
 	/**
 	 * the assigned content type value for the message body section or null if not
 	 * set.
@@ -85,6 +87,7 @@ public enum AmqpHeaderProperties {
 	private final CasedString casedName;
 
 	AmqpHeaderProperties(Schema schema) {
+		Objects.requireNonNull(schema);
 		this.schema = schema;
 		casedName = new CasedString(CasedString.StringCase.SNAKE, this.name().toLowerCase(Locale.ROOT));
 	}
