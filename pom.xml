@@ -6,7 +6,7 @@
         you may not use this file except in compliance with the License.
         You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+        https://www.apache.org/licenses/LICENSE-2.0
 
         Unless required by applicable law or agreed to in writing,
         software distributed under the License is distributed on an
@@ -15,7 +15,7 @@
         specific language governing permissions and limitations
         under the License.
 
-        SPDX-License-Identifier: Apache-2
+        SPDX-License-Identifier: Apache-2.0
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -23,12 +23,12 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>3-SNAPSHOT</version>
+    <version>3</version>
   </parent>
 
   <groupId>io.aiven.kafka.connect</groupId>
   <artifactId>connectors-for-amqp</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aiven connectors for AMQP on Apache Kafka</name>
@@ -71,59 +71,19 @@
   <modules>
     <module>common</module>
     <module>source</module>
-    <module>sink</module>
+    <!--    <module>sink</module>-->
   </modules>
 
   <properties>
-    <latestRelease>0.0.1-SNAPSHOT</latestRelease>
+    <latestRelease>0.1.0-SNAPSHOT</latestRelease>
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <proton.version>1.1.0</proton.version>
     <jackson.version>2.21.2</jackson.version>
-    <aiven.common.util.version>0.1.0-SNAPSHOT</aiven.common.util.version>
-    <aiven.kafka.config.version>0.1.0-SNAPSHOT</aiven.kafka.config.version>
-    <aiven.kafak.framework.version>0.1.0-SNAPSHOT</aiven.kafak.framework.version>
+    <aiven.common.util.version>0.1.0</aiven.common.util.version>
+    <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
+    <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
   </properties>
-
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>fail</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>Maven</id>
-      <url>https://repo1.maven.org/maven2/</url>
-    </repository>
-
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>central</id>
-      <url>https://central.sonatype.com/repository/maven</url>
-    </repository>
-
-    <repository>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <id>central-snapshot</id>
-      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-    </repository>
-  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -300,6 +260,46 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>fail</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>Maven</id>
+      <url>https://repo1.maven.org/maven2/</url>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <url>https://central.sonatype.com/repository/maven</url>
+    </repository>
+
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+      <id>central-snapshot</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+    </repository>
+  </repositories>
 
   <!--  <repositories>-->
   <!--    &lt;!&ndash; This repo is for avro converter &ndash;&gt;-->

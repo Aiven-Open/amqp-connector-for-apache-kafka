@@ -14,7 +14,7 @@
         specific language governing permissions and limitations
         under the License.
 
-        SPDX-License-Identifier: Apache-2
+        SPDX-License-Identifier: Apache-2.0
  */
 package io.aiven.kafka.connect.amqp.source;
 
