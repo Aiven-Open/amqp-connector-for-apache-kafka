@@ -115,8 +115,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   public static class ULIDSerde implements NativeSourceData.KeySerde<ULID.Value> {
 
     /** Default constructor */
-    public ULIDSerde() {
-    }
+    public ULIDSerde() {}
 
     @Override
     public String toString(ULID.Value nativeKey) {

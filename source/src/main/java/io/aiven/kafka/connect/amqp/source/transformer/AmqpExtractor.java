@@ -24,9 +24,7 @@ import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Extracts data from the AMQP Message.  Each AMQP message generates a single Kafka message
- */
+/** Extracts data from the AMQP Message. Each AMQP message generates a single Kafka message */
 public final class AmqpExtractor extends Extractor {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpExtractor.class);
 
@@ -35,6 +33,7 @@ public final class AmqpExtractor extends Extractor {
 
   /**
    * Creates AmqpExtractor
+   *
    * @param config the
    */
   public AmqpExtractor(final SourceCommonConfig config) {
@@ -51,6 +50,7 @@ public final class AmqpExtractor extends Extractor {
 
   /**
    * Creates an ExtractorInfo for this extractor.
+   *
    * @return the ExtractorInfo for this extractor.
    */
   public static ExtractorInfo info() {

@@ -33,16 +33,16 @@ import org.slf4j.LoggerFactory;
 /** The AMQP source connector */
 public final class AmqpSourceConnector extends SourceConnector {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
-  /** The  map of property name to values as passed during {@link #start(Map)} */
+
+  /** The map of property name to values as passed during {@link #start(Map)} */
   private Map<String, String> props;
 
   /** Default constructor */
-  public AmqpSourceConnector() {
-  }
+  public AmqpSourceConnector() {}
 
   @Override
   public void start(Map<String, String> props) {
-    LOGGER.info("{} {} Starting", AmqpVersionInfo.NAME, AmqpVersionInfo.VERSION);
+    LOGGER.info("{} {} Starting", AmqpSourceVersionInfo.NAME, AmqpSourceVersionInfo.VERSION);
     this.props = props;
   }
 
@@ -65,7 +65,7 @@ public final class AmqpSourceConnector extends SourceConnector {
 
   @Override
   public void stop() {
-    LOGGER.info("{} {} Stopping", AmqpVersionInfo.NAME, AmqpVersionInfo.VERSION);
+    LOGGER.info("{} {} Stopping", AmqpSourceVersionInfo.NAME, AmqpSourceVersionInfo.VERSION);
   }
 
   @Override
@@ -75,6 +75,6 @@ public final class AmqpSourceConnector extends SourceConnector {
 
   @Override
   public String version() {
-    return AmqpVersionInfo.VERSION;
+    return AmqpSourceVersionInfo.VERSION;
   }
 }

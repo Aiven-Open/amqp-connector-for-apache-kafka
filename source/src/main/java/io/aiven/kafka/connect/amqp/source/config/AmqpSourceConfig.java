@@ -31,7 +31,7 @@ import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
 /** The configuration for an AMQP Source connector. */
-public final class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonConfig {
+public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonConfig {
   private final AmqpFragment amqpFragment;
 
   /**

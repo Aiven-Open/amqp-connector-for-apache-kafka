@@ -24,7 +24,10 @@ package io.aiven.kafka.connect.amqp.source;
  * Automatically generated from filtered-source AmqpVersionInfo.java during
  * source-generate execution
  */
-public final static class AmqpSourceVersionInfo  {
+public final class AmqpSourceVersionInfo  {
+    private AmqpSourceVersionInfo() {
+        // do not instantiate.
+    }
     /** The version of this instance */
     public final static String VERSION = "${project.version}";
     /** The name of this project */

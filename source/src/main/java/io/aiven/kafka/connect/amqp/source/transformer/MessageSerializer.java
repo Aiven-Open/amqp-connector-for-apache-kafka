@@ -13,28 +13,26 @@ import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.types.messaging.Section;
 
-/**
- * Serializes an AMQP Message into a JSON format.
- */
-public final class MessageSerializer extends StdSerializer<Message<?>> {
+/** Serializes an AMQP Message into a JSON format. */
+public final class MessageSerializer extends StdSerializer<Message> {
 
-  /**
-   * Default constructor.
-   */
+  /** Default constructor. */
   public MessageSerializer() {
     this(null);
   }
 
   /**
    * Constructor for an arbitrary Message.
+   *
    * @param t the class of the Message to process.
    */
-  public MessageSerializer(Class<Message<?>> t) {
+  public MessageSerializer(Class<Message> t) {
     super(t);
   }
 
   /**
    * Write the map object if the map is not empty.
+   *
    * @param jgen the JSON generator.
    * @param name the name of the map.
    * @param map the map to write.
@@ -49,6 +47,7 @@ public final class MessageSerializer extends StdSerializer<Message<?>> {
 
   /**
    * Write the object if the object is not null.
+   *
    * @param jgen the JSON generator.
    * @param name the name of the map.
    * @param object the object to write.
@@ -63,6 +62,7 @@ public final class MessageSerializer extends StdSerializer<Message<?>> {
 
   /**
    * Write the string if the string is not null.
+   *
    * @param jgen the JSON generator.
    * @param name the name of the map.
    * @param string the string to write.
@@ -133,13 +133,15 @@ public final class MessageSerializer extends StdSerializer<Message<?>> {
   }
 
   /**
-   * Extract the body sections of the message.  An AMQP message may have 0 or more sections.
-   * If the body has:
+   * Extract the body sections of the message. An AMQP message may have 0 or more sections. If the
+   * body has:
+   *
    * <ul>
-   *     <li>zero element, null is returned</li>
-   *     <li>one element, the single section is returned.</li>
-   *     <li>two or more elements, the collection is returned.</li>
+   *   <li>zero element, null is returned
+   *   <li>one element, the single section is returned.
+   *   <li>two or more elements, the collection is returned.
    * </ul>
+   *
    * @param value the message to extract the sections from.
    * @return the Object representing the body or {@code null}.
    * @throws IOException

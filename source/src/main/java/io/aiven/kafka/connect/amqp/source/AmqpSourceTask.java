@@ -37,8 +37,7 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   private AmqpSourceData amqpSourceData;
 
   /** Default constructor. */
-  public AmqpSourceTask() {
-  }
+  public AmqpSourceTask() {}
 
   @Override
   protected AmqpSourceConfig configure(Map<String, String> props, OffsetManager offsetManager) {
@@ -68,6 +67,6 @@ public final class AmqpSourceTask extends AbstractSourceTask {
 
   @Override
   public String version() {
-    return AmqpVersionInfo.VERSION;
+    return AmqpSourceVersionInfo.VERSION;
   }
 }
