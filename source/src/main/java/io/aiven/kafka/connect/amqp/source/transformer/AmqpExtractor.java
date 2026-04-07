@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
-import io.aiven.commons.kafka.connector.source.transformer.SchemaAndValueFactory;
-import io.aiven.commons.kafka.connector.source.transformer.Transformer;
-import io.aiven.commons.kafka.connector.source.transformer.TransformerInfo;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
+import io.aiven.commons.kafka.connector.source.extractor.ExtractorInfo;
+import io.aiven.commons.kafka.connector.source.extractor.SchemaAndValueFactory;
 import io.aiven.commons.util.io.compression.CompressionType;
 import io.aiven.kafka.connect.amqp.source.AmqpSourceNativeInfo;
 import java.io.ByteArrayOutputStream;
@@ -24,13 +24,13 @@ import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class AmqpTransformer extends Transformer {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTransformer.class);
+public final class AmqpExtractor extends Extractor {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpExtractor.class);
 
   private final ObjectMapper objectMapper;
   private final JsonConverter jsonConverter;
 
-  public AmqpTransformer(final SourceCommonConfig config) {
+  public AmqpExtractor(final SourceCommonConfig config) {
     super(config, info());
     objectMapper = new ObjectMapper();
     SimpleModule module = new SimpleModule();
@@ -42,11 +42,11 @@ public final class AmqpTransformer extends Transformer {
     jsonConverter.configure(Map.of("schemas.enable", "false"), false);
   }
 
-  public static TransformerInfo info() {
-    return new TransformerInfo(
+  public static ExtractorInfo info() {
+    return new ExtractorInfo(
         "Amqp",
-        AmqpTransformer.class,
-        TransformerInfo.FEATURE_NONE,
+        AmqpExtractor.class,
+        ExtractorInfo.FEATURE_NONE,
         "Processes an AMQP message.  All message features are presented in a Json document.  Message body is uncompressed if specified");
   }
 

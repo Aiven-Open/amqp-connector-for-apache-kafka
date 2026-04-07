@@ -28,9 +28,9 @@ import org.apache.qpid.protonj2.types.messaging.Section;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class AmqpTransformerTest {
+public class AmqpExtractorTest {
   private final ObjectMapper objectMapper;
-  private AmqpTransformer underTest;
+  private AmqpExtractor underTest;
   private AmqpSourceNativeInfo sourceNativeInfo;
 
   private static final Map<String, String> CONFIG =
@@ -41,7 +41,7 @@ public class AmqpTransformerTest {
           .setPassword("password")
           .data();
 
-  public AmqpTransformerTest() {
+  public AmqpExtractorTest() {
     objectMapper = new ObjectMapper();
     SimpleModule module = new SimpleModule();
     module.addSerializer(Message.class, new MessageSerializer());
@@ -50,7 +50,7 @@ public class AmqpTransformerTest {
 
     SourceCommonConfig sourceCommonConfig = new AmqpSourceConfig(CONFIG);
 
-    underTest = new AmqpTransformer(sourceCommonConfig);
+    underTest = new AmqpExtractor(sourceCommonConfig);
   }
 
   @BeforeEach
@@ -125,7 +125,7 @@ public class AmqpTransformerTest {
     Map<String, String> compressedConfig = new HashMap<>(CONFIG);
     ConnectorCommonConfigFragment.setter(compressedConfig).compressionType(CompressionType.GZIP);
     SourceCommonConfig sourceCommonConfig = new AmqpSourceConfig(compressedConfig);
-    underTest = new AmqpTransformer(sourceCommonConfig);
+    underTest = new AmqpExtractor(sourceCommonConfig);
     byte[] compressedValue =
         CompressionType.GZIP.compress("Hello world".getBytes(StandardCharsets.UTF_8));
     Message<byte[]> message = ClientMessage.create();

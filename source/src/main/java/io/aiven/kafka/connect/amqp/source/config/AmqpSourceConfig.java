@@ -23,7 +23,7 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-import io.aiven.kafka.connect.amqp.source.transformer.AmqpTransformer;
+import io.aiven.kafka.connect.amqp.source.transformer.AmqpExtractor;
 import java.util.Map;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
@@ -46,7 +46,7 @@ public final class AmqpSourceConfig extends SourceCommonConfig implements AmqpCo
   }
 
   private static Map<String, String> setTransformer(Map<String, String> props) {
-    SourceConfigFragment.setter(props).transformerClass(AmqpTransformer.class);
+    SourceConfigFragment.setter(props).transformerClass(AmqpExtractor.class);
     return props;
   }
 
