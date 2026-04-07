@@ -6,13 +6,23 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 import org.apache.qpid.protonj2.types.messaging.Section;
 
-public final class AmqpSectionSerializer extends StdSerializer<Section> {
+/**
+ * Serializes sections of an AMQP message into a JSON format.
+ */
+public final class AmqpSectionSerializer extends StdSerializer<Section<?>> {
 
+  /**
+   * Default constructor.
+   */
   public AmqpSectionSerializer() {
     this(null);
   }
 
-  public AmqpSectionSerializer(Class<Section> t) {
+  /**
+   * Constructor for a specific section type.
+   * @param t the section type class.
+   */
+  public AmqpSectionSerializer(Class<Section<?>> t) {
     super(t);
   }
 

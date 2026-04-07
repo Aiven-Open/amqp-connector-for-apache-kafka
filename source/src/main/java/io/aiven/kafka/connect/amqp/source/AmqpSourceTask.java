@@ -36,6 +36,10 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   private AmqpSourceConfig amqpSourceConfig;
   private AmqpSourceData amqpSourceData;
 
+  /** Default constructor. */
+  public AmqpSourceTask() {
+  }
+
   @Override
   protected AmqpSourceConfig configure(Map<String, String> props, OffsetManager offsetManager) {
     LOGGER.info("AMQP Source task started.");

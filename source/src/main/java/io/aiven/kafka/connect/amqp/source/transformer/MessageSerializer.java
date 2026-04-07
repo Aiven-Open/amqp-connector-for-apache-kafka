@@ -13,16 +13,33 @@ import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.types.messaging.Section;
 
-public final class MessageSerializer extends StdSerializer<Message> {
+/**
+ * Serializes an AMQP Message into a JSON format.
+ */
+public final class MessageSerializer extends StdSerializer<Message<?>> {
 
+  /**
+   * Default constructor.
+   */
   public MessageSerializer() {
     this(null);
   }
 
-  public MessageSerializer(Class<Message> t) {
+  /**
+   * Constructor for an arbitrary Message.
+   * @param t the class of the Message to process.
+   */
+  public MessageSerializer(Class<Message<?>> t) {
     super(t);
   }
 
+  /**
+   * Write the map object if the map is not empty.
+   * @param jgen the JSON generator.
+   * @param name the name of the map.
+   * @param map the map to write.
+   * @throws IOException on IO error.
+   */
   private void writeMap(final JsonGenerator jgen, final String name, final Map<String, Object> map)
       throws IOException {
     if (!map.isEmpty()) {
@@ -30,6 +47,13 @@ public final class MessageSerializer extends StdSerializer<Message> {
     }
   }
 
+  /**
+   * Write the object if the object is not null.
+   * @param jgen the JSON generator.
+   * @param name the name of the map.
+   * @param object the object to write.
+   * @throws IOException on IO error.
+   */
   private void writeObject(final JsonGenerator jgen, final String name, final Object object)
       throws IOException {
     if (object != null) {
@@ -37,10 +61,17 @@ public final class MessageSerializer extends StdSerializer<Message> {
     }
   }
 
-  private void writeString(final JsonGenerator jgen, final String name, final String object)
+  /**
+   * Write the string if the string is not null.
+   * @param jgen the JSON generator.
+   * @param name the name of the map.
+   * @param string the string to write.
+   * @throws IOException on IO error.
+   */
+  private void writeString(final JsonGenerator jgen, final String name, final String string)
       throws IOException {
-    if (object != null) {
-      jgen.writeStringField(name, object);
+    if (string != null) {
+      jgen.writeStringField(name, string);
     }
   }
 
@@ -101,6 +132,18 @@ public final class MessageSerializer extends StdSerializer<Message> {
     }
   }
 
+  /**
+   * Extract the body sections of the message.  An AMQP message may have 0 or more sections.
+   * If the body has:
+   * <ul>
+   *     <li>zero element, null is returned</li>
+   *     <li>one element, the single section is returned.</li>
+   *     <li>two or more elements, the collection is returned.</li>
+   * </ul>
+   * @param value the message to extract the sections from.
+   * @return the Object representing the body or {@code null}.
+   * @throws IOException
+   */
   private Object extractBody(Message<?> value) throws IOException {
     try {
       Collection<Section<?>> sections = value.toAdvancedMessage().bodySections();
