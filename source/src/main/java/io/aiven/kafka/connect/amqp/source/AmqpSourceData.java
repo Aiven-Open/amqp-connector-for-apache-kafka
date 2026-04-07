@@ -24,10 +24,10 @@ import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -37,7 +37,9 @@ import org.apache.qpid.protonj2.client.exceptions.ClientException;
 public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   private static final ULIDSerde serde = new ULIDSerde();
   private final Receiver receiver;
-  private final int streamLimit;
+
+  /** The maximum number of Deliveries to pull from the Receiver. */
+  private final int receiveLimit;
 
   /**
    * Constructor.
@@ -50,7 +52,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
       throws ClientException {
     super(sourceConfig, offsetManager);
     this.receiver = sourceConfig.getReceiver(sourceConfig.getConnection(sourceConfig.getClient()));
-    streamLimit = 500; // sourceConfig.getStreamLimit();
+    receiveLimit = 500; // sourceConfig.getreceiveLimit();
   }
 
   @Override
@@ -59,10 +61,10 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   }
 
   @Override
-  public Stream<AmqpSourceNativeInfo> getNativeItemStream(ULID.Value ignore) {
+  public Iterator<AmqpSourceNativeInfo> getNativeItemIterator(ULID.Value ignore) {
     try {
       long waiting = receiver.queuedDeliveries();
-      int limit = (int) Math.min(waiting, streamLimit);
+      int limit = (int) Math.min(waiting, receiveLimit);
       List<AmqpSourceNativeInfo> lst = new ArrayList<>(limit);
       try {
         for (int i = 0; i < limit; i++) {
@@ -75,7 +77,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
         // do nothing.
       }
 
-      return lst.stream();
+      return lst.iterator();
     } catch (ClientException e) {
       throw new ConnectException(e);
     }

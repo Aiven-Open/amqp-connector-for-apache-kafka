@@ -40,13 +40,13 @@ public final class AmqpSourceConfig extends SourceCommonConfig implements AmqpCo
    * @param originals the initial configuration data.
    */
   public AmqpSourceConfig(Map<String, String> originals) {
-    super(new AmqpSourceConfigDef(), setTransformer(originals));
+    super(new AmqpSourceConfigDef(), setExtractor(originals));
     FragmentDataAccess dataAccess = FragmentDataAccess.from(this);
     amqpFragment = new AmqpFragment(dataAccess);
   }
 
-  private static Map<String, String> setTransformer(Map<String, String> props) {
-    SourceConfigFragment.setter(props).transformerClass(AmqpExtractor.class);
+  private static Map<String, String> setExtractor(Map<String, String> props) {
+    SourceConfigFragment.setter(props).extractorClass(AmqpExtractor.class);
     return props;
   }
 
