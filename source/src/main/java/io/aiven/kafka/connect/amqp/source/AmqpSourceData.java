@@ -32,9 +32,13 @@ import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The AMQP NativeSourceData implementation. */
 public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
+
   private static final ULIDSerde serde = new ULIDSerde();
   private final Receiver receiver;
 
@@ -74,6 +78,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
           }
         }
       } catch (ClientException e) {
+        LOGGER.warn("Client exception retrieving delivery: {}", e.getMessage(), e);
         // do nothing.
       }
 

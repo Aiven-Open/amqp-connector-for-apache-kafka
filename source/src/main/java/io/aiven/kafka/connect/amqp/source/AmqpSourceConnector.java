@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /** The AMQP source connector */
 public final class AmqpSourceConnector extends SourceConnector {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceConnector.class);
 
   /** The map of property name to values as passed during {@link #start(Map)} */
   private Map<String, String> props;

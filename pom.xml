@@ -79,6 +79,7 @@
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <proton.version>1.1.0</proton.version>
     <jackson.version>2.21.2</jackson.version>
+    <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
     <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
@@ -133,7 +134,11 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
-        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>org.junit</groupId>
@@ -262,31 +267,18 @@
   </dependencies>
 
   <repositories>
+    <!-- This repo is for avro converter -->
     <repository>
       <releases>
         <enabled>true</enabled>
-        <checksumPolicy>fail</checksumPolicy>
       </releases>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-      <id>Maven</id>
-      <url>https://repo1.maven.org/maven2/</url>
+      <id>confluent</id>
+      <url>https://packages.confluent.io/maven/</url>
     </repository>
-
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>central</id>
-      <url>https://central.sonatype.com/repository/maven</url>
-    </repository>
-
+    <!-- used to pickup our snapshots -->
     <repository>
       <releases>
         <enabled>false</enabled>
@@ -298,36 +290,9 @@
       </snapshots>
       <id>central-snapshot</id>
       <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+      <layout>default</layout>
     </repository>
   </repositories>
-
-  <!--  <repositories>-->
-  <!--    &lt;!&ndash; This repo is for avro converter &ndash;&gt;-->
-  <!--    <repository>-->
-  <!--      <releases>-->
-  <!--        <enabled>true</enabled>-->
-  <!--      </releases>-->
-  <!--      <snapshots>-->
-  <!--        <enabled>false</enabled>-->
-  <!--      </snapshots>-->
-  <!--      <id>confluent</id>-->
-  <!--      <url>https://packages.confluent.io/maven/</url>-->
-  <!--    </repository>-->
-  <!--    &lt;!&ndash; used to pickup our snapshots &ndash;&gt;-->
-  <!--    <repository>-->
-  <!--      <releases>-->
-  <!--        <enabled>false</enabled>-->
-  <!--      </releases>-->
-  <!--      <snapshots>-->
-  <!--        <enabled>true</enabled>-->
-  <!--        <updatePolicy>always</updatePolicy>-->
-  <!--        <checksumPolicy>fail</checksumPolicy>-->
-  <!--      </snapshots>-->
-  <!--      <id>central-snapshot</id>-->
-  <!--      <url>https://central.sonatype.com/repository/maven-snapshots/</url>-->
-  <!--      <layout>default</layout>-->
-  <!--    </repository>-->
-  <!--  </repositories>-->
 
   <profiles>
     <profile>
