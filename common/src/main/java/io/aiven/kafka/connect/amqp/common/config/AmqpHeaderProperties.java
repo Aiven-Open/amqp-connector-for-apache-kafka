@@ -93,6 +93,6 @@ public enum AmqpHeaderProperties {
    * @return the schema name for this data item.
    */
   public String getSchemaName() {
-    return casedName.toCase(CasedString.StringCase.CAMEL);
+    return casedName.toCase(CasedString.StringCase.PASCAL);
   }
 }

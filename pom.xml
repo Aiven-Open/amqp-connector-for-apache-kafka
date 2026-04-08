@@ -311,6 +311,36 @@
             </plugin>
           </plugins>
         </pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-markdown-resources</id>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <phase>pre-site</phase>
+                <configuration>
+                  <resources>
+                    <resource>
+                      <directory>.</directory>
+                      <includes>
+                        <include>*.md</include>
+                      </includes>
+                      <excludes>
+                        <exclude>README.md</exclude>
+                        <exclude>CONTRIBUTING.md</exclude>
+                      </excludes>
+                    </resource>
+                  </resources>
+                  <outputDirectory>${project.build.directory}/generated-site/markdown</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
       </build>
     </profile>
   </profiles>
