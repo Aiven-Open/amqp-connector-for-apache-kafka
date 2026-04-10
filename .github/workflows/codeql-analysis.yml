@@ -76,7 +76,7 @@ jobs:
           distribution: temurin
 
       - name: Build with Maven
-        run: ./mvnw clean package
+        run: maven clean package
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
