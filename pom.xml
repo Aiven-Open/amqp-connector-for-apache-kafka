@@ -97,7 +97,7 @@
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
     <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
-    <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
+    <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
   </properties>
 
   <dependencyManagement>
