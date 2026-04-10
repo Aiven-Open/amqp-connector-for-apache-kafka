@@ -32,7 +32,7 @@
   <packaging>pom</packaging>
 
   <name>Aiven connectors for AMQP on Apache Kafka</name>
-
+  <description>The parent pom for the AMQP connectors</description>
   <url>https://github.com/Aiven-Open/amqp-connector-for-apache-kafka</url>
 
   <inceptionYear>2025</inceptionYear>
