@@ -281,17 +281,6 @@
   </dependencies>
 
   <repositories>
-    <!-- This repo is for kafka schema serializer -->
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-      <id>confluent</id>
-      <url>https://packages.confluent.io/maven/</url>
-    </repository>
     <!-- used to pickup our snapshots -->
     <repository>
       <releases>
@@ -306,7 +295,50 @@
       <url>https://central.sonatype.com/repository/maven-snapshots/</url>
       <layout>default</layout>
     </repository>
+    <!-- This repo is for kafka schema serializer -->
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>confluent</id>
+      <url>https://packages.confluent.io/maven/</url>
+    </repository>
   </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <version>2.7.1</version>
+        <configuration>
+          <projectType>library</projectType>
+          <schemaVersion>1.4</schemaVersion>
+          <includeBomSerialNumber>true</includeBomSerialNumber>
+          <includeCompileScope>true</includeCompileScope>
+          <includeProvidedScope>true</includeProvidedScope>
+          <includeRuntimeScope>true</includeRuntimeScope>
+          <includeSystemScope>true</includeSystemScope>
+          <includeTestScope>false</includeTestScope>
+          <includeLicenseText>false</includeLicenseText>
+          <outputReactorProjects>true</outputReactorProjects>
+          <outputFormat>all</outputFormat>
+          <outputName>CycloneDX-Sbom</outputName>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>makeAggregateBom</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <profiles>
     <profile>

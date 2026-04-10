@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.aiven.kafka.connect</groupId>
     <artifactId>connectors-for-amqp</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>sink-connector-for-amqp</artifactId>
