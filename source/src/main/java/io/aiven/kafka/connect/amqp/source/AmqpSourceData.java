@@ -35,7 +35,16 @@ import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** The AMQP NativeSourceData implementation. */
+/**
+ * The AMQP NativeSourceData implementation.
+ *
+ * <p>This implementation reads {@link Delivery} records from a protonj2 {@link Receiver} and
+ * creates {@link AmqpSourceNativeInfo} objects from those.
+ *
+ * <p>Since {@link org.apache.qpid.protonj2.client.Message} objects are not required to have a
+ * unique ID, this implementation uses a {@link ULID} for the native key. ULIDs are generated in the
+ * {@link AmqpSourceNativeInfo} class.
+ */
 public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
 
@@ -56,7 +65,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
       throws ClientException {
     super(sourceConfig, offsetManager);
     this.receiver = sourceConfig.getReceiver(sourceConfig.getConnection(sourceConfig.getClient()));
-    receiveLimit = 500; // sourceConfig.getreceiveLimit();
+    receiveLimit = 500; // TODO make this configurable
   }
 
   @Override

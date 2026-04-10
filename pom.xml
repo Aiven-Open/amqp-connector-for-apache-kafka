@@ -28,7 +28,7 @@
 
   <groupId>io.aiven.kafka.connect</groupId>
   <artifactId>connectors-for-amqp</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aiven connectors for AMQP on Apache Kafka</name>
