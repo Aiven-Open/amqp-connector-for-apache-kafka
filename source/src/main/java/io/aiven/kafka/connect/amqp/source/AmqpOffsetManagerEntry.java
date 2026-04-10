@@ -20,13 +20,12 @@ package io.aiven.kafka.connect.amqp.source;
 
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The OffsetManager Entry for the AMQP messages */
 public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry {
