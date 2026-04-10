@@ -62,8 +62,10 @@ public class AmqpSourceNativeInfoTest {
 
   @Test
   void getInputStream() throws IOException {
-    byte[] result = IOUtils.readFullyToByteArray(new DataInputStream(underTest.getInputStream()));
-    assertThat(result).isEqualTo(BODY.getBytes(StandardCharsets.UTF_8));
+    try (DataInputStream dataInputStream = new DataInputStream(underTest.getInputStream())) {
+      byte[] result = IOUtils.readFullyToByteArray(dataInputStream);
+      assertThat(result).isEqualTo(BODY.getBytes(StandardCharsets.UTF_8));
+    }
   }
 
   @Test
