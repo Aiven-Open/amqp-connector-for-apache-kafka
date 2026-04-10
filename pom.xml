@@ -33,7 +33,7 @@
 
   <name>Aiven connectors for AMQP on Apache Kafka</name>
 
-  <!--    <url>https://github.com/Aiven-Open/bigquery-connector-for-apache-kafka</url>-->
+  <url>https://github.com/Aiven-Open/amqp-connector-for-apache-kafka</url>
 
   <inceptionYear>2025</inceptionYear>
 
@@ -49,13 +49,6 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <!--    <scm>-->
-  <!--        <connection>scm:git:git://github.com/Aiven-Open/bigquery-connector-for-apache-kafka.git</connection>-->
-  <!--        <developerConnection>scm:git:git@github.com:Aiven-Open/bigquery-connector-for-apache-kafka.git</developerConnection>-->
-  <!--        <url>https://github.com/Aiven-Open/bigquery-connector-for-apache-kafka</url>-->
-  <!--        <tag>HEAD</tag>-->
-  <!--    </scm>-->
 
   <developers>
     <developer>
@@ -74,8 +67,29 @@
     <!--    <module>sink</module>-->
   </modules>
 
+  <scm>
+    <connection>scm:git:git://github.com/Aiven-Open/amqp-connector-for-apache-kafka</connection>
+    <developerConnection>scm:git:git@github.com:Aiven-Open/amqp-connector-for-apache-kafka.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/Aiven-Open/amqp-connector-for-apache-kafka</url>
+  </scm>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>central-snapshot</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+    </snapshotRepository>
+    <site>
+      <id>staging</id>
+      <!--  For the URL to resolve to the default URL as described in the Apache Site Plugin documentation this URL
+            must be invalid. A ticket is open to resolve this issue. See https://github.com/apache/maven-site-plugin/issues/1140
+            -->
+      <url>invalid:url</url>
+    </site>
+  </distributionManagement>
+
   <properties>
-    <latestRelease>0.1.0-SNAPSHOT</latestRelease>
+    <latestRelease>none</latestRelease>
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <proton.version>1.1.0</proton.version>
     <jackson.version>2.21.2</jackson.version>
@@ -267,7 +281,7 @@
   </dependencies>
 
   <repositories>
-    <!-- This repo is for avro converter -->
+    <!-- This repo is for kafka schema serializer -->
     <repository>
       <releases>
         <enabled>true</enabled>

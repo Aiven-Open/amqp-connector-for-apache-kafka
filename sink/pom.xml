@@ -27,10 +27,15 @@
 
   <artifactId>sink-connector-for-amqp</artifactId>
   <name>Aiven sink connector for AMQP on Apache Kafka</name>
-  <properties>
-    <maven.compiler.source>23</maven.compiler.source>
-    <maven.compiler.target>23</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+
+  <distributionManagement>
+    <site>
+      <id>staging</id>
+      <!--  For the URL to resolve to the default URL as described in the Apache Site Plugin documentation this URL
+            must be invalid. A ticket is open to resolve this issue. See https://github.com/apache/maven-site-plugin/issues/1140
+            -->
+      <url>invalid:url/sink</url>
+    </site>
+  </distributionManagement>
 
 </project>

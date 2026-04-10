@@ -28,6 +28,16 @@
   <artifactId>source-connector-for-amqp</artifactId>
   <name>Aiven source connector for AMQP on Apache Kafka</name>
 
+  <distributionManagement>
+    <site>
+      <id>staging</id>
+      <!--  For the URL to resolve to the default URL as described in the Apache Site Plugin documentation this URL
+            must be invalid. A ticket is open to resolve this issue. See https://github.com/apache/maven-site-plugin/issues/1140
+            -->
+      <url>invalid:url/source</url>
+    </site>
+  </distributionManagement>
+
   <dependencies>
     <!-- Source: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations -->
     <dependency>

@@ -29,6 +29,16 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>Aiven connectors common library for AMQP on Apache Kafka</name>
 
+  <distributionManagement>
+    <site>
+      <id>staging</id>
+      <!--  For the URL to resolve to the default URL as described in the Apache Site Plugin documentation this URL
+            must be invalid. A ticket is open to resolve this issue. See https://github.com/apache/maven-site-plugin/issues/1140
+            -->
+      <url>invalid:url/common</url>
+    </site>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>io.aiven.commons</groupId>
