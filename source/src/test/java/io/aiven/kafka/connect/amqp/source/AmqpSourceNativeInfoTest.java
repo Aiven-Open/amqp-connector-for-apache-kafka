@@ -56,7 +56,7 @@ public class AmqpSourceNativeInfoTest {
     ULID.Value nativeKey = context.getNativeKey();
     assertThat(nativeKey).isNotNull();
     Context context2 = underTest.getContext();
-    ULID.Value nativeKey2 = context.getNativeKey();
+    ULID.Value nativeKey2 = context2.getNativeKey();
     assertThat(nativeKey.compareTo(nativeKey2)).isEqualTo(0);
   }
 
