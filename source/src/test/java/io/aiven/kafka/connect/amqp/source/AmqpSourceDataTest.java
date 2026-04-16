@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Delivery;
@@ -67,13 +69,13 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void getSourceName() throws ClientException {
+  void getSourceName() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     assertThat(underTest.getSourceName()).isEqualTo("AMQP Source");
   }
 
   @Test
-  void nativeSerde() throws ClientException {
+  void nativeSerde() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     Optional<NativeSourceData.KeySerde<ULID.Value>> optSerde = underTest.getNativeKeySerde();
     assertThat(optSerde.isPresent()).isTrue();
@@ -85,7 +87,7 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntry() throws ClientException {
+  void createOffsetManagerEntry() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(context);
@@ -94,7 +96,7 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntryWithMap() throws ClientException {
+  void createOffsetManagerEntryWithMap() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(

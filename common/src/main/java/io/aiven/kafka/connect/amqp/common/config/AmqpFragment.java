@@ -24,6 +24,8 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.types.Password;
 import org.apache.qpid.protonj2.client.Client;
@@ -177,8 +179,8 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   }
 
   @Override
-  public Receiver getReceiver(Connection connection) throws ClientException {
-    return connection.openReceiver(dataAccess.getString(ADDRESS));
+  public Receiver getReceiver(Connection connection) throws ClientException, ExecutionException, InterruptedException {
+    return connection.openReceiver(dataAccess.getString(ADDRESS)).openFuture().get();
   }
 
   /** The Setter for the AMQP fragment. */

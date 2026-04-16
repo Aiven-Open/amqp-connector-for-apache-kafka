@@ -23,6 +23,8 @@ import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
+import java.util.concurrent.ExecutionException;
+
 /** The methods that must be implemented by both source and sink. */
 public interface AmqpCommonConfig {
 
@@ -49,5 +51,15 @@ public interface AmqpCommonConfig {
    * @return the new AMQP Receiver. Must be closed when finished.
    * @throws ClientException if the AMQP receiver can not be created.
    */
-  Receiver getReceiver(Connection connection) throws ClientException;
+  Receiver getReceiver(Connection connection) throws ClientException, ExecutionException, InterruptedException;
+
+  /**
+   * Creates a new AMQP Receiver by creating and using a Client and Connection.
+   *
+   * @return the new AMQP Receiver. Must be closed when finished.
+   * @throws ClientException if the AMQP receiver can not be created.
+   */
+  default Receiver getReceiver() throws ClientException, ExecutionException, InterruptedException {
+    return getReceiver(getConnection(getClient()));
+  }
 }

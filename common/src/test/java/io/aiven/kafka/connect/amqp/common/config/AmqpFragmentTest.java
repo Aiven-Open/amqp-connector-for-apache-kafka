@@ -25,6 +25,8 @@ import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.qpid.protonj2.client.Client;
@@ -68,7 +70,7 @@ public class AmqpFragmentTest {
   }
 
   @Test
-  void verifyConfigRetrival() throws ClientException {
+  void verifyConfigRetrival() throws ClientException, ExecutionException, InterruptedException {
     try (Client client = underTest.getClient()) {
       assertThat(client).isNotNull();
       Connection connection = underTest.getConnection(client);
@@ -80,7 +82,7 @@ public class AmqpFragmentTest {
   }
 
   @Test
-  void verifySendReceive() throws ClientException {
+  void verifySendReceive() throws ClientException, ExecutionException, InterruptedException {
     try (Client client = underTest.getClient();
         Connection connection = underTest.getConnection(client);
         Receiver receiver = underTest.getReceiver(connection)) {

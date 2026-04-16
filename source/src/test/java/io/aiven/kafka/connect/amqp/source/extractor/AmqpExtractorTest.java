@@ -39,9 +39,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.connect.data.SchemaAndValue;
+import org.apache.qpid.protonj2.client.AdvancedMessage;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.client.impl.ClientMessage;
+import org.apache.qpid.protonj2.client.impl.ClientMessageSupport;
+import org.apache.qpid.protonj2.types.messaging.Data;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +53,7 @@ public class AmqpExtractorTest {
   private final ObjectMapper objectMapper;
   private AmqpExtractor underTest;
   private AmqpSourceNativeInfo sourceNativeInfo;
+  private Map<String, String> encodings = Map.of("Hello", "SGVsbG8=", "World", "V29ybGQ=");
 
   private static final Map<String, String> CONFIG =
       AmqpFragment.setter(new HashMap<String, String>())
@@ -159,5 +163,48 @@ public class AmqpExtractorTest {
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
     assertThat(schemaAndValue.value().toString()).contains(expected);
+  }
+
+  @Test
+  void multiSectionDataBodyTest() throws ClientException {
+    AdvancedMessage<byte[]> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
+    message.addBodySection(ClientMessageSupport.createSectionFromValue("World".getBytes(StandardCharsets.UTF_8)));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains(encodings.get("Hello"));
+    assertThat(schemaAndValue.value().toString()).contains(encodings.get("World"));
+  }
+
+  @Test
+  void singleSectionDataBodyTest() throws ClientException {
+    AdvancedMessage<byte[]> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains(encodings.get("Hello"));
+    assertThat(schemaAndValue.value().toString()).doesNotContain(encodings.get("World"));
+  }
+
+  @Test
+  void multiSectionSequenceBodyTest() throws ClientException {
+    List<String> lst = List.of("Hello", "World");
+    List<String> lst2 = List.of("Hola", "Mundo");
+    AdvancedMessage<List<String>> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
+    message.addBodySection(ClientMessageSupport.createSectionFromValue(lst2));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains("body=[[Hello, World], [Hola, Mundo]]");
+  }
+
+  @Test
+  void singleSectionSequenceBodyTest() throws ClientException {
+    List<String> lst = List.of("Hello", "World");
+    AdvancedMessage<List<String>> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains("body=[Hello, World]");
   }
 }

@@ -41,6 +41,7 @@ import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.Sender;
+import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +94,16 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
       return new WriteResult<>(null, nativeKey);
     } catch (ClientException e) {
       LOGGER.error("writingWithKey error: {}", e.getMessage(), e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Tracker write(byte[] testDataBytes) {
+    try {
+      Message<byte[]> message = Message.create(testDataBytes);
+      return sender.send(message);
+    } catch (ClientException e) {
+      LOGGER.error("write error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
     }
   }

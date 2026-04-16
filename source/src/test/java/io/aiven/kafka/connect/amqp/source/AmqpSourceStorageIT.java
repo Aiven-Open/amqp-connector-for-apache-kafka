@@ -30,6 +30,8 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -74,7 +76,7 @@ public class AmqpSourceStorageIT {
   }
 
   @Test
-  void sourceStorageTestWithConfigGenClientTest() throws ClientException {
+  void sourceStorageTestWithConfigGenClientTest() throws ClientException, ExecutionException, InterruptedException {
     ULID ulid = new ULID();
     underTest.setAmqpAddress("AMQP_" + "storageTestWithClient");
     underTest.createStorage();
@@ -82,7 +84,7 @@ public class AmqpSourceStorageIT {
     Map<String, String> props = underTest.createConnectorConfig();
     AmqpSourceConfig config = new AmqpSourceConfig(props);
 
-    Receiver receiver = config.getReceiver(config.getConnection(config.getClient()));
+    Receiver receiver = config.getReceiver();
 
     underTest.writeWithKey(ulid.nextValue(), "Hello world".getBytes(StandardCharsets.UTF_8));
 
