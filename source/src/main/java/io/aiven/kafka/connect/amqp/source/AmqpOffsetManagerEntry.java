@@ -106,7 +106,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
 
   @Override
   public OffsetManager.OffsetManagerKey getManagerKey() {
-    return () -> Map.of(PRIMARY_KEY, primaryKey.toString(), RECORD_COUNT, recordCount);
+    return () -> Map.of(PRIMARY_KEY, primaryKey.toString());
   }
 
   @Override
