@@ -41,6 +41,7 @@ public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<ULID.Va
   static ULID.Value nextValue() {
     return ulid.nextValue();
   }
+
   /**
    * Construct native info for a Delivery from AMQP.
    *

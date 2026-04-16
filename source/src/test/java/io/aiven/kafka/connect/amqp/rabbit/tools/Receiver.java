@@ -1,6 +1,6 @@
-//package io.aiven.kafka.connect.amqp.rabbit.tools;
+// package io.aiven.kafka.connect.amqp.rabbit.tools;
 //
-///*
+/// *
 //        Copyright 2026 Aiven Oy and project contributors
 //
 //       Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,28 +17,28 @@
 //       under the License.
 //
 //       SPDX-License-Identifier: Apache-2.0
-//*/
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.awaitility.Awaitility.await;
-//import static org.mockito.ArgumentMatchers.anyMap;
-//import static org.mockito.Mockito.mock;
-//import static org.mockito.Mockito.when;
+// */
+// import static org.assertj.core.api.Assertions.assertThat;
+// import static org.awaitility.Awaitility.await;
+// import static org.mockito.ArgumentMatchers.anyMap;
+// import static org.mockito.Mockito.mock;
+// import static org.mockito.Mockito.when;
 //
-//import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-//import io.aiven.kafka.connect.amqp.source.AmqpSourceTask;
-//import java.time.Duration;
-//import java.util.ArrayList;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//import org.apache.kafka.connect.source.SourceRecord;
-//import org.apache.kafka.connect.source.SourceTaskContext;
-//import org.apache.kafka.connect.storage.OffsetStorageReader;
-//import org.junit.jupiter.api.Disabled;
-//import org.junit.jupiter.api.Test;
+// import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
+// import io.aiven.kafka.connect.amqp.source.AmqpSourceTask;
+// import java.time.Duration;
+// import java.util.ArrayList;
+// import java.util.HashMap;
+// import java.util.List;
+// import java.util.Map;
+// import org.apache.kafka.connect.source.SourceRecord;
+// import org.apache.kafka.connect.source.SourceTaskContext;
+// import org.apache.kafka.connect.storage.OffsetStorageReader;
+// import org.junit.jupiter.api.Disabled;
+// import org.junit.jupiter.api.Test;
 //
-//@Disabled("Not a real test")
-//public class Receiver {
+// @Disabled("Not a real test")
+// public class Receiver {
 //  Map<String, String> props;
 //  AmqpSourceTask task;
 //
@@ -74,4 +74,4 @@
 //            });
 //    System.out.println(result.get(0));
 //  }
-//}
+// }
