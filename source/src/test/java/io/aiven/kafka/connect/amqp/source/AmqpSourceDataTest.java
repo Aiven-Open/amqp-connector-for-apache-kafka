@@ -171,7 +171,7 @@ public class AmqpSourceDataTest {
       assertThat(lst.get(0).getMessage()).isEqualTo(message1);
       assertThat(lst.get(1).getMessage()).isEqualTo(message2);
     } catch (Exception e) {
-        fail(e);
+      fail(e);
     }
   }
 }
