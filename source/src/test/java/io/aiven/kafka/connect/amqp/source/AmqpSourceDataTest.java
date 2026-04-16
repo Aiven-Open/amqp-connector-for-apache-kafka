@@ -89,7 +89,8 @@ public class AmqpSourceDataTest {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(context);
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+    assertThat(offsetManagerEntry.getProperties())
+        .containsEntry("ulid", context.getNativeKey().toString());
   }
 
   @Test
@@ -98,18 +99,20 @@ public class AmqpSourceDataTest {
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", context.getNativeKey(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+    assertThat(offsetManagerEntry.getProperties())
+        .containsEntry("ulid", context.getNativeKey().toString());
 
     offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", context.getNativeKey().toString(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+    assertThat(offsetManagerEntry.getProperties())
+        .containsEntry("ulid", context.getNativeKey().toString());
 
     offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", "01KKVQF32P85BW8EYKBP1BTQR0", "recordCount", 5));
     assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0"));
+        .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
   }
 
   @Test
