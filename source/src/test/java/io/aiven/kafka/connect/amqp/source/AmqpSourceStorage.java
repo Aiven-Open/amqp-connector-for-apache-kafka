@@ -1,3 +1,21 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.source;
 
 import de.huxhorn.sulky.ulid.ULID;
@@ -24,9 +42,12 @@ import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.Sender;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
-public class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
+public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTaskTestIT.class);
   private static final ExtractorRegistry extractorRegistry =
       ExtractorRegistry.builder().add(AmqpExtractor.info()).build();
 
@@ -40,13 +61,18 @@ public class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
   public AmqpSourceStorage(RabbitMQContainer rabbit) throws ClientException {
     this.rabbit = rabbit;
     client = Client.create();
-    connection =
-        client.connect(
-            rabbit.getHost(),
-            rabbit.getAmqpPort(),
-            new ConnectionOptions()
-                .user(rabbit.getAdminUsername())
-                .password(rabbit.getAdminUsername()));
+    try {
+      connection =
+          client.connect(
+              rabbit.getHost(),
+              rabbit.getAmqpPort(),
+              new ConnectionOptions()
+                  .user(rabbit.getAdminUsername())
+                  .password(rabbit.getAdminUsername()));
+    } catch (ClientException e) {
+      LOGGER.error("constructor create connection error: {}", e.getMessage(), e);
+      throw e;
+    }
   }
 
   @Override
@@ -66,6 +92,7 @@ public class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
       sender.send(message);
       return new WriteResult<>(null, nativeKey);
     } catch (ClientException e) {
+      LOGGER.error("writingWithKey error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
     }
   }
@@ -106,6 +133,7 @@ public class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
       sender = connection.openSender(amqpAddress);
       receiver = connection.openReceiver(amqpAddress);
     } catch (ClientException e) {
+      LOGGER.error("createStorage error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
     }
   }
@@ -139,6 +167,7 @@ public class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
         }
         return Collections.emptyList();
       } catch (ClientException e) {
+        LOGGER.error("getNativeInfo error: {}", e.getMessage(), e);
         throw new RuntimeException(e);
       }
     }

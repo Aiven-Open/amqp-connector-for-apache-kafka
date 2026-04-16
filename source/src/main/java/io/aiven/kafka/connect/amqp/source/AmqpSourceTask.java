@@ -33,7 +33,6 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   /** The logger to write to */
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
 
-  private AmqpSourceConfig amqpSourceConfig;
   private AmqpSourceData amqpSourceData;
 
   /** Default constructor. */
@@ -42,7 +41,7 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   @Override
   protected AmqpSourceConfig configure(Map<String, String> props, OffsetManager offsetManager) {
     LOGGER.info("AMQP Source task started.");
-    this.amqpSourceConfig = new AmqpSourceConfig(props);
+    final AmqpSourceConfig amqpSourceConfig = new AmqpSourceConfig(props);
     try {
       this.amqpSourceData = new AmqpSourceData(amqpSourceConfig, offsetManager);
     } catch (ClientException e) {

@@ -132,6 +132,8 @@ public class AmqpSourceDataTest {
     Client client = mock(Client.class);
     Connection connection = mock(Connection.class);
     Receiver receiver = mock(Receiver.class);
+    when(receiver.connection()).thenReturn(connection);
+    when(connection.client()).thenReturn(client);
 
     AmqpSourceConfig config2 =
         new AmqpSourceConfig(CONFIG) {

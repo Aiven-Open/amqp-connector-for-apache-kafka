@@ -18,97 +18,88 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import de.huxhorn.sulky.ulid.ULID;
-import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
+import io.aiven.commons.kafka.connector.source.AbstractSourceIntegrationBase;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
-import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
-import java.io.IOException;
+import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
-import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 @Testcontainers
-public class AmqpTaskTestIT /*extends AbstractSourceIntegrationBase<ULID.Value, Delivery>*/ {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTaskTestIT.class);
+public class AmqpSourceDataIT extends AbstractSourceIntegrationBase<ULID.Value, Delivery> {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceDataIT.class);
   private final AmqpSourceStorage sourceStorage;
-  private AmqpSourceTask underTest;
+  private AmqpSourceData underTest;
 
   @Container RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
-  AmqpTaskTestIT() throws ClientException {
+  AmqpSourceDataIT() throws ClientException {
     rabbit.start();
     sourceStorage = new AmqpSourceStorage(rabbit);
   }
 
-  @BeforeEach
-  void beforeEach() {
-    underTest = new AmqpSourceTask();
-  }
-
   @AfterEach
   void afterEach() {
-    underTest.stop();
-    underTest = null;
+    try {
+      underTest.close();
+    } catch (Exception e) {
+      LOGGER.error("Error closing AmqpSourceData: {}", e.getMessage(), e);
+      if (e instanceof RuntimeException rE) {
+        throw rE;
+      }
+      throw new RuntimeException(e);
+    }
   }
 
-  //  @Override
-  //  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
-  //    return sourceStorage;
-  //  }
+  @Override
+  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
+    return sourceStorage;
+  }
 
   @Test
-  void testMessageRead() throws IOException {
-    String topic = "testMessageRead";
+  void getNativeItemIteratorTest() throws ClientException {
+
+    String topic = getTopic();
     sourceStorage.setAmqpAddress("AMQP_" + topic);
     sourceStorage.createStorage();
-    OffsetManager offsetManager = mock(OffsetManager.class);
-    Map<String, String> props = new HashMap<>();
-
-    Map<String, String> config = sourceStorage.createConnectorConfig();
-    CommonConfigFragment.setter(config).maxTasks(1);
-    SourceConfigFragment.setter(config).targetTopic(topic);
-
-    LOGGER.info("{}", config);
 
     String body = "hello world";
 
-    ULID ulid = new ULID();
-    SourceStorage.WriteResult<ULID.Value> writeResult =
-        sourceStorage.writeWithKey(ulid.nextValue(), body.getBytes(StandardCharsets.UTF_8));
+    OffsetManager offsetManager = mock(OffsetManager.class);
+    Map<String, String> props = sourceStorage.createConnectorConfig();
+    AmqpSourceConfig amqpConfig = new AmqpSourceConfig(props);
+    try {
+      underTest = new AmqpSourceData(amqpConfig, offsetManager);
+    } catch (ClientException e) {
+      LOGGER.error("Unable to create AmqpSourceData: {}", e.getMessage(), e);
+      throw e;
+    }
 
-    // Poll messages from the Kafka topic and verify the consumed data
-    underTest.start(config);
-    List<SourceRecord> result = new ArrayList<>();
+    Iterator<AmqpSourceNativeInfo> iter = underTest.getNativeItemIterator(null);
+    SourceStorage.WriteResult<ULID.Value> writeResult =
+        write(topic, body.getBytes(StandardCharsets.UTF_8), 1);
 
     Awaitility.await()
-        .atMost(Duration.ofMinutes(2))
-        .until(
-            () -> {
-              List<SourceRecord> newLst = underTest.poll();
-              if (newLst != null) {
-                result.addAll(newLst);
-              }
-              return newLst == null && result.size() == 1;
-            });
-
-    System.out.println(result);
+        .atMost(Duration.ofSeconds(5))
+        .untilAsserted(() -> assertThat(iter).hasNext());
+    AmqpSourceNativeInfo nativeInfo = iter.next();
+    assertThat(iter).isExhausted();
   }
 }
