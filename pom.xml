@@ -98,10 +98,25 @@
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
     <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <aiven.common.kafka.testkit.version>0.1.0-SNAPSHOT</aiven.common.kafka.testkit.version>
+    <testcontainers.version>2.0.4</testcontainers.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-rabbitmq</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-junit-jupiter</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>test</scope>
+      </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>common-util</artifactId>
@@ -111,6 +126,22 @@
         <groupId>io.aiven.commons</groupId>
         <artifactId>kafka-config</artifactId>
         <version>${aiven.kafka.config.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.common.kafka.testkit.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
@@ -118,11 +149,23 @@
         <version>${aiven.kafak.framework.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>framework-for-source-connectors</artifactId>
         <version>${aiven.kafak.framework.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
@@ -173,6 +216,7 @@
         <version>${slf4j.version}</version>
         <scope>test</scope>
       </dependency>
+
       <dependency>
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_${kafka.scala.version}</artifactId>
@@ -254,12 +298,32 @@
       <artifactId>kafka-clients</artifactId>
       <version>${kafka.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.github.luben</groupId>
+          <artifactId>zstd-jni</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xerial.snappy</groupId>
+          <artifactId>snappy-java</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-api</artifactId>
       <version>${kafka.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -273,10 +337,21 @@
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
       <version>${fasterxml.uuid.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -348,6 +423,24 @@
               <goal>makeAggregateBom</goal>
             </goals>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <dependencyConvergence/>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>

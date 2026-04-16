@@ -19,6 +19,7 @@
 package io.aiven.kafka.connect.amqp.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -160,14 +161,17 @@ public class AmqpSourceDataTest {
     // only 2 are returned.
     when(receiver.tryReceive()).thenReturn(delivery1, delivery2, null);
 
-    AmqpSourceData underTest = new AmqpSourceData(config2, offsetManager);
-    Iterator<AmqpSourceNativeInfo> nativeItemIterator = underTest.getNativeItemIterator(null);
-    assertThat(nativeItemIterator).isNotNull();
-    assertThat(nativeItemIterator).hasNext();
-    List<AmqpSourceNativeInfo> lst = new ArrayList<>();
-    nativeItemIterator.forEachRemaining(lst::add);
-    assertThat(lst).hasSize(2);
-    assertThat(lst.get(0).getMessage()).isEqualTo(message1);
-    assertThat(lst.get(1).getMessage()).isEqualTo(message2);
+    try (AmqpSourceData underTest = new AmqpSourceData(config2, offsetManager)) {
+      Iterator<AmqpSourceNativeInfo> nativeItemIterator = underTest.getNativeItemIterator(null);
+      assertThat(nativeItemIterator).isNotNull();
+      assertThat(nativeItemIterator).hasNext();
+      List<AmqpSourceNativeInfo> lst = new ArrayList<>();
+      nativeItemIterator.forEachRemaining(lst::add);
+      assertThat(lst).hasSize(2);
+      assertThat(lst.get(0).getMessage()).isEqualTo(message1);
+      assertThat(lst.get(1).getMessage()).isEqualTo(message2);
+    } catch (Exception e) {
+        fail(e);
+    }
   }
 }
