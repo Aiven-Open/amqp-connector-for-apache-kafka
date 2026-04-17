@@ -27,58 +27,34 @@ The AMQP message provider contract does not require that a message have a unique
 Each message is parsed into a JSON document that contains all the components of the message.  Each AMQP message creates one Kafka message.  The extraction of the kafka message body from the AMQP message occurs in the AmqpExtractor class.
 
 Data Mapping
---------------------
+-------------
 
-The JSON object generated from the message has the following properties:
-| Name | Optional | Contents | Example |
-| ---- | -------- | -------- | ------- |
-| messageId |Y |
+The JSON object generated from the message has a number of properties.  If the property listed below as not set in the message it will not be present. The potential properties are:
 
-
-The methods on the Message to set Mesasge properties like Message ID, UserID, and Subject are
-/** the currently set Message Id or null if none set. */
-MESSAGE_ID(Schema.OPTIONAL_BYTES_SCHEMA),
-/** the currently set User ID or null if none set. */
-USER_ID(Schema.OPTIONAL_BYTES_SCHEMA),
-/** the currently set 'To' address which indicates the intended destination of the message. */
-TO(Schema.STRING_SCHEMA),
-/** the currently set subject metadata for this message or null if none set. */
-SUBJECT(Schema.OPTIONAL_STRING_SCHEMA),
-/**
-* the configured address of the node where replies to this message should be sent, or null if not
-* set.
-  */
-  REPLY_TO(Schema.OPTIONAL_STRING_SCHEMA),
-  /** the currently assigned correlation ID or null if none set. */
-  CORRELATION_ID(SchemaBuilder.OPTIONAL_BYTES_SCHEMA),
-  /** the assigned content type value for the message body section or null if not set. */
-  CONTENT_TYPE(Schema.OPTIONAL_STRING_SCHEMA),
-  /** the assigned content encoding value for the message body section or null if not set */
-  CONTENT_ENCODING(Schema.OPTIONAL_STRING_SCHEMA),
-  /** the configured absolute time of expiration for this message */
-  ABSOLUTE_EXPIRY(Schema.INT64_SCHEMA),
-  /** the absolute time of creation for this message */
-  CREATION_TIME(Schema.INT64_SCHEMA),
-  /** the assigned group ID for this message or null if not set. */
-  GROUP_ID(Schema.OPTIONAL_STRING_SCHEMA),
-  /** the assigned group sequence for this message. */
-  GROUP_SEQUENCE(Schema.INT32_SCHEMA),
-  /**
-* the client-specific id used so that client can send replies to this message to a specific
-* group.
-  */
-  REPLY_TO_GROUP_ID(Schema.OPTIONAL_STRING_SCHEMA),
-  /**
-* For an message being sent this method returns the current state of the durable flag on the
-* message. For a received message this method returns the durable flag value at the time of
-* sending (or false if not set) unless the value is updated after being received by the receiver
-  */
-  DURABLE(Schema.OPTIONAL_STRING_SCHEMA),
-  /** if this message has been acquired by another link previously */
-  FIRST_ACQUIRER(Schema.BOOLEAN_SCHEMA),
-  /** the number of failed delivery attempts that this message has been part of */
-  DELIVERY_COUNT(Schema.INT64_SCHEMA);
+* `absoluteExpiry` : The absolute time for the expiration of the message.
+* `annotations` : Conceptually a map of strings to objects.  The JSON serialization of this is a standard JSON map serialization.
+* `body` : The body of the message may be a List of objects, a byte array, or a single object.  Byte arrays are always encoded using Base64 encoding.
+* `contentEncoding` : The content-encoding property is used as a modifier to the content-type. When present, its value indicates what additional content encodings have been applied to the application-data, and thus what decoding mechanisms need to be applied in order to obtain the media-type referenced by the content-type header field.
+* `contentType` : The RFC-2046 MIME type for the message's application-data section (body). As per RFC-2046 this can contain a charset parameter defining the character encoding used: e.g., 'text/plain; charset="utf-8"'.
+* `correlationId` : An id that correlates messages together.
+* `creationTime` : the absolute time for the creation of the message.
+* `deliveryCount` : the number of failed delivery attempts this message has been part of.
+* `durable` : the flag that indicates if the message is durable.
+* `firstAcquirer` : if this message has been acquired by another link previously.
+* `footers` : conceptually a map of strings to objects.  The JSON serialization of this is a standard JSON map serialization.
+* `groupId` : the group id for the message.
+* `groupSequence` : the group sequence number for the message.
+* `messageId` : The message Id if any was provided.
+* `properties` : conceptually a map of strings to objects.  The JSON serialization of this is a standard JSON map serialization.
+* `replyTo` : the suggested reply destination.
+* `replyToGroup` : the group to which replies should be sent.
+* `subject` : the subject of the message
+* `to` : The intended destination of the message if set.
+* `userId` : The Id of the user that created the message if it was provided.
 
 
+Data Serialization
+------------------
 
+Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.
 
