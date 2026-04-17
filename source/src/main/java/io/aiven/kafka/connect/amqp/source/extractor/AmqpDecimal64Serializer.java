@@ -19,19 +19,21 @@ package io.aiven.kafka.connect.amqp.source.extractor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.apache.qpid.protonj2.types.Decimal64;
+
 import java.io.IOException;
-import org.apache.qpid.protonj2.types.Symbol;
 
 /** A AmqpBinarySerializer wrapper that presents an immutable view of a payload. */
-public final class AmqpSymbolSerializer extends StdSerializer<Symbol> {
+public final class AmqpDecimal64Serializer extends StdSerializer<Decimal64> {
   /** Default constructor. */
-  public AmqpSymbolSerializer() {
-    super(Symbol.class);
+  public AmqpDecimal64Serializer() {
+    super(Decimal64.class);
   }
 
+
   @Override
-  public void serialize(Symbol symbol, JsonGenerator gen, SerializerProvider provider)
+  public void serialize(Decimal64 decimal, JsonGenerator gen, SerializerProvider provider)
       throws IOException {
-    gen.writeObject(symbol.toString());
+    gen.writeNumber(decimal.doubleValue());
   }
 }

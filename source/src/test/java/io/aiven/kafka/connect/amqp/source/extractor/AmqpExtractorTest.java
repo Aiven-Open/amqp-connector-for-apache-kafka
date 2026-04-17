@@ -34,6 +34,7 @@ import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.AmqpSourceNativeInfo;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.client.impl.ClientMessage;
 import org.apache.qpid.protonj2.client.impl.ClientMessageSupport;
 import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.Symbol;
 import org.apache.qpid.protonj2.types.UnsignedLong;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +57,8 @@ public class AmqpExtractorTest {
   private final ObjectMapper objectMapper;
   private AmqpExtractor underTest;
   private AmqpSourceNativeInfo sourceNativeInfo;
-  private Map<String, String> encodings = Map.of("Hello", "SGVsbG8=", "World", "V29ybGQ=");
+  private Map<String, String> encodings = Map.of("Hello", "SGVsbG8=", "World", "V29ybGQ=",
+          "Man bites dog", "TWFuIGJpdGVzIGRvZw==");
 
   private static final Map<String, String> CONFIG =
       AmqpFragment.setter(new HashMap<String, String>())
@@ -221,22 +224,153 @@ public class AmqpExtractorTest {
   void messageIdTest() throws ClientException {
     AdvancedMessage<List<String>> message = ClientMessage.create();
 
-    message.messageId("String");
+    message.messageId("Man bites dog");
     List<SchemaAndValue> actual = generateRecords(message);
-    System.out.println(actual.get(0).value().toString());
+    assertThat(actual.get(0).value().toString().contains("messageId=Man bites dog,"));
 
-    message.messageId(UUID.randomUUID());
+    message.messageId(UUID.nameUUIDFromBytes("Man bites dog".getBytes(StandardCharsets.UTF_8)));
     actual = generateRecords(message);
-    System.out.println(actual.get(0).value().toString());
+    assertThat(actual.get(0).value().toString().contains("messageId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
 
     message.messageId(new UnsignedLong(5L));
     actual = generateRecords(message);
-    System.out.println(actual.get(0).value().toString());
+    assertThat(actual.get(0).value().toString().contains("messageId=5,"));
 
     message.messageId(new Binary("Hello".getBytes(StandardCharsets.UTF_8)));
     actual = generateRecords(message);
-    System.out.println(actual.get(0).value().toString());
+
     assertThat(actual.get(0).value().toString()).contains("messageId=" + encodings.get("Hello"));
+  }
+
+  @Test
+  void subjectTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.subject("The subject");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("subject=The subject,"));
+  }
+
+  @Test
+  void replyToTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.replyTo("reply to me");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("replyTo=reply to me,"));
+  }
+
+
+  @Test
+  void correlationId() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.correlationId("Man bites dog");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("correlationId=Man bites dog,"));
+
+    message.correlationId(UUID.nameUUIDFromBytes("Man bites dog".getBytes(StandardCharsets.UTF_8)));
+    actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("corrolationId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
+
+    message.correlationId(new UnsignedLong(5L));
+    actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("correlationId=5,"));
+
+    message.correlationId(new Binary("Hello".getBytes(StandardCharsets.UTF_8)));
+    actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString()).contains("correlationId=" + encodings.get("Hello"));
+  }
+
+  @Test
+  void contentTypeTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.contentType("myType");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("contentType=myType,"));
+  }
+
+  @Test
+  void contentEncodingTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.contentEncoding("my encoding");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("contentEncoding=my encoding,"));
+  }
+
+
+  @Test
+  void absoluteExpiryTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.absoluteExpiryTime(10L);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("absoluteExpiry=10,"));
+  }
+
+  @Test
+  void creationTimeTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.creationTime(10L);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("creationTime=10,"));
+  }
+
+  @Test
+  void groupIdTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.groupId("MyGroupId");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("groupId=MyGroupId,"));
+  }
+
+  @Test
+  void groupSequenceTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.groupSequence(5);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("groupSequence=5,"));
+  }
+
+  @Test
+  void replyToGroupIdTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.replyToGroupId("the group to reply to");
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("replyToGroupId=the group to reply to,"));
+  }
+
+  @Test
+  void durableTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.durable(true);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("durable=true"));
+  }
+
+  @Test
+  void firstAcquirerTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.firstAcquirer(true);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("firstAcquirer=true"));
+  }
+
+  @Test
+  void deliveryCountTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.deliveryCount(500);
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual.get(0).value().toString().contains("deliveryCount=500"));
   }
 
   @Test
@@ -248,6 +382,36 @@ public class AmqpExtractorTest {
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
-    assertThat(schemaAndValue.value().toString()).contains("body=[Hello, World]");
+    assertThat(schemaAndValue.value().toString()).contains("annotations={Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, World=[Munto, Domhan]}");
+  }
+
+  @Test
+  void propertiesTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+    message.property("Hello", "Hola");
+    message.property("World", List.of("Munto", "Domhan"));
+    message.property("Bytes", "Man bites dog".getBytes(StandardCharsets.UTF_8));
+    message.property("Integer", 5);
+    message.property("BigDecimal", BigDecimal.TEN);
+    message.property("Symbol", Symbol.valueOf("My new symbol"));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains("properties={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
+  }
+
+  @Test
+  void footerTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+    message.footer("Hello", "Hola");
+    message.footer("World", List.of("Munto", "Domhan"));
+    message.footer("Bytes", "Man bites dog".getBytes(StandardCharsets.UTF_8));
+    message.footer("Integer", 5);
+    message.footer("BigDecimal", BigDecimal.TEN);
+    message.footer("Symbol", Symbol.valueOf("My new symbol"));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains("footers={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
   }
 }

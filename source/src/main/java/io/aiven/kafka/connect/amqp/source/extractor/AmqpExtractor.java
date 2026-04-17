@@ -20,6 +20,7 @@ package io.aiven.kafka.connect.amqp.source.extractor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
@@ -39,6 +40,9 @@ import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.Decimal128;
+import org.apache.qpid.protonj2.types.Decimal32;
+import org.apache.qpid.protonj2.types.Decimal64;
 import org.apache.qpid.protonj2.types.Symbol;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
@@ -46,6 +50,8 @@ import org.slf4j.LoggerFactory;
 
 /** Extracts data from the AMQP Message. Each AMQP message generates a single Kafka message */
 public final class AmqpExtractor extends Extractor {
+
+
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpExtractor.class);
 
   private final ObjectMapper objectMapper;
@@ -58,16 +64,23 @@ public final class AmqpExtractor extends Extractor {
    */
   public AmqpExtractor(final SourceCommonConfig config) {
     super(config, info());
-    objectMapper = new ObjectMapper();
+    objectMapper = registerSerializers(new ObjectMapper());
+    jsonConverter = new JsonConverter();
+    jsonConverter.configure(Map.of("schemas.enable", "false"), false);
+  }
+
+  public static ObjectMapper registerSerializers(final ObjectMapper objectMapper) {
     SimpleModule module = new SimpleModule();
     module.addSerializer(Message.class, new MessageSerializer());
     module.addSerializer(Section.class, new AmqpSectionSerializer());
     module.addSerializer(Binary.class, new AmqpBinarySerializer());
     module.addSerializer(Symbol.class, new AmqpSymbolSerializer());
+    module.addSerializer(Decimal64.class, new AmqpDecimal64Serializer());
+    module.addSerializer(new AmqpDecimal32Serializer());
+    module.addSerializer(Decimal128.class, new AmqpDecimal128Serializer());
+    module.addSerializer(Symbol.class, new AmqpSymbolSerializer());
     objectMapper.registerModule(module);
-
-    jsonConverter = new JsonConverter();
-    jsonConverter.configure(Map.of("schemas.enable", "false"), false);
+    return objectMapper;
   }
 
   /**
