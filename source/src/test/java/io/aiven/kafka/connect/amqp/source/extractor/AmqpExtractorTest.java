@@ -38,13 +38,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.qpid.protonj2.client.AdvancedMessage;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.client.impl.ClientMessage;
 import org.apache.qpid.protonj2.client.impl.ClientMessageSupport;
-import org.apache.qpid.protonj2.types.messaging.Data;
+import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.UnsignedLong;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -167,8 +169,11 @@ public class AmqpExtractorTest {
 
   @Test
   void multiSectionDataBodyTest() throws ClientException {
-    AdvancedMessage<byte[]> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
-    message.addBodySection(ClientMessageSupport.createSectionFromValue("World".getBytes(StandardCharsets.UTF_8)));
+    AdvancedMessage<byte[]> message =
+        ClientMessage.create(
+            ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
+    message.addBodySection(
+        ClientMessageSupport.createSectionFromValue("World".getBytes(StandardCharsets.UTF_8)));
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
@@ -178,7 +183,9 @@ public class AmqpExtractorTest {
 
   @Test
   void singleSectionDataBodyTest() throws ClientException {
-    AdvancedMessage<byte[]> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
+    AdvancedMessage<byte[]> message =
+        ClientMessage.create(
+            ClientMessageSupport.createSectionFromValue("Hello".getBytes(StandardCharsets.UTF_8)));
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
@@ -190,7 +197,8 @@ public class AmqpExtractorTest {
   void multiSectionSequenceBodyTest() throws ClientException {
     List<String> lst = List.of("Hello", "World");
     List<String> lst2 = List.of("Hola", "Mundo");
-    AdvancedMessage<List<String>> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
+    AdvancedMessage<List<String>> message =
+        ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
     message.addBodySection(ClientMessageSupport.createSectionFromValue(lst2));
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
@@ -201,7 +209,42 @@ public class AmqpExtractorTest {
   @Test
   void singleSectionSequenceBodyTest() throws ClientException {
     List<String> lst = List.of("Hello", "World");
-    AdvancedMessage<List<String>> message = ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
+    AdvancedMessage<List<String>> message =
+        ClientMessage.create(ClientMessageSupport.createSectionFromValue(lst));
+    List<SchemaAndValue> actual = generateRecords(message);
+    assertThat(actual).hasSize(1);
+    SchemaAndValue schemaAndValue = actual.get(0);
+    assertThat(schemaAndValue.value().toString()).contains("body=[Hello, World]");
+  }
+
+  @Test
+  void messageIdTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+
+    message.messageId("String");
+    List<SchemaAndValue> actual = generateRecords(message);
+    System.out.println(actual.get(0).value().toString());
+
+    message.messageId(UUID.randomUUID());
+    actual = generateRecords(message);
+    System.out.println(actual.get(0).value().toString());
+
+    message.messageId(new UnsignedLong(5L));
+    actual = generateRecords(message);
+    System.out.println(actual.get(0).value().toString());
+
+    message.messageId(new Binary("Hello".getBytes(StandardCharsets.UTF_8)));
+    actual = generateRecords(message);
+    System.out.println(actual.get(0).value().toString());
+    assertThat(actual.get(0).value().toString()).contains("messageId=" + encodings.get("Hello"));
+  }
+
+  @Test
+  void annotationTest() throws ClientException {
+    AdvancedMessage<List<String>> message = ClientMessage.create();
+    message.annotation("Hello", "Hola");
+    message.annotation("World", List.of("Munto", "Domhan"));
+    message.annotation("Bytes", "Man bites dog".getBytes(StandardCharsets.UTF_8));
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);

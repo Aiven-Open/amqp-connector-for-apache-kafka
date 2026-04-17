@@ -22,10 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-import de.huxhorn.sulky.ulid.ULID;
-import io.aiven.commons.kafka.connector.source.AbstractSourceIntegrationBase;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
-import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.nio.charset.StandardCharsets;
@@ -33,9 +30,6 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import org.apache.qpid.protonj2.client.Delivery;
-import org.apache.qpid.protonj2.client.DeliveryState;
 import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.junit.jupiter.api.AfterEach;
@@ -45,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 @Testcontainers
 public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value, Delivery>*/ {
@@ -73,10 +66,10 @@ public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value
     }
   }
 
-//  @Override
-//  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
-//    return sourceStorage;
-//  }
+  //  @Override
+  //  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
+  //    return sourceStorage;
+  //  }
 
   @Test
   void getNativeItemIteratorTest() {
@@ -103,10 +96,11 @@ public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value
     final Iterator[] iter = new Iterator[1];
     await()
         .atMost(Duration.ofSeconds(5))
-        .until(() -> {
-          iter[0] = underTest.getNativeItemIterator(null);
-          return iter[0].hasNext();
-        });
+        .until(
+            () -> {
+              iter[0] = underTest.getNativeItemIterator(null);
+              return iter[0].hasNext();
+            });
     AmqpSourceNativeInfo nativeInfo = (AmqpSourceNativeInfo) iter[0].next();
     assertThat(iter[0]).isExhausted();
   }

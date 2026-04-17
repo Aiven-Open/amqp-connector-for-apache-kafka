@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Delivery;
@@ -96,7 +95,8 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntryWithMap() throws ClientException, ExecutionException, InterruptedException {
+  void createOffsetManagerEntryWithMap()
+      throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(

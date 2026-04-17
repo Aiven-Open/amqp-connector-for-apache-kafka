@@ -38,6 +38,8 @@ import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.Symbol;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,8 @@ public final class AmqpExtractor extends Extractor {
     SimpleModule module = new SimpleModule();
     module.addSerializer(Message.class, new MessageSerializer());
     module.addSerializer(Section.class, new AmqpSectionSerializer());
+    module.addSerializer(Binary.class, new AmqpBinarySerializer());
+    module.addSerializer(Symbol.class, new AmqpSymbolSerializer());
     objectMapper.registerModule(module);
 
     jsonConverter = new JsonConverter();

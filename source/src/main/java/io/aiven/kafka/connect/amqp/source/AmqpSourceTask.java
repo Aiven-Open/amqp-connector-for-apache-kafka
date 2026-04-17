@@ -25,7 +25,6 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
