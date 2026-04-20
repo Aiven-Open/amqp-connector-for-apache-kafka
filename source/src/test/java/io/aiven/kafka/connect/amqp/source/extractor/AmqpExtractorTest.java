@@ -57,8 +57,8 @@ public class AmqpExtractorTest {
   private final ObjectMapper objectMapper;
   private AmqpExtractor underTest;
   private AmqpSourceNativeInfo sourceNativeInfo;
-  private Map<String, String> encodings = Map.of("Hello", "SGVsbG8=", "World", "V29ybGQ=",
-          "Man bites dog", "TWFuIGJpdGVzIGRvZw==");
+  private Map<String, String> encodings =
+      Map.of("Hello", "SGVsbG8=", "World", "V29ybGQ=", "Man bites dog", "TWFuIGJpdGVzIGRvZw==");
 
   private static final Map<String, String> CONFIG =
       AmqpFragment.setter(new HashMap<String, String>())
@@ -230,7 +230,12 @@ public class AmqpExtractorTest {
 
     message.messageId(UUID.nameUUIDFromBytes("Man bites dog".getBytes(StandardCharsets.UTF_8)));
     actual = generateRecords(message);
-    assertThat(actual.get(0).value().toString().contains("messageId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
+    assertThat(
+        actual
+            .get(0)
+            .value()
+            .toString()
+            .contains("messageId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
 
     message.messageId(new UnsignedLong(5L));
     actual = generateRecords(message);
@@ -260,7 +265,6 @@ public class AmqpExtractorTest {
     assertThat(actual.get(0).value().toString().contains("replyTo=reply to me,"));
   }
 
-
   @Test
   void correlationId() throws ClientException {
     AdvancedMessage<List<String>> message = ClientMessage.create();
@@ -271,7 +275,12 @@ public class AmqpExtractorTest {
 
     message.correlationId(UUID.nameUUIDFromBytes("Man bites dog".getBytes(StandardCharsets.UTF_8)));
     actual = generateRecords(message);
-    assertThat(actual.get(0).value().toString().contains("corrolationId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
+    assertThat(
+        actual
+            .get(0)
+            .value()
+            .toString()
+            .contains("corrolationId=612dfaeb-9570-3aee-bf60-ff1b3437e0eb,"));
 
     message.correlationId(new UnsignedLong(5L));
     actual = generateRecords(message);
@@ -279,7 +288,8 @@ public class AmqpExtractorTest {
 
     message.correlationId(new Binary("Hello".getBytes(StandardCharsets.UTF_8)));
     actual = generateRecords(message);
-    assertThat(actual.get(0).value().toString()).contains("correlationId=" + encodings.get("Hello"));
+    assertThat(actual.get(0).value().toString())
+        .contains("correlationId=" + encodings.get("Hello"));
   }
 
   @Test
@@ -299,7 +309,6 @@ public class AmqpExtractorTest {
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual.get(0).value().toString().contains("contentEncoding=my encoding,"));
   }
-
 
   @Test
   void absoluteExpiryTest() throws ClientException {
@@ -382,7 +391,8 @@ public class AmqpExtractorTest {
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
-    assertThat(schemaAndValue.value().toString()).contains("annotations={Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, World=[Munto, Domhan]}");
+    assertThat(schemaAndValue.value().toString())
+        .contains("annotations={Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, World=[Munto, Domhan]}");
   }
 
   @Test
@@ -397,7 +407,9 @@ public class AmqpExtractorTest {
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
-    assertThat(schemaAndValue.value().toString()).contains("properties={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
+    assertThat(schemaAndValue.value().toString())
+        .contains(
+            "properties={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
   }
 
   @Test
@@ -412,6 +424,8 @@ public class AmqpExtractorTest {
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     SchemaAndValue schemaAndValue = actual.get(0);
-    assertThat(schemaAndValue.value().toString()).contains("footers={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
+    assertThat(schemaAndValue.value().toString())
+        .contains(
+            "footers={Integer=5, Bytes=TWFuIGJpdGVzIGRvZw==, Hello=Hola, Symbol=My new symbol, World=[Munto, Domhan], BigDecimal=10}}");
   }
 }

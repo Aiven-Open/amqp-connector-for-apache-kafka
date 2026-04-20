@@ -19,9 +19,8 @@ package io.aiven.kafka.connect.amqp.source.extractor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.apache.qpid.protonj2.types.Decimal32;
-
 import java.io.IOException;
+import org.apache.qpid.protonj2.types.Decimal32;
 
 /** A AmqpBinarySerializer wrapper that presents an immutable view of a payload. */
 public final class AmqpDecimal32Serializer extends StdSerializer<Decimal32> {
@@ -30,14 +29,14 @@ public final class AmqpDecimal32Serializer extends StdSerializer<Decimal32> {
     super(Decimal32.class);
   }
 
-//  /**
-//   * Constructor for a specific section type.
-//   *
-//   * @param t the section type class.
-//   */
-//  public AmqpDecimal32Serializer(Class<Decimal32> t) {
-//    super(t);
-//  }
+  //  /**
+  //   * Constructor for a specific section type.
+  //   *
+  //   * @param t the section type class.
+  //   */
+  //  public AmqpDecimal32Serializer(Class<Decimal32> t) {
+  //    super(t);
+  //  }
 
   @Override
   public void serialize(Decimal32 decimal, JsonGenerator gen, SerializerProvider provider)

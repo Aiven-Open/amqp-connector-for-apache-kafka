@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.math.BigDecimal;
 import org.apache.qpid.protonj2.types.Decimal128;
 import org.apache.qpid.protonj2.types.Decimal32;
@@ -49,8 +48,6 @@ public class AmqpNumberSerializerTest {
     decimal = new Decimal32(BIGGER_DOUBLE);
     actual = objectMapper.writeValueAsString(decimal);
     assertThat(actual).isEqualTo("\"Infinity\"");
-
-
   }
 
   @Test
@@ -126,8 +123,8 @@ public class AmqpNumberSerializerTest {
     actual = objectMapper.writeValueAsString(unsinged);
     assertThat(actual).isEqualTo("2147483647");
 
-     unsinged = new UnsignedInteger(-1);
-     actual = objectMapper.writeValueAsString(unsinged);
+    unsinged = new UnsignedInteger(-1);
+    actual = objectMapper.writeValueAsString(unsinged);
     assertThat(actual).isEqualTo("4294967295");
   }
 
@@ -141,14 +138,14 @@ public class AmqpNumberSerializerTest {
     actual = objectMapper.writeValueAsString(unsinged);
     assertThat(actual).isEqualTo("9223372036854775807");
 
-     unsinged = new UnsignedLong(-1L);
-     actual = objectMapper.writeValueAsString(unsinged);
+    unsinged = new UnsignedLong(-1L);
+    actual = objectMapper.writeValueAsString(unsinged);
     assertThat(actual).isEqualTo("18446744073709551615");
   }
 
   @Test
   void unsignedShortTest() throws JsonProcessingException {
-    UnsignedShort unsinged = new UnsignedShort((short)10);
+    UnsignedShort unsinged = new UnsignedShort((short) 10);
     String actual = objectMapper.writeValueAsString(unsinged);
     assertThat(actual).isEqualTo("10");
 

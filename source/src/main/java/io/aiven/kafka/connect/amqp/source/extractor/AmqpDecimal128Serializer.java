@@ -19,11 +19,8 @@ package io.aiven.kafka.connect.amqp.source.extractor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.apache.qpid.protonj2.types.Decimal128;
-import org.apache.qpid.protonj2.types.Decimal64;
-
 import java.io.IOException;
-import java.math.BigDecimal;
+import org.apache.qpid.protonj2.types.Decimal128;
 
 /** A AmqpBinarySerializer wrapper that presents an immutable view of a payload. */
 public final class AmqpDecimal128Serializer extends StdSerializer<Decimal128> {

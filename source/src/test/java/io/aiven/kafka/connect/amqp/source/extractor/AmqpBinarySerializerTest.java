@@ -31,6 +31,6 @@ public class AmqpBinarySerializerTest {
   void bytesTest() throws JsonProcessingException {
     Binary binary = new Binary("Hello".getBytes(StandardCharsets.UTF_8));
     String actual = objectMapper.writeValueAsString(binary);
-    assertThat(actual).isEqualTo("SGVsbG8=");
+    assertThat(actual).isEqualTo("\"SGVsbG8=\"");
   }
 }
