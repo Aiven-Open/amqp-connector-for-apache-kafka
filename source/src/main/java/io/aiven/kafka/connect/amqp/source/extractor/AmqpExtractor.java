@@ -30,12 +30,11 @@ import io.aiven.kafka.connect.amqp.source.AmqpSourceNativeInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.types.Binary;
@@ -52,7 +51,6 @@ public final class AmqpExtractor extends Extractor {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpExtractor.class);
 
   private final ObjectMapper objectMapper;
-  private final JsonConverter jsonConverter;
 
   /**
    * Creates AmqpExtractor
@@ -62,8 +60,6 @@ public final class AmqpExtractor extends Extractor {
   public AmqpExtractor(final SourceCommonConfig config) {
     super(config, info());
     objectMapper = registerSerializers(new ObjectMapper());
-    jsonConverter = new JsonConverter();
-    jsonConverter.configure(Map.of("schemas.enable", "false"), false);
   }
 
   /**
@@ -106,7 +102,8 @@ public final class AmqpExtractor extends Extractor {
 
   @Override
   public SchemaAndValue generateKeyData(EvolvingSourceRecord evolvingSourceRecord) {
-    return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
+    return SchemaAndValueFactory.createSchemaAndValue(
+        evolvingSourceRecord.getNativeKey().toString());
   }
 
   private Optional<SchemaAndValue> generateValue(AmqpSourceNativeInfo nativeInfo) {
@@ -120,16 +117,12 @@ public final class AmqpExtractor extends Extractor {
         }
         message.body(baos.toByteArray());
       }
+
       return Optional.of(
-          jsonConverter.toConnectData(null, objectMapper.writeValueAsBytes(message)));
+          new SchemaAndValue(Schema.STRING_SCHEMA, objectMapper.writeValueAsString(message)));
     } catch (ClientException | IOException e) {
       LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
       return Optional.empty();
     }
-  }
-
-  @Override
-  public void close() {
-    jsonConverter.close();
   }
 }
