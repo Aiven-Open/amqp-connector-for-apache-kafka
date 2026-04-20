@@ -77,7 +77,7 @@ public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Va
 
     LOGGER.info("{}", config);
 
-     kafkaManager.configureConnector(getTopic(), config);
+    kafkaManager.configureConnector(getTopic(), config);
 
     String body = "hello world";
 

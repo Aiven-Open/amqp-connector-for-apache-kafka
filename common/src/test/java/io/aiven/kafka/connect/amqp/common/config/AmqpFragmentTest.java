@@ -34,7 +34,6 @@ import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.Sender;
-import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;

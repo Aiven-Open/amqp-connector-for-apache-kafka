@@ -19,7 +19,6 @@
 package io.aiven.kafka.connect.amqp.source.ctest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;

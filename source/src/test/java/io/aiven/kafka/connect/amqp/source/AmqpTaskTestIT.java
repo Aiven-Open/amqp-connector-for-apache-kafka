@@ -19,7 +19,6 @@
 package io.aiven.kafka.connect.amqp.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
