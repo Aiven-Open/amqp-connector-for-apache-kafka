@@ -29,7 +29,7 @@ SPDX-License-Identifier: Apache-2.0
             <outputDirectory>amqp-source-connector-${project.version}</outputDirectory>
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>false</unpack>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependencySet>
     </dependencySets>
 </assembly>
