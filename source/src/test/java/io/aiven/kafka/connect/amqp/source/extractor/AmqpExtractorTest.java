@@ -558,7 +558,7 @@ public class AmqpExtractorTest {
     EvolvingSourceRecord sourceRecord = mock(EvolvingSourceRecord.class);
     when(sourceRecord.getNativeKey()).thenReturn(key);
     SchemaAndValue keyValue = underTest.generateKeyData(sourceRecord);
-    assertThat(keyValue.value().toString()).isEqualTo("{\"root\":\"" + key + "\"}");
+    assertThat(keyValue.value().toString()).isEqualTo(key.toString());
     assertThat(keyValue.schema()).isEqualTo(Schema.STRING_SCHEMA);
   }
 }

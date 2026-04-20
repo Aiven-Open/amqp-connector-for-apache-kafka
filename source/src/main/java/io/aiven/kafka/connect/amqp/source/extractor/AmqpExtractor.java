@@ -24,7 +24,6 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.extractor.ExtractorInfo;
-import io.aiven.commons.kafka.connector.source.extractor.SchemaAndValueFactory;
 import io.aiven.commons.util.io.compression.CompressionType;
 import io.aiven.kafka.connect.amqp.source.AmqpSourceNativeInfo;
 import java.io.ByteArrayOutputStream;
@@ -102,8 +101,7 @@ public final class AmqpExtractor extends Extractor {
 
   @Override
   public SchemaAndValue generateKeyData(EvolvingSourceRecord evolvingSourceRecord) {
-    return SchemaAndValueFactory.createSchemaAndValue(
-        evolvingSourceRecord.getNativeKey().toString());
+    return new SchemaAndValue(Schema.STRING_SCHEMA, evolvingSourceRecord.getNativeKey().toString());
   }
 
   private Optional<SchemaAndValue> generateValue(AmqpSourceNativeInfo nativeInfo) {
