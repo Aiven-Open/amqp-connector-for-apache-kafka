@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2026 Aiven Oy
  *
@@ -145,6 +146,7 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
    *
    * @return the default offset flush interval.
    */
+  @Override
   protected Duration getOffsetFlushInterval() {
     return Duration.ofSeconds(5);
   }

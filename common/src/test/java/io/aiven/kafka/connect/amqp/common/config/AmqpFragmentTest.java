@@ -92,7 +92,7 @@ public class AmqpFragmentTest {
 
       assertThat(sender).isNotNull();
       Message<String> message = Message.create("hello world");
-      Tracker tracker = sender.send(message);
+      sender.send(message);
 
       Awaitility.await()
           .atMost(Duration.ofSeconds(2))

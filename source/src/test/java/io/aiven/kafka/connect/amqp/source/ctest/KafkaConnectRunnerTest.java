@@ -80,7 +80,7 @@ public class KafkaConnectRunnerTest {
     assertConnectorCounters(0, 0, 0);
     assertThat(underTest.hasConnector("testConnector")).isFalse();
 
-    String result = underTest.configureConnector("testConnector", connectorConfig);
+    underTest.configureConnector("testConnector", connectorConfig);
     assertThat(underTest.hasConnector("testConnector")).isTrue();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))

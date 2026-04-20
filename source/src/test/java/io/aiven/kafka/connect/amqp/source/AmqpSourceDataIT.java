@@ -41,7 +41,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 @Testcontainers
-public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value, Delivery>*/ {
+public class AmqpSourceDataIT {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceDataIT.class);
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceData underTest;
@@ -65,11 +65,6 @@ public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value
       throw new RuntimeException(e);
     }
   }
-
-  //  @Override
-  //  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
-  //    return sourceStorage;
-  //  }
 
   @Test
   void getNativeItemIteratorTest() {
@@ -103,5 +98,6 @@ public class AmqpSourceDataIT /*extends AbstractSourceIntegrationBase<ULID.Value
             });
     AmqpSourceNativeInfo nativeInfo = (AmqpSourceNativeInfo) iter[0].next();
     assertThat(iter[0]).isExhausted();
+    assertThat(nativeInfo).isNotNull();
   }
 }

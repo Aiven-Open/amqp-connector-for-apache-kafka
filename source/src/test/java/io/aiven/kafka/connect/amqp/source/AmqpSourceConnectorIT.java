@@ -77,7 +77,7 @@ public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Va
 
     LOGGER.info("{}", config);
 
-    String result = kafkaManager.configureConnector(getTopic(), config);
+     kafkaManager.configureConnector(getTopic(), config);
 
     String body = "hello world";
 
@@ -90,5 +90,6 @@ public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Va
 
     // Verify that the correct data is read from the S3 bucket and pushed to Kafka
     assertThat(records).containsOnly("hello world");
+    assertThat(writeResult).isNotNull();
   }
 }

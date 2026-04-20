@@ -150,7 +150,6 @@ public final class MessageSerializer extends StdSerializer<Message> {
           }
           jgen.writeEndArray();
         }
-        // jgen.writePOJOField("body", body);
       }
 
       jgen.writeEndObject();

@@ -18,11 +18,11 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
-import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -46,7 +45,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 @Testcontainers
-public class AmqpTaskTestIT /*extends AbstractSourceIntegrationBase<ULID.Value, Delivery>*/ {
+public class AmqpTaskTestIT {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTaskTestIT.class);
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceTask underTest;
@@ -69,18 +68,11 @@ public class AmqpTaskTestIT /*extends AbstractSourceIntegrationBase<ULID.Value, 
     underTest = null;
   }
 
-  //  @Override
-  //  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
-  //    return sourceStorage;
-  //  }
-
   @Test
   void testMessageRead() throws IOException {
     String topic = "testMessageRead";
     sourceStorage.setAmqpAddress("AMQP_" + topic);
     sourceStorage.createStorage();
-    OffsetManager offsetManager = mock(OffsetManager.class);
-    Map<String, String> props = new HashMap<>();
 
     Map<String, String> config = sourceStorage.createConnectorConfig();
     CommonConfigFragment.setter(config).maxTasks(1);
@@ -94,6 +86,7 @@ public class AmqpTaskTestIT /*extends AbstractSourceIntegrationBase<ULID.Value, 
     SourceStorage.WriteResult<ULID.Value> writeResult =
         sourceStorage.writeWithKey(ulid.nextValue(), body.getBytes(StandardCharsets.UTF_8));
 
+    assertThat(writeResult).isNotNull();
     // Poll messages from the Kafka topic and verify the consumed data
     underTest.start(config);
     List<SourceRecord> result = new ArrayList<>();

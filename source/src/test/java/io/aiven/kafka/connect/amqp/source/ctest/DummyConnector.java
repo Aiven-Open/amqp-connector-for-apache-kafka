@@ -52,7 +52,7 @@ public class DummyConnector extends SinkConnector {
     for (int i = 0; i < maxTasks; i++) {
       lst.add(Map.of("task.id", Integer.toString(i)));
     }
-    return List.of(Collections.emptyMap());
+    return lst;
   }
 
   @Override
