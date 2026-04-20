@@ -26,9 +26,11 @@ import static org.mockito.Mockito.when;
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
+import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,13 +58,21 @@ public class AmqpSourceDataTest {
           .setPassword("password")
           .data();
 
+  private Receiver receiver;
   private AmqpSourceConfig sourceConfig;
   private OffsetManager offsetManager;
   private Context context;
 
   @BeforeEach
-  void setup() {
-    sourceConfig = new AmqpSourceConfig(CONFIG);
+  void setup() throws ClientException, ExecutionException, InterruptedException {
+    receiver = mock(Receiver.class);
+    when(receiver.connection()).thenReturn(mock(Connection.class));
+    when(receiver.connection().client()).thenReturn(mock(Client.class));
+    Extractor extractor = new AmqpExtractor(null);
+    sourceConfig = mock(AmqpSourceConfig.class);
+    when(sourceConfig.getReceiver()).thenReturn(receiver);
+    when(sourceConfig.getExtractor()).thenReturn(extractor);
+
     offsetManager = mock(OffsetManager.class);
     context = new Context(new ULID().nextValue());
   }
@@ -86,12 +96,15 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntry() throws ClientException, ExecutionException, InterruptedException {
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
-    OffsetManager.OffsetManagerEntry offsetManagerEntry =
-        underTest.createOffsetManagerEntry(context);
-    assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", context.getNativeKey().toString());
+  void createOffsetManagerEntry() {
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      OffsetManager.OffsetManagerEntry offsetManagerEntry =
+          underTest.createOffsetManagerEntry(context);
+      assertThat(offsetManagerEntry.getProperties())
+          .containsEntry("ulid", context.getNativeKey().toString());
+    } catch (Exception e) {
+      fail(e);
+    }
   }
 
   @Test
