@@ -29,15 +29,6 @@ public final class AmqpDecimal32Serializer extends StdSerializer<Decimal32> {
     super(Decimal32.class);
   }
 
-  //  /**
-  //   * Constructor for a specific section type.
-  //   *
-  //   * @param t the section type class.
-  //   */
-  //  public AmqpDecimal32Serializer(Class<Decimal32> t) {
-  //    super(t);
-  //  }
-
   @Override
   public void serialize(Decimal32 decimal, JsonGenerator gen, SerializerProvider provider)
       throws IOException {

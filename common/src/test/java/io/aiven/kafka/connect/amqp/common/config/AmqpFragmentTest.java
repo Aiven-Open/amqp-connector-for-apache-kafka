@@ -43,7 +43,6 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 @Testcontainers
 public class AmqpFragmentTest {
-  // KafkaConnectRunner kafkaConnectRunner = new KafkaConnectRunner(Duration.ofSeconds(2));
 
   private static final String AMQP_ADDRESS = "Test";
   @Container RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();

@@ -51,10 +51,6 @@
       <groupId>com.github.victools</groupId>
       <artifactId>jsonschema-generator</artifactId>
     </dependency>
-    <!--    <dependency>-->
-    <!--      <groupId>de.huxhorn.sulky</groupId>-->
-    <!--      <artifactId>de.huxhorn.sulky.ulid</artifactId>-->
-    <!--    </dependency>-->
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>common-util</artifactId>
@@ -143,11 +139,6 @@
       <artifactId>protonj2</artifactId>
       <scope>compile</scope>
     </dependency>
-    <!--    <dependency>-->
-    <!--      <groupId>org.assertj</groupId>-->
-    <!--      <artifactId>assertj-core</artifactId>-->
-    <!--      <scope>test</scope>-->
-    <!--    </dependency>-->
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>

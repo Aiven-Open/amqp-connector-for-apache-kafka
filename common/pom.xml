@@ -64,16 +64,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!--    <dependency>-->
-    <!--      <groupId>org.apache.qpid</groupId>-->
-    <!--      <artifactId>protonj2</artifactId>-->
-    <!--      <scope>compile</scope>-->
-    <!--    </dependency>-->
-    <!--    <dependency>-->
-    <!--      <groupId>org.apache.qpid</groupId>-->
-    <!--      <artifactId>protonj2-client</artifactId>-->
-    <!--      <version>${proton.version}</version>-->
-    <!--    </dependency>-->
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
