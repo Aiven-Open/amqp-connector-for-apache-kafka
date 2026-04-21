@@ -25,6 +25,7 @@ import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -40,18 +41,19 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
    * @param originals the initial configuration data.
    */
   public AmqpSourceConfig(Map<String, String> originals) {
-    super(new AmqpSourceConfigDef(), setExtractor(originals));
+    super(new AmqpSourceConfigDef(), setOverrides(originals));
     FragmentDataAccess dataAccess = FragmentDataAccess.from(this);
     amqpFragment = new AmqpFragment(dataAccess);
   }
 
-  private static Map<String, String> setExtractor(Map<String, String> props) {
-    SourceConfigFragment.setter(props).extractorClass(AmqpExtractor.class);
+  private static Map<String, String> setOverrides(Map<String, String> props) {
+    SourceConfigFragment.setter(props).extractorClass(AmqpExtractor.class).ringBufferSize(1);
     return props;
   }
 
   @Override
-  public Receiver getReceiver(Connection connection) throws ClientException {
+  public Receiver getReceiver(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException {
     return amqpFragment.getReceiver(connection);
   }
 

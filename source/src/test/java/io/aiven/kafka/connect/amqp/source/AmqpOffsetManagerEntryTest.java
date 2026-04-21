@@ -33,12 +33,11 @@ public class AmqpOffsetManagerEntryTest {
     AmqpOffsetManagerEntry entry = new AmqpOffsetManagerEntry(primaryKey);
     OffsetManager.OffsetManagerKey key = entry.getManagerKey();
     Map<String, Object> keyMap = key.getPartitionMap();
-    assertThat(keyMap)
-        .containsExactlyInAnyOrderEntriesOf(
-            Map.of("ulid", primaryKey.toString(), "recordCount", 0));
+    assertThat(keyMap).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
     Map<String, Object> map = entry.getProperties();
     assertThat(map)
-        .containsExactlyInAnyOrderEntriesOf(Map.of("ulid", primaryKey, "recordCount", 0));
+        .containsExactlyInAnyOrderEntriesOf(
+            Map.of("ulid", primaryKey.toString(), "recordCount", 0));
   }
 
   @Test
@@ -46,21 +45,19 @@ public class AmqpOffsetManagerEntryTest {
     AmqpOffsetManagerEntry entry = new AmqpOffsetManagerEntry(primaryKey);
     OffsetManager.OffsetManagerKey key = entry.getManagerKey();
     Map<String, Object> map = key.getPartitionMap();
+    assertThat(map).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
+    map = entry.getProperties();
     assertThat(map)
         .containsExactlyInAnyOrderEntriesOf(
             Map.of("ulid", primaryKey.toString(), "recordCount", 0));
-    map = entry.getProperties();
-    assertThat(map)
-        .containsExactlyInAnyOrderEntriesOf(Map.of("ulid", primaryKey, "recordCount", 0));
 
     entry.incrementRecordCount();
 
     map = entry.getManagerKey().getPartitionMap();
+    assertThat(map).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
+    map = entry.getProperties();
     assertThat(map)
         .containsExactlyInAnyOrderEntriesOf(
             Map.of("ulid", primaryKey.toString(), "recordCount", 1));
-    map = entry.getProperties();
-    assertThat(map)
-        .containsExactlyInAnyOrderEntriesOf(Map.of("ulid", primaryKey, "recordCount", 1));
   }
 }

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -49,6 +50,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
 
   private static final ULIDSerde serde = new ULIDSerde();
+
   private final Receiver receiver;
 
   /** The maximum number of Deliveries to pull from the Receiver. */
@@ -62,9 +64,9 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
    * @throws ClientException on error.
    */
   AmqpSourceData(final AmqpSourceConfig sourceConfig, final OffsetManager offsetManager)
-      throws ClientException {
+      throws ClientException, ExecutionException, InterruptedException {
     super(sourceConfig, offsetManager);
-    this.receiver = sourceConfig.getReceiver(sourceConfig.getConnection(sourceConfig.getClient()));
+    this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
   }
 

@@ -24,6 +24,7 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.types.Password;
 import org.apache.qpid.protonj2.client.Client;
@@ -73,20 +74,6 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   public static Setter setter(Map<String, String> data) {
     return new Setter(data);
   }
-
-  //  /**
-  //   * Override of the validate method
-  //   *
-  //   * @param configMap The map of all values for configuration
-  //   */
-  //  @Override
-  //  public void validate(
-  //      Map<String, ConfigValue> configMap) { // NOPMD useless overriding method ignore as we will
-  // add
-  //    super.validate(configMap);
-  //    // handle any restrictions between options here.
-  //
-  //  }
 
   /**
    * @param configDef
@@ -177,8 +164,9 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   }
 
   @Override
-  public Receiver getReceiver(Connection connection) throws ClientException {
-    return connection.openReceiver(dataAccess.getString(ADDRESS));
+  public Receiver getReceiver(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException {
+    return connection.openReceiver(dataAccess.getString(ADDRESS)).openFuture().get();
   }
 
   /** The Setter for the AMQP fragment. */

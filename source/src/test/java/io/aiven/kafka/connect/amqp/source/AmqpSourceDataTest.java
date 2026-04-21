@@ -19,21 +19,25 @@
 package io.aiven.kafka.connect.amqp.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
+import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
+import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Delivery;
@@ -54,25 +58,33 @@ public class AmqpSourceDataTest {
           .setPassword("password")
           .data();
 
+  private Receiver receiver;
   private AmqpSourceConfig sourceConfig;
   private OffsetManager offsetManager;
   private Context context;
 
   @BeforeEach
-  void setup() {
-    sourceConfig = new AmqpSourceConfig(CONFIG);
+  void setup() throws ClientException, ExecutionException, InterruptedException {
+    receiver = mock(Receiver.class);
+    when(receiver.connection()).thenReturn(mock(Connection.class));
+    when(receiver.connection().client()).thenReturn(mock(Client.class));
+    Extractor extractor = new AmqpExtractor(null);
+    sourceConfig = mock(AmqpSourceConfig.class);
+    when(sourceConfig.getReceiver()).thenReturn(receiver);
+    when(sourceConfig.getExtractor()).thenReturn(extractor);
+
     offsetManager = mock(OffsetManager.class);
     context = new Context(new ULID().nextValue());
   }
 
   @Test
-  void getSourceName() throws ClientException {
+  void getSourceName() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     assertThat(underTest.getSourceName()).isEqualTo("AMQP Source");
   }
 
   @Test
-  void nativeSerde() throws ClientException {
+  void nativeSerde() throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     Optional<NativeSourceData.KeySerde<ULID.Value>> optSerde = underTest.getNativeKeySerde();
     assertThat(optSerde.isPresent()).isTrue();
@@ -84,31 +96,38 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntry() throws ClientException {
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
-    OffsetManager.OffsetManagerEntry offsetManagerEntry =
-        underTest.createOffsetManagerEntry(context);
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+  void createOffsetManagerEntry() {
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      OffsetManager.OffsetManagerEntry offsetManagerEntry =
+          underTest.createOffsetManagerEntry(context);
+      assertThat(offsetManagerEntry.getProperties())
+          .containsEntry("ulid", context.getNativeKey().toString());
+    } catch (Exception e) {
+      fail(e);
+    }
   }
 
   @Test
-  void createOffsetManagerEntryWithMap() throws ClientException {
+  void createOffsetManagerEntryWithMap()
+      throws ClientException, ExecutionException, InterruptedException {
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
     OffsetManager.OffsetManagerEntry offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", context.getNativeKey(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+    assertThat(offsetManagerEntry.getProperties())
+        .containsEntry("ulid", context.getNativeKey().toString());
 
     offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", context.getNativeKey().toString(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties()).containsEntry("ulid", context.getNativeKey());
+    assertThat(offsetManagerEntry.getProperties())
+        .containsEntry("ulid", context.getNativeKey().toString());
 
     offsetManagerEntry =
         underTest.createOffsetManagerEntry(
             Map.of("ulid", "01KKVQF32P85BW8EYKBP1BTQR0", "recordCount", 5));
     assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0"));
+        .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
   }
 
   @Test
@@ -131,6 +150,8 @@ public class AmqpSourceDataTest {
     Client client = mock(Client.class);
     Connection connection = mock(Connection.class);
     Receiver receiver = mock(Receiver.class);
+    when(receiver.connection()).thenReturn(connection);
+    when(connection.client()).thenReturn(client);
 
     AmqpSourceConfig config2 =
         new AmqpSourceConfig(CONFIG) {
@@ -160,14 +181,17 @@ public class AmqpSourceDataTest {
     // only 2 are returned.
     when(receiver.tryReceive()).thenReturn(delivery1, delivery2, null);
 
-    AmqpSourceData underTest = new AmqpSourceData(config2, offsetManager);
-    Iterator<AmqpSourceNativeInfo> nativeItemIterator = underTest.getNativeItemIterator(null);
-    assertThat(nativeItemIterator).isNotNull();
-    assertThat(nativeItemIterator).hasNext();
-    List<AmqpSourceNativeInfo> lst = new ArrayList<>();
-    nativeItemIterator.forEachRemaining(lst::add);
-    assertThat(lst).hasSize(2);
-    assertThat(lst.get(0).getMessage()).isEqualTo(message1);
-    assertThat(lst.get(1).getMessage()).isEqualTo(message2);
+    try (AmqpSourceData underTest = new AmqpSourceData(config2, offsetManager)) {
+      Iterator<AmqpSourceNativeInfo> nativeItemIterator = underTest.getNativeItemIterator(null);
+      assertThat(nativeItemIterator).isNotNull();
+      assertThat(nativeItemIterator).hasNext();
+      List<AmqpSourceNativeInfo> lst = new ArrayList<>();
+      nativeItemIterator.forEachRemaining(lst::add);
+      assertThat(lst).hasSize(2);
+      assertThat(lst.get(0).getMessage()).isEqualTo(message1);
+      assertThat(lst.get(1).getMessage()).isEqualTo(message2);
+    } catch (Exception e) {
+      fail(e);
+    }
   }
 }

@@ -80,7 +80,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
   @Override
   public Map<String, Object> getProperties() {
     Map<String, Object> result = new HashMap<>(properties);
-    result.put(PRIMARY_KEY, primaryKey);
+    result.put(PRIMARY_KEY, primaryKey.toString());
     result.put(RECORD_COUNT, recordCount);
     return result;
   }
@@ -106,7 +106,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
 
   @Override
   public OffsetManager.OffsetManagerKey getManagerKey() {
-    return () -> Map.of(PRIMARY_KEY, primaryKey.toString(), RECORD_COUNT, recordCount);
+    return () -> Map.of(PRIMARY_KEY, primaryKey.toString());
   }
 
   @Override

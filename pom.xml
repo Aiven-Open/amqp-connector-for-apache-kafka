@@ -28,7 +28,7 @@
 
   <groupId>io.aiven.kafka.connect</groupId>
   <artifactId>connectors-for-amqp</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Aiven connectors for AMQP on Apache Kafka</name>
@@ -98,51 +98,32 @@
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
     <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <testcontainers.version>2.0.4</testcontainers.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>common-util</artifactId>
-        <version>${aiven.common.util.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>kafka-config</artifactId>
-        <version>${aiven.kafka.config.version}</version>
-      </dependency>
+      <!-- included poms -->
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>framework-for-connectors</artifactId>
         <version>${aiven.kafak.framework.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
+
+      <!-- keep in order groupId, artifactId -->
       <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>framework-for-source-connectors</artifactId>
-        <version>${aiven.kafak.framework.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>framework-common-for-connectors</artifactId>
-        <version>${aiven.kafak.framework.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>de.huxhorn.sulky</groupId>
-        <artifactId>de.huxhorn.sulky.ulid</artifactId>
-        <version>${huxhorn.sulky.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.qpid</groupId>
-        <artifactId>protonj2-client</artifactId>
-        <version>${proton.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.qpid</groupId>
-        <artifactId>protonj2</artifactId>
-        <version>${proton.version}</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>${jackson.annotations.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -150,9 +131,123 @@
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.annotations.version}</version>
+        <groupId>com.google.re2j</groupId>
+        <artifactId>re2j</artifactId>
+        <version>${com.google.re2j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>common-util</artifactId>
+        <version>${aiven.common.util.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-common-for-connectors</artifactId>
+        <version>${aiven.kafak.framework.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-for-source-connectors</artifactId>
+        <version>${aiven.kafak.framework.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-config</artifactId>
+        <version>${aiven.kafka.config.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>${commons.collection4.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-api</artifactId>
+        <version>${kafka.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-json</artifactId>
+        <version>${kafka.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>${kafka.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>connect-runtime</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_${kafka.scala.version}</artifactId>
+        <version>${kafka.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka_${kafka.scala.version}</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>${plugin.resources}</version>
+        <type>maven-plugin</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.qpid</groupId>
+        <artifactId>protonj2</artifactId>
+        <version>${proton.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.qpid</groupId>
+        <artifactId>protonj2-client</artifactId>
+        <version>${proton.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.junit</groupId>
@@ -174,109 +269,96 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka_${kafka.scala.version}</artifactId>
-        <version>${kafka.version}</version>
-        <scope>compile</scope>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-junit-jupiter</artifactId>
+        <version>${testcontainers.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka_${kafka.scala.version}</artifactId>
-        <version>${kafka.version}</version>
-        <classifier>test</classifier>
-        <type>test-jar</type>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka-clients</artifactId>
-        <version>${kafka.version}</version>
-        <classifier>test</classifier>
-        <type>test-jar</type>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>connect-api</artifactId>
-        <version>${kafka.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>connect-runtime</artifactId>
-        <version>${kafka.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>connect-runtime</artifactId>
-        <version>${kafka.version}</version>
-        <classifier>test</classifier>
-        <type>test-jar</type>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.google.re2j</groupId>
-        <artifactId>re2j</artifactId>
-        <version>${com.google.re2j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>${plugin.resources}</version>
-        <type>maven-plugin</type>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-collections4</artifactId>
-        <version>${commons.collection4.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.awaitility</groupId>
-        <artifactId>awaitility</artifactId>
-        <version>${awaitility.version}</version>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-rabbitmq</artifactId>
+        <version>${testcontainers.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <!-- keep in sorted order groupId, artifactId -->
   <dependencies>
-    <dependency>
-      <groupId>de.huxhorn.sulky</groupId>
-      <artifactId>de.huxhorn.sulky.ulid</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.qpid</groupId>
-      <artifactId>protonj2-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>connect-api</artifactId>
-      <version>${kafka.version}</version>
-      <scope>compile</scope>
-    </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
       <version>${fasterxml.uuid.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>de.huxhorn.sulky</groupId>
+      <artifactId>de.huxhorn.sulky.ulid</artifactId>
+      <version>${huxhorn.sulky.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>connect-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>${kafka.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.github.luben</groupId>
+          <artifactId>zstd-jni</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.xerial.snappy</groupId>
+          <artifactId>snappy-java</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.qpid</groupId>
+      <artifactId>protonj2-client</artifactId>
+      <version>${proton.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -348,6 +430,25 @@
               <goal>makeAggregateBom</goal>
             </goals>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <skip>true</skip>
+              <rules>
+                <dependencyConvergence/>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>

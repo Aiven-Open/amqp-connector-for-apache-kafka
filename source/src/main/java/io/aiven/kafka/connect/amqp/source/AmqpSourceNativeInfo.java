@@ -38,6 +38,10 @@ public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<ULID.Va
   /** The ULID to generate keys with */
   private static final ULID ulid = new ULID();
 
+  static ULID.Value nextValue() {
+    return ulid.nextValue();
+  }
+
   /**
    * Construct native info for a Delivery from AMQP.
    *
