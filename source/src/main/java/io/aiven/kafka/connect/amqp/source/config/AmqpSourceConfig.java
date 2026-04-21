@@ -66,4 +66,13 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   public Connection getConnection(Client client) throws ClientException {
     return amqpFragment.getConnection(client);
   }
+
+  /**
+   * Determins if we are processing a stream.
+   *
+   * @return {@code true} if the AMQP messages are from a stram, {@code false} if they are not.
+   */
+  public boolean isStream() {
+    return false;
+  }
 }
