@@ -122,9 +122,9 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   @Override
   public void close() throws Exception {
     super.close();
-    receiver.connection().client().close();
-    receiver.connection().close();
-    receiver.close();
+    try (receiver) {
+      LOGGER.info("close the open receviers from inside the class");
+    }
   }
 
   /** The AMQP native source data implementation of NativeSourceData.KeySerde. */
