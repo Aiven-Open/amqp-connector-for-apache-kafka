@@ -56,7 +56,6 @@ public class AmqpNumberSerializerTest {
 
     decimal = new Decimal32(BIGGER_FLOAT);
     actual = objectMapper.writeValueAsString(decimal);
-    System.out.println(BIGGER_FLOAT.toString());
     assertThat(actual).isEqualTo("3.4028235E38");
 
     decimal = new Decimal32(MAX_DOUBLE);
@@ -80,7 +79,6 @@ public class AmqpNumberSerializerTest {
 
     decimal = new Decimal64(BIGGER_FLOAT);
     actual = objectMapper.writeValueAsString(decimal);
-    System.out.println(BIGGER_FLOAT.toString());
     assertThat(actual).isEqualTo("3.4028234663852886E38");
 
     decimal = new Decimal64(MAX_DOUBLE);
@@ -104,7 +102,6 @@ public class AmqpNumberSerializerTest {
 
     decimal = new Decimal128(BIGGER_FLOAT);
     actual = objectMapper.writeValueAsString(decimal);
-    System.out.println(BIGGER_FLOAT.toString());
     assertThat(actual).isEqualTo("3.4028234663852886E38");
 
     decimal = new Decimal128(MAX_DOUBLE);

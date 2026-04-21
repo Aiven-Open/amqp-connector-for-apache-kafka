@@ -72,11 +72,6 @@
       <artifactId>kafka-config</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.aiven.commons</groupId>
-      <artifactId>kafka-testkit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>io.aiven.kafka.connect</groupId>
       <artifactId>connectors-common-for-amqp</artifactId>
       <version>0.1.0-SNAPSHOT</version>
@@ -148,11 +143,11 @@
       <artifactId>protonj2</artifactId>
       <scope>compile</scope>
     </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>org.assertj</groupId>-->
+    <!--      <artifactId>assertj-core</artifactId>-->
+    <!--      <scope>test</scope>-->
+    <!--    </dependency>-->
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>

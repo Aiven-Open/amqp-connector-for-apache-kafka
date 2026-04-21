@@ -99,7 +99,6 @@
     <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <aiven.common.kafka.testkit.version>0.1.0-SNAPSHOT</aiven.common.kafka.testkit.version>
     <testcontainers.version>2.0.4</testcontainers.version>
   </properties>
 
@@ -172,12 +171,6 @@
             <artifactId>commons-beanutils</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>kafka-testkit</artifactId>
-        <version>${aiven.common.kafka.testkit.version}</version>
-        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -310,12 +303,14 @@
         </exclusion>
       </exclusions>
     </dependency>
+
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>
       <artifactId>de.huxhorn.sulky.ulid</artifactId>
       <version>${huxhorn.sulky.version}</version>
       <scope>compile</scope>
     </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -354,6 +349,11 @@
       <groupId>org.apache.qpid</groupId>
       <artifactId>protonj2-client</artifactId>
       <version>${proton.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
