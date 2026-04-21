@@ -75,20 +75,6 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
     return new Setter(data);
   }
 
-  //  /**
-  //   * Override of the validate method
-  //   *
-  //   * @param configMap The map of all values for configuration
-  //   */
-  //  @Override
-  //  public void validate(
-  //      Map<String, ConfigValue> configMap) { // NOPMD useless overriding method ignore as we will
-  // add
-  //    super.validate(configMap);
-  //    // handle any restrictions between options here.
-  //
-  //  }
-
   /**
    * @param configDef
    */
