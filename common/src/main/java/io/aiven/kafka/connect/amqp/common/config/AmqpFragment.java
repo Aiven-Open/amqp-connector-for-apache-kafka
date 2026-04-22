@@ -81,8 +81,8 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   static void addAMQPConnectivity(final ConfigDef configDef) {
     SinceInfo.Builder siBuilder =
         SinceInfo.builder()
-            .groupId("io.aiven.commons")
-            .artifactId("kafka-source-connector-framework");
+            .groupId("io.aiven.kafka.connect")
+            .artifactId("connectors-common-for-amqp");
     int connectivityCounter = 0;
     configDef
         .define(
@@ -90,7 +90,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The host address for the AMQP service")
                 .build())
@@ -98,7 +98,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
             ExtendedConfigKey.builder(PORT)
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .type(ConfigDef.Type.INT)
                 .defaultValue(5672)
                 .validator(ConfigDef.Range.between(1, 65534))
@@ -110,7 +110,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .validator(new ConfigDef.NonEmptyStringWithoutControlChars())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The address (topic) to listend to.")
@@ -120,7 +120,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .validator(new ConfigDef.NonEmptyStringWithoutControlChars())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The user to log into the AMQP server.")
@@ -130,7 +130,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .type(ConfigDef.Type.PASSWORD)
                 .validator(
                     new ConfigDef.NonEmptyStringWithoutControlChars() {
