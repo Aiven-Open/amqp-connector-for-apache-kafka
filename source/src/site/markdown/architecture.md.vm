@@ -22,7 +22,7 @@ ${project.name} Architecture Notes
 
 ${project.name} connects to an [AMQP](https://www.amqp.org/) provider using the [protonj2 client](https://qpid.apache.org/proton/index.html) from the [Apache QPID&trade;](https://qpid.apache.org/) messaging library to read AMQP messages. It utilizes the [Aiven Kafka Connector Framework](https://github.com/Aiven-Open/aiven-kafka-connector-framework) to do most of the heavy lifting.
 
-**At this time ${projeect.name} only supports queue type messages.**  This means that the Apache QPID will distribute the inbound messages across all the listeners.  In effect the number of Kafka Connenct tasks becomes the number of simultaneous messages that can be processed.
+**At this time ${project.name} only supports queue type messages.**  This means that the Apache QPID will distribute the inbound messages across all the listeners.  In effect the number of Kafka Connect tasks becomes the number of simultaneous messages that can be processed.
 
 The AMQP message provider contract does not require that a message have a unique key, the connector framework expects that each message will have a unique ID and that those IDs can be lexically ordered.  The framework calls these IDs NativeKeys.  To meet the native key requirement we assign every message that arrives in the system a [ULID](https://github.com/ulid/spec). We use the [Sulky java implementation of ULID](https://github.com/huxi/sulky/blob/27c8d809f2e3af6eafa9c7324f158cd9b482b351/sulky-ulid/README.md) from [Jörn Huxhorn](https://github.com/huxi).
 
@@ -58,5 +58,5 @@ The JSON object generated from the message has a number of properties.  If the p
 Data Serialization
 ------------------
 
-Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.
+Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.  The Kafka daa is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
 
