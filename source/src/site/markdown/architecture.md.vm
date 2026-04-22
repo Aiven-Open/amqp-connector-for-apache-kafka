@@ -58,5 +58,5 @@ The JSON object generated from the message has a number of properties.  If the p
 Data Serialization
 ------------------
 
-Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.  The Kafka daa is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
+Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.  The Kafka data is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
 
