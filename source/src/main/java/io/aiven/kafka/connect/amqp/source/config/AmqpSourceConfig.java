@@ -21,6 +21,7 @@ package io.aiven.kafka.connect.amqp.source.config;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
+import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
@@ -47,7 +48,11 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   }
 
   private static Map<String, String> setOverrides(Map<String, String> props) {
-    SourceConfigFragment.setter(props).extractorClass(AmqpExtractor.class).ringBufferSize(1);
+    SourceConfigFragment.setter(props)
+        .extractorClass(AmqpExtractor.class)
+        .ringBufferSize(0)
+        // TODO when STREAM flag is set this changes.
+        .distributionType(DistributionType.ALL);
     return props;
   }
 
@@ -65,5 +70,14 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   @Override
   public Connection getConnection(Client client) throws ClientException {
     return amqpFragment.getConnection(client);
+  }
+
+  /**
+   * Determins if we are processing a stream.
+   *
+   * @return {@code true} if the AMQP messages are from a stram, {@code false} if they are not.
+   */
+  public boolean isStream() {
+    return false;
   }
 }

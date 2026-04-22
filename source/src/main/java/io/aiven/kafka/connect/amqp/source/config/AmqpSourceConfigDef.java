@@ -18,7 +18,6 @@
 */
 package io.aiven.kafka.connect.amqp.source.config;
 
-import io.aiven.commons.kafka.config.SinceInfoMapBuilder;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
@@ -32,14 +31,6 @@ public final class AmqpSourceConfigDef extends SourceCommonConfig.SourceCommonCo
   public AmqpSourceConfigDef() {
     super();
     AmqpFragment.update(this);
-    applyOverrideMap();
-  }
-
-  /** Applies "since" overrides. */
-  private void applyOverrideMap() {
-    SinceInfoMapBuilder mapBuilder = new SinceInfoMapBuilder();
-    mapBuilder.put("io.aiven.commons:kafka-source-connector-framework:[,1.0.0]", "1.0.0");
-    mapBuilder.applyTo(this);
   }
 
   /**

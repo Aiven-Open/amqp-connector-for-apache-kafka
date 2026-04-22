@@ -96,7 +96,7 @@
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
-    <aiven.kafak.framework.version>0.1.0</aiven.kafak.framework.version>
+    <aiven.kafak.framework.version>0.2.0-SNAPSHOT</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
     <slf4j.version>2.0.17</slf4j.version>
     <testcontainers.version>2.0.4</testcontainers.version>

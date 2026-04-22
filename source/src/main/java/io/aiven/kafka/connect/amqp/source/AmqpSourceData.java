@@ -56,6 +56,8 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   /** The maximum number of Deliveries to pull from the Receiver. */
   private final int receiveLimit;
 
+  private final int taskId;
+
   /**
    * Constructor.
    *
@@ -66,6 +68,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   AmqpSourceData(final AmqpSourceConfig sourceConfig, final OffsetManager offsetManager)
       throws ClientException, ExecutionException, InterruptedException {
     super(sourceConfig, offsetManager);
+    taskId = sourceConfig.getTaskId();
     this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
   }
@@ -85,11 +88,14 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
         for (int i = 0; i < limit; i++) {
           Delivery delivery = receiver.tryReceive();
           if (delivery != null) {
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("task {}: read {}", taskId, delivery.message());
+            }
             lst.add(new AmqpSourceNativeInfo(delivery));
           }
         }
       } catch (ClientException e) {
-        LOGGER.warn("Client exception retrieving delivery: {}", e.getMessage(), e);
+        LOGGER.warn("task {}: Client exception retrieving delivery: {}", taskId, e.getMessage(), e);
         // do nothing.
       }
 

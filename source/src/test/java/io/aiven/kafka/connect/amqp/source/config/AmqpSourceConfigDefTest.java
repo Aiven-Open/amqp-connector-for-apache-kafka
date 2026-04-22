@@ -30,7 +30,7 @@ public class AmqpSourceConfigDefTest {
   void sinceTest() {
     for (ExtendedConfigKeyBean bean :
         new ConfigDefBeanFactory().open(AmqpSourceConfigDef.class.getName()).configKeys()) {
-      assertThat(bean.since()).as(bean.getName()).isIn("1.0.0", "Kafka 0.9.0.0");
+      assertThat(bean.since()).as(bean.getName()).isIn("0.1.0", "Kafka 0.9.0.0");
     }
   }
 }
