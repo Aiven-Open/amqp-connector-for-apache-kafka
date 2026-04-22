@@ -31,6 +31,14 @@ public final class AmqpSourceConfigDef extends SourceCommonConfig.SourceCommonCo
   public AmqpSourceConfigDef() {
     super();
     AmqpFragment.update(this);
+    hideDistributionType(true);
+    hideExtractorBuffer(true);
+    hideExtractorCacheSize(true);
+    hideExtractorCSVHeaders(true);
+    hideExtractorCSVHeadersEnabled(true);
+    hideExtractorExtractorClass(true);
+    hideNativeStartKey(true);
+    hideRingBufferSize(true);
   }
 
   /**

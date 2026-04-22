@@ -52,6 +52,22 @@
 
   <developers>
     <developer>
+      <id>aindriu-aiven</id>
+      <name>Aindriú Lavelle</name>
+      <email>aindriu.lavelle@aiven.io</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Dublin</timezone>
+    </developer>
+    <developer>
+      <id>RyanSkraba</id>
+      <name>Ryan Skraba</name>
+      <email>ryan.skraba@aiven.io</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Paris</timezone>
+    </developer>
+    <developer>
       <id>claudenw</id>
       <name>Claude Warren</name>
       <email>claude@xenei.com</email>
@@ -452,57 +468,81 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-markdown-resources</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>pre-site</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>.</directory>
+                  <includes>
+                    <include>*.md</include>
+                  </includes>
+                  <excludes>
+                    <exclude>README.md</exclude>
+                    <exclude>CONTRIBUTING.md</exclude>
+                  </excludes>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/generated-site/markdown</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>false</generateReports>
+          <generateProjectInfo>false</generateProjectInfo>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.doxia</groupId>
+            <artifactId>doxia-module-markdown</artifactId>
+            <version>2.0.0</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.doxia</groupId>
+            <artifactId>doxia-site-renderer</artifactId>
+            <version>2.0.0</version>
+          </dependency>
+          <dependency>
+            <groupId>io.aiven.commons</groupId>
+            <artifactId>kafka-config</artifactId>
+            <version>${aiven.kafka.config.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-runtime</artifactId>
+            <version>${kafka.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
     </plugins>
   </build>
 
-  <profiles>
-    <profile>
-      <id>ci</id>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-failsafe-plugin</artifactId>
-              <configuration>
-                <redirectTestOutputToFile>true</redirectTestOutputToFile>
-                <parallel>classes</parallel>
-                <useUnlimitedThreads>true</useUnlimitedThreads>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-markdown-resources</id>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <phase>pre-site</phase>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>.</directory>
-                      <includes>
-                        <include>*.md</include>
-                      </includes>
-                      <excludes>
-                        <exclude>README.md</exclude>
-                        <exclude>CONTRIBUTING.md</exclude>
-                      </excludes>
-                    </resource>
-                  </resources>
-                  <outputDirectory>${project.build.directory}/generated-site/markdown</outputDirectory>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+  <profiles/>
 </project>
