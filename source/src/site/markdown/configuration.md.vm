@@ -31,7 +31,7 @@ ${esc.hash}${esc.hash}${esc.hash} Configuration options
 
 All the configuration options are listed below in alphabetical order.
 
-#set($extendedConfigDef = ${configDefFactory.open("io.aiven.kafka.connect.salesforce.source.config.AmqpSourceConfigDef")})
+#set($extendedConfigDef = ${configDefFactory.open("io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfigDef")})
 
 #foreach ($configKey in ${extendedConfigDef.configKeys})
 
