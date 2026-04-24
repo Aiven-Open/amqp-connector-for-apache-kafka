@@ -17,7 +17,7 @@
     SPDX-License-Identifier: Apache-2.0
 -->
 
-${project.name}
+AMQP Source Connector
 ================
 
 This is an Apache Kafka&trade; source connector that extracts data from AMQP connections.

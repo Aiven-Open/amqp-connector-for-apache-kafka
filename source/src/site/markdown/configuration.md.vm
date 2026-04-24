@@ -17,9 +17,14 @@
     SPDX-License-Identifier: Apache-2.0
 -->
 
-${project.name} Configuration
+Source Connector Configuration
 ==============================
 
+The AMQP source connector reads AMQP messages from a queue and writes them to Kafka.  It formats the messages as described in the [architecture documentation](./architecture.html).
+
+**NOTE:** The Key and Value sent to Kafka are Strings. Only the String converter is supported for the Key and either the JSON converter or the String converter are supported for the value.  All other converters will probably fail.
+
+**NOTE:** At this time ${project.name} only supports queue type messages. This means that the messages will be distributed across all the tasks.  In effect the maximum number of Kafka Connect tasks becomes the number of simultaneous messages that can be processed.
 
 Configuration
 ------------

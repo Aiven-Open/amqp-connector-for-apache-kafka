@@ -17,7 +17,7 @@
     SPDX-License-Identifier: Apache-2.0
 -->
 
-${project.name} Architecture Notes
+AMQP Source Connector Architecture Notes
 ==============================
 
 ${project.name} connects to an [AMQP](https://www.amqp.org/) provider using the [protonj2 client](https://qpid.apache.org/proton/index.html) from the [Apache QPID&trade;](https://qpid.apache.org/) messaging library to read AMQP messages. It utilizes the [Aiven Kafka Connector Framework](https://github.com/Aiven-Open/aiven-kafka-connector-framework) to do most of the heavy lifting.
@@ -58,5 +58,5 @@ The JSON object generated from the message has a number of properties.  If the p
 Data Serialization
 ------------------
 
-Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize.  In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside of the Kafka environment.  The Kafka data is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
+Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize. In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside the Kafka environment.  The Kafka data is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
 

@@ -26,10 +26,7 @@ This is an open source connector developed by Aiven that integrates with Apache 
 Overview
 ========
 
-## Features
- 
- - A utility library to connect to and provide convenience methods for AMQP interactions. 
- - An Apache Kafka source connector for AMQP.
+ * Connector Class: io.aiven.kafka.connect.amqp.source.AmqpSourceConnector
 
 ## Prerequisites
 
@@ -38,7 +35,7 @@ Overview
 
 ## Documentation
 
-Documentation for this project can be found at https://aiven-open.github.io/amqp-connector-for-apache-kafka.  Documentation can be generated from source by executing: `mvn site site:stage`.  The documentation will then be found in `/target/staging`.
+Documentation for this project can be found at [https://aiven-open.github.io/amqp-connector-for-apache-kafka](https://aiven-open.github.io/amqp-connector-for-apache-kafka).  Documentation can be generated from source by executing: `mvn site site:stage`.  The documentation will then be found in `/target/staging`.
 
 This project is built upon [Aiven framework for connectors on Apache Kafka](https://github.com/Aiven-Open/aiven-kafka-connector-framework) and familuraity with the [framework documentation](httpd://aiven-open.github.io/aiven-kafka-connector-framework) is recommended.
 
