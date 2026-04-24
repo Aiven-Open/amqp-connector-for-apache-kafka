@@ -17,10 +17,9 @@
 
     SPDX-License-Identifier: Apache-2.0
 -->
-<site xmlns="http://maven.apache.org/SITE/2.0.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd"
->
+<site xmlns="http://maven.apache.org/SITE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
+requireParent="true">
 
     <poweredBy>
         <logo name="Aiven" href="https://aiven.io/">
@@ -29,15 +28,10 @@
     </poweredBy>
     <body>
 
-        <menu ref="parent"/>
 
-        <menu name="Overview">
-            <item name="Introduction" href="./index.html"/>
-            <item name="Architecture notes" href="./architecture.html" />
-            <item name="Configuration documentation" href="./configuration.html"/>
-        </menu>
-
-        <menu ref="reports"/>
+        <breadcrumbs>
+            <item name="Source Connector" href="./index.html" />
+        </breadcrumbs>
 
         <links>
             <item name="Apache Kafka" href="http://kafka.apache.org"/>
