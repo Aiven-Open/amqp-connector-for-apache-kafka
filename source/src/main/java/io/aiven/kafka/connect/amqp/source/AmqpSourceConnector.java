@@ -38,7 +38,9 @@ public final class AmqpSourceConnector extends SourceConnector {
   private Map<String, String> props;
 
   /** Default constructor */
-  public AmqpSourceConnector() {}
+  public AmqpSourceConnector() {
+    LOGGER.debug("AmqpSourceConnector constructed");
+  }
 
   @Override
   public void start(Map<String, String> props) {

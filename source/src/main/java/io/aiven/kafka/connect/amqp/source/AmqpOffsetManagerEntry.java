@@ -24,9 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The OffsetManager Entry for the AMQP messages */
 public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpOffsetManagerEntry.class);
+
   private final ULID.Value primaryKey;
   private int recordCount;
   private final Map<String, Object> properties;
@@ -51,7 +55,13 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
     if (recCount == null) {
       recordCount = 0;
     } else if (recCount instanceof String recStr) {
-      recordCount = Integer.parseInt(recStr);
+      try {
+        recordCount = Integer.parseInt(recStr);
+      } catch (NumberFormatException e) {
+        LOGGER.error("Unable to parse recordCount string: {}", e.getMessage(), e);
+        LOGGER.error("Setting recordCount to zero");
+        recordCount = 0;
+      }
     } else if (recCount instanceof Number number) {
       recordCount = number.intValue();
     }
@@ -70,7 +80,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
   @Override
   public Map<String, Object> getProperties() {
     Map<String, Object> result = new HashMap<>(properties);
-    result.put(PRIMARY_KEY, primaryKey);
+    result.put(PRIMARY_KEY, primaryKey.toString());
     result.put(RECORD_COUNT, recordCount);
     return result;
   }
@@ -96,7 +106,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
 
   @Override
   public OffsetManager.OffsetManagerKey getManagerKey() {
-    return () -> Map.of(PRIMARY_KEY, primaryKey.toString(), RECORD_COUNT, recordCount);
+    return () -> Map.of(PRIMARY_KEY, primaryKey.toString());
   }
 
   @Override

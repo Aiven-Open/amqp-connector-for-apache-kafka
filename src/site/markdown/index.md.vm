@@ -20,35 +20,39 @@
 ${project.name}
 ======================
 
-Versions
-========
+This project provides a source connector that will read AMQP **queue** data and send it to Kafka.  This is an open source project and we welcome participation from all parties.  Read the "Getting Involved" section if you are interested in contributing.
 
+Overview
+-------
+
+ - **Source Connector Class:** io.aiven.kafka.connect.amqp.source.AmqpSourceConnector
  - Development: ${project.version}
  - Latest Release: ${project.properties.latestRelease}
  - Minimum Java: ${context.get("jdk.version")}
  - Minimum Kafka: ${context.get("kafka.version")}
 
-Overview
-========
 
 ${project.name} provides a utility library and Apache Kafka source connector for applicatons that implement [Advanced Message Queuing Protocol](https://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol) (AMQP).  The source connector consumes data from an AMQP connection and to publishs that data to Kafka topics. This project utiizes the [Aiven connector framework](https://github.com/Aiven-Open/aiven-kafka-connector-framework) and familuarity with the [framework documentation](https://aiven-open.github.io/aiven-kafka-connector-framework) is advised.
 
+Please see the source connector module for more detail.
+
 Build
-============
+----------
 
 The latest release is ${project.properties.latestRelease} and is available for download from the Maven repository or via the [releases](${project.url}/releases) page.
-Please note that all jars are provided for your convenience, the project delivery is the source code found in the [project git repository](${project.url}).
+Please note that all jars are provided for your convenience, the project delivery is the source code found in the [project git repository](${project.url}).  The tar and zip packages contain the release jar as well as all dependencies except those that are provided by the Kafka infrastructure.
 
 To build the framework execute `mvn install`.  This will create the jars and install them in your local maven repository where they can be accessed from other projects.
 
 License
-============
+----------
 
 ${project.name} is licensed under the Apache License, version 2.0. Full license text is available in the [license documentation](licenses.html) file.
 
 Please note that the project explicitly does not require a CLA (Contributor License Agreement) from its contributors.
 
 Contact
-============
+-------
+
 Bug reports and patches are very welcome, please post them as GitHub issues and pull requests at https://github.com/aiven/aiven-kafka-connector-framework .
 To report any possible vulnerabilities or other serious issues please see our [security policy](SECURITY.html).

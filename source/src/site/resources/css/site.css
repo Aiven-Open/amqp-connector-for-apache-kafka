@@ -1,0 +1,14 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.nav-header {
+    color: #333333;
+    font-size: 14px;
+}
+
+footer {
+    color: #333333;
+    width: 100%;
+    text-align: center;
+    background-color: #f5f5f5;
+    padding: 15px;
+}

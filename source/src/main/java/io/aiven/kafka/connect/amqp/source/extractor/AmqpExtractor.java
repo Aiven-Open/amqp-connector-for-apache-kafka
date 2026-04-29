@@ -24,30 +24,32 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.extractor.Extractor;
 import io.aiven.commons.kafka.connector.source.extractor.ExtractorInfo;
-import io.aiven.commons.kafka.connector.source.extractor.SchemaAndValueFactory;
 import io.aiven.commons.util.io.compression.CompressionType;
 import io.aiven.kafka.connect.amqp.source.AmqpSourceNativeInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.commons.io.IOUtils;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
-import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.Decimal128;
+import org.apache.qpid.protonj2.types.Decimal64;
+import org.apache.qpid.protonj2.types.Symbol;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Extracts data from the AMQP Message. Each AMQP message generates a single Kafka message */
 public final class AmqpExtractor extends Extractor {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpExtractor.class);
 
   private final ObjectMapper objectMapper;
-  private final JsonConverter jsonConverter;
 
   /**
    * Creates AmqpExtractor
@@ -56,14 +58,27 @@ public final class AmqpExtractor extends Extractor {
    */
   public AmqpExtractor(final SourceCommonConfig config) {
     super(config, info());
-    objectMapper = new ObjectMapper();
+    objectMapper = registerSerializers(new ObjectMapper());
+  }
+
+  /**
+   * Registeres the standard JSON serializers used by the extractor.
+   *
+   * @param objectMapper the ObjectMapper to add the serializers to.
+   * @return the objectMapper parameter with serializers added.
+   */
+  public static ObjectMapper registerSerializers(final ObjectMapper objectMapper) {
     SimpleModule module = new SimpleModule();
     module.addSerializer(Message.class, new MessageSerializer());
     module.addSerializer(Section.class, new AmqpSectionSerializer());
+    module.addSerializer(Binary.class, new AmqpBinarySerializer());
+    module.addSerializer(Symbol.class, new AmqpSymbolSerializer());
+    module.addSerializer(Decimal64.class, new AmqpDecimal64Serializer());
+    module.addSerializer(new AmqpDecimal32Serializer());
+    module.addSerializer(Decimal128.class, new AmqpDecimal128Serializer());
+    module.addSerializer(Symbol.class, new AmqpSymbolSerializer());
     objectMapper.registerModule(module);
-
-    jsonConverter = new JsonConverter();
-    jsonConverter.configure(Map.of("schemas.enable", "false"), false);
+    return objectMapper;
   }
 
   /**
@@ -86,7 +101,7 @@ public final class AmqpExtractor extends Extractor {
 
   @Override
   public SchemaAndValue generateKeyData(EvolvingSourceRecord evolvingSourceRecord) {
-    return SchemaAndValueFactory.createSchemaAndValue(evolvingSourceRecord.getNativeKey());
+    return new SchemaAndValue(Schema.STRING_SCHEMA, evolvingSourceRecord.getNativeKey().toString());
   }
 
   private Optional<SchemaAndValue> generateValue(AmqpSourceNativeInfo nativeInfo) {
@@ -100,16 +115,12 @@ public final class AmqpExtractor extends Extractor {
         }
         message.body(baos.toByteArray());
       }
+
       return Optional.of(
-          jsonConverter.toConnectData(null, objectMapper.writeValueAsBytes(message)));
+          new SchemaAndValue(Schema.STRING_SCHEMA, objectMapper.writeValueAsString(message)));
     } catch (ClientException | IOException e) {
       LOGGER.error("Error reading input stream: {}", e.getMessage(), e);
       return Optional.empty();
     }
-  }
-
-  @Override
-  public void close() {
-    jsonConverter.close();
   }
 }

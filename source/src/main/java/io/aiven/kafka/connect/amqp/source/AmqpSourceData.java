@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -49,10 +50,13 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
 
   private static final ULIDSerde serde = new ULIDSerde();
+
   private final Receiver receiver;
 
   /** The maximum number of Deliveries to pull from the Receiver. */
   private final int receiveLimit;
+
+  private final int taskId;
 
   /**
    * Constructor.
@@ -62,9 +66,10 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
    * @throws ClientException on error.
    */
   AmqpSourceData(final AmqpSourceConfig sourceConfig, final OffsetManager offsetManager)
-      throws ClientException {
+      throws ClientException, ExecutionException, InterruptedException {
     super(sourceConfig, offsetManager);
-    this.receiver = sourceConfig.getReceiver(sourceConfig.getConnection(sourceConfig.getClient()));
+    taskId = sourceConfig.getTaskId();
+    this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
   }
 
@@ -83,11 +88,14 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
         for (int i = 0; i < limit; i++) {
           Delivery delivery = receiver.tryReceive();
           if (delivery != null) {
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("task {}: read {}", taskId, delivery.message());
+            }
             lst.add(new AmqpSourceNativeInfo(delivery));
           }
         }
       } catch (ClientException e) {
-        LOGGER.warn("Client exception retrieving delivery: {}", e.getMessage(), e);
+        LOGGER.warn("task {}: Client exception retrieving delivery: {}", taskId, e.getMessage(), e);
         // do nothing.
       }
 
@@ -120,9 +128,9 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   @Override
   public void close() throws Exception {
     super.close();
-    receiver.connection().client().close();
-    receiver.connection().close();
-    receiver.close();
+    try (receiver) {
+      LOGGER.info("Closing the open receiver");
+    }
   }
 
   /** The AMQP native source data implementation of NativeSourceData.KeySerde. */

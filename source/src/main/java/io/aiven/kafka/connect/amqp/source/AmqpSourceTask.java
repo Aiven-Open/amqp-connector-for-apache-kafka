@@ -24,6 +24,7 @@ import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   /** The logger to write to */
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
 
-  private AmqpSourceConfig amqpSourceConfig;
   private AmqpSourceData amqpSourceData;
 
   /** Default constructor. */
@@ -42,10 +42,11 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   @Override
   protected AmqpSourceConfig configure(Map<String, String> props, OffsetManager offsetManager) {
     LOGGER.info("AMQP Source task started.");
-    this.amqpSourceConfig = new AmqpSourceConfig(props);
+    final AmqpSourceConfig amqpSourceConfig = new AmqpSourceConfig(props);
     try {
       this.amqpSourceData = new AmqpSourceData(amqpSourceConfig, offsetManager);
-    } catch (ClientException e) {
+    } catch (ClientException | ExecutionException | InterruptedException e) {
+      LOGGER.error("Unable to configure the AmqpSourceTask: {}", e.getMessage(), e);
       throw new RuntimeException(e);
     }
     return amqpSourceConfig;

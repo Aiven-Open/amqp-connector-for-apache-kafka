@@ -24,6 +24,7 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.types.Password;
 import org.apache.qpid.protonj2.client.Client;
@@ -74,28 +75,14 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
     return new Setter(data);
   }
 
-  //  /**
-  //   * Override of the validate method
-  //   *
-  //   * @param configMap The map of all values for configuration
-  //   */
-  //  @Override
-  //  public void validate(
-  //      Map<String, ConfigValue> configMap) { // NOPMD useless overriding method ignore as we will
-  // add
-  //    super.validate(configMap);
-  //    // handle any restrictions between options here.
-  //
-  //  }
-
   /**
    * @param configDef
    */
   static void addAMQPConnectivity(final ConfigDef configDef) {
     SinceInfo.Builder siBuilder =
         SinceInfo.builder()
-            .groupId("io.aiven.commons")
-            .artifactId("kafka-source-connector-framework");
+            .groupId("io.aiven.kafka.connect")
+            .artifactId("connectors-common-for-amqp");
     int connectivityCounter = 0;
     configDef
         .define(
@@ -103,7 +90,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The host address for the AMQP service")
                 .build())
@@ -111,7 +98,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
             ExtendedConfigKey.builder(PORT)
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .type(ConfigDef.Type.INT)
                 .defaultValue(5672)
                 .validator(ConfigDef.Range.between(1, 65534))
@@ -123,7 +110,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .validator(new ConfigDef.NonEmptyStringWithoutControlChars())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The address (topic) to listend to.")
@@ -133,7 +120,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .validator(new ConfigDef.NonEmptyStringWithoutControlChars())
                 .importance(ConfigDef.Importance.MEDIUM)
                 .documentation("The user to log into the AMQP server.")
@@ -143,7 +130,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .group(GROUP_AMQP_CONNECTIVITY)
                 .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
                 .orderInGroup(++connectivityCounter)
-                .since(siBuilder.version("1.0.0").build())
+                .since(siBuilder.version("0.1.0").build())
                 .type(ConfigDef.Type.PASSWORD)
                 .validator(
                     new ConfigDef.NonEmptyStringWithoutControlChars() {
@@ -177,8 +164,9 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   }
 
   @Override
-  public Receiver getReceiver(Connection connection) throws ClientException {
-    return connection.openReceiver(dataAccess.getString(ADDRESS));
+  public Receiver getReceiver(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException {
+    return connection.openReceiver(dataAccess.getString(ADDRESS)).openFuture().get();
   }
 
   /** The Setter for the AMQP fragment. */

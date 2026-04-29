@@ -6,7 +6,7 @@
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+    https://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
@@ -15,29 +15,42 @@
     specific language governing permissions and limitations
     under the License.
 
-    SPDX-License-Identifier: Apache-2
+    SPDX-License-Identifier: Apache-2.0
 -->
-<site xmlns="http://maven.apache.org/SITE/2.0.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd">
+<site xmlns="http://maven.apache.org/SITE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd">
+
+    <bannerLeft name="Aiven connectors for AMQP on Apache Kafka" href="https://aiven.io" >
+        <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"  />
+    </bannerLeft>
 
     <poweredBy>
         <logo name="Aiven" href="https://aiven.io/">
             <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"/>
         </logo>
     </poweredBy>
+
     <body>
         <head>
-            <![CDATA[<link rel="icon" href="https://aiven.io/favicon.ico">]]>
+            <![CDATA[<link rel="icon" href="https://aiven.io/favicons/favicon-32x32.png">]]>
         </head>
 
-        <menu ref="modules" inherit="top"/>
+        <breadcrumbs>
+            <item name="Home" href="./index.html" />
+        </breadcrumbs>
 
-        <menu name="Overview">
-            <item name="Introduction" href="/index.html"/>
+        <menu name="Overview" inherit="bottom" inheritAsRef="true">
+            <item name="Introduction" href="./index.html"/>
+            <item name="Source Connector" href="./source/index.html">
+                <item name="Architecture" href="./source/architecture.html"/>
+                <item name="Configuration" href="./source/configuration.html"/>
+            </item>
+            <item name="Change log" href="./CHANGE_LOG.html" />
+        </menu>
+
+        <menu name="Getting Involved" inherit="bottom" inheritAsRef="true">
             <item name="Code of Conduct" href="./CODE_OF_CONDUCT.html" />
             <item name="Contributing" href="./contributing.html" />
-            <item name="Change log" href="./CHANGE_LOG.html" />
             <item name="Security Policy" href="./SECURITY.html" />
         </menu>
 

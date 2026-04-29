@@ -25,10 +25,9 @@ import static org.mockito.Mockito.when;
 
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.task.Context;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import org.apache.hadoop.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
@@ -56,13 +55,14 @@ public class AmqpSourceNativeInfoTest {
     ULID.Value nativeKey = context.getNativeKey();
     assertThat(nativeKey).isNotNull();
     Context context2 = underTest.getContext();
-    ULID.Value nativeKey2 = context.getNativeKey();
+    ULID.Value nativeKey2 = context2.getNativeKey();
     assertThat(nativeKey.compareTo(nativeKey2)).isEqualTo(0);
   }
 
   @Test
   void getInputStream() throws IOException {
-    byte[] result = IOUtils.readFullyToByteArray(new DataInputStream(underTest.getInputStream()));
+
+    byte[] result = IOUtils.toByteArray(underTest.getInputStream());
     assertThat(result).isEqualTo(BODY.getBytes(StandardCharsets.UTF_8));
   }
 

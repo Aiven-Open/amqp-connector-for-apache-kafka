@@ -141,7 +141,15 @@ public final class MessageSerializer extends StdSerializer<Message> {
 
       Object body = extractBody(value);
       if (body != null) {
-        jgen.writePOJOField("body", body);
+        if (body instanceof Section<?> section) {
+          jgen.writeObjectField("body", section);
+        } else {
+          jgen.writeArrayFieldStart("body");
+          for (Section<?> section : (Collection<Section<?>>) body) {
+            jgen.writeObject(section);
+          }
+          jgen.writeEndArray();
+        }
       }
 
       jgen.writeEndObject();
@@ -162,7 +170,7 @@ public final class MessageSerializer extends StdSerializer<Message> {
    *
    * @param value the message to extract the sections from.
    * @return the Object representing the body or {@code null}.
-   * @throws IOException
+   * @throws IOException on IO Error
    */
   private Object extractBody(Message<?> value) throws IOException {
     try {

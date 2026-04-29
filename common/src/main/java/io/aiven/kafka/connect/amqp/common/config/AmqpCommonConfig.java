@@ -18,6 +18,7 @@
 */
 package io.aiven.kafka.connect.amqp.common.config;
 
+import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Receiver;
@@ -48,6 +49,21 @@ public interface AmqpCommonConfig {
    * @param connection the AMQP connection to use for the receiver.
    * @return the new AMQP Receiver. Must be closed when finished.
    * @throws ClientException if the AMQP receiver can not be created.
+   * @throws ExecutionException If the receiver could not be created.
+   * @throws InterruptedException If the remote server was interrupted.
    */
-  Receiver getReceiver(Connection connection) throws ClientException;
+  Receiver getReceiver(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException;
+
+  /**
+   * Creates a new AMQP Receiver by creating and using a Client and Connection.
+   *
+   * @return the new AMQP Receiver. Must be closed when finished.
+   * @throws ClientException if the AMQP receiver can not be created.
+   * @throws ExecutionException If the receiver could not be created.
+   * @throws InterruptedException If the remote server was interrupted.
+   */
+  default Receiver getReceiver() throws ClientException, ExecutionException, InterruptedException {
+    return getReceiver(getConnection(getClient()));
+  }
 }
