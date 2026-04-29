@@ -57,8 +57,8 @@ public class AmqpFragmentTest {
         .setHost(rabbit.getHost())
         .setPort(rabbit.getAmqpPort())
         .setAddress(AMQP_ADDRESS)
-        .setUser("guest")
-        .setPassword("guest");
+        .setUser(rabbit.getAdminUsername())
+        .setPassword(rabbit.getAdminPassword());
 
     ConfigDef configDef = new ConfigDef();
     AmqpFragment.update(configDef);
