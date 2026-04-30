@@ -65,6 +65,17 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
     }
   }
 
+  private void ensureReceiver() {
+    if (receiver == null) {
+      try {
+        receiver = connection.openReceiver(amqpAddress);
+      } catch (ClientException e) {
+        LOGGER.error("createStorage error: {}", e.getMessage(), e);
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
   public AmqpSourceStorage(RabbitMQContainer rabbit) throws ClientException {
     this.rabbit = rabbit;
     client = Client.create();
@@ -150,7 +161,6 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
     }
     try {
       sender = connection.openSender(amqpAddress);
-      receiver = connection.openReceiver(amqpAddress);
     } catch (ClientException e) {
       LOGGER.error("createStorage error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
@@ -163,14 +173,11 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
       sender.close();
       sender = null;
     }
-    if (receiver != null) {
-      receiver.close();
-      receiver = null;
-    }
   }
 
   @Override
   public List<? extends NativeInfo<ULID.Value, Delivery>> getNativeInfo() {
+    ensureReceiver();
     if (receiver != null) {
       try {
         int limit = (int) Math.min(Integer.MAX_VALUE, receiver.queuedDeliveries());
