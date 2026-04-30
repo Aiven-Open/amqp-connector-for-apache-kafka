@@ -70,7 +70,7 @@
     <developer>
       <id>claudenw</id>
       <name>Claude Warren</name>
-      <email>claude@aiven.io</email>
+      <email>claude.warren@xenei.com</email>
       <organization>Aiven, OY</organization>
       <organizationUrl>https://aiven.io</organizationUrl>
       <timezone>Europe/Dublin</timezone>
@@ -120,7 +120,7 @@
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
-    <aiven.kafak.framework.version>0.2.0</aiven.kafak.framework.version>
+    <aiven.kafak.framework.version>0.3.0-SNAPSHOT</aiven.kafak.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
     <slf4j.version>2.0.17</slf4j.version>
     <testcontainers.version>2.0.4</testcontainers.version>
@@ -195,6 +195,12 @@
             <artifactId>commons-beanutils</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>kafka-testkit</artifactId>
+        <version>${aiven.common.kafka.testkit.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -478,6 +484,23 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <includes>
+                <include>**/*IT</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
@@ -551,6 +574,8 @@
       </plugin>
     </plugins>
   </build>
+</project>
+
 
   <reporting>
     <plugins>
@@ -617,4 +642,5 @@
       </build>
     </profile>
   </profiles>
+
 </project>
