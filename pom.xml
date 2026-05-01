@@ -108,7 +108,7 @@
     <latestRelease>0.1.0</latestRelease>
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <proton.version>1.1.0</proton.version>
-    <jackson.version>2.21.2</jackson.version>
+    <jackson.version>2.21.3</jackson.version>
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
