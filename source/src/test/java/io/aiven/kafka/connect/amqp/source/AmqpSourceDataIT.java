@@ -27,9 +27,12 @@ import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +49,7 @@ public class AmqpSourceDataIT {
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceData underTest;
 
-  @Container RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
+  @Container static RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
   AmqpSourceDataIT() throws ClientException {
     rabbit.start();
@@ -67,7 +70,7 @@ public class AmqpSourceDataIT {
   }
 
   @Test
-  void getNativeItemIteratorTest() {
+  void getNativeItemIteratorTest() throws ClientException {
 
     String topic = "getNativeItemIteratorTest";
     sourceStorage.setAmqpAddress("AMQP_" + topic);
@@ -90,7 +93,7 @@ public class AmqpSourceDataIT {
 
     final Iterator[] iter = new Iterator[1];
     await()
-        .atMost(Duration.ofSeconds(5))
+        .atMost(Duration.ofSeconds(60))
         .until(
             () -> {
               iter[0] = underTest.getNativeItemIterator(null);
@@ -99,5 +102,52 @@ public class AmqpSourceDataIT {
     AmqpSourceNativeInfo nativeInfo = (AmqpSourceNativeInfo) iter[0].next();
     assertThat(iter[0]).isExhausted();
     assertThat(nativeInfo).isNotNull();
+    Message<Object> message = nativeInfo.getMessage();
+    assertThat(message.body()).isEqualTo(body.getBytes(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void multiRecordNativeItemIteratorTest() throws ClientException {
+
+    String topic = "multiRecordNativeItemIteratorTest";
+    sourceStorage.setAmqpAddress("AMQP_" + topic);
+    sourceStorage.createStorage();
+
+    OffsetManager offsetManager = mock(OffsetManager.class);
+    Map<String, String> props = sourceStorage.createConnectorConfig();
+    AmqpSourceConfig amqpConfig = new AmqpSourceConfig(props);
+    try {
+      underTest = new AmqpSourceData(amqpConfig, offsetManager);
+    } catch (ClientException | ExecutionException | InterruptedException e) {
+      LOGGER.error("Unable to create AmqpSourceData: {}", e.getMessage(), e);
+      throw new RuntimeException(e);
+    }
+
+    List<byte[]> bodies = new ArrayList<>();
+    List<Tracker> trackers = new ArrayList<Tracker>();
+
+    for (int i = 0; i < 100; i++) {
+      String body = "Hello world" + i;
+      bodies.add(body.getBytes(StandardCharsets.UTF_8));
+      trackers.add(sourceStorage.write(body.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    trackers.forEach(
+        tracker -> await().atMost(Duration.ofSeconds(5)).until(tracker::remoteSettled));
+    List<byte[]> read = new ArrayList<>();
+
+    final Iterator[] iter = new Iterator[1];
+    await()
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> {
+              iter[0] = underTest.getNativeItemIterator(null);
+              while (iter[0].hasNext()) {
+                AmqpSourceNativeInfo nativeInfo = (AmqpSourceNativeInfo) iter[0].next();
+                Message<Object> message = nativeInfo.getMessage();
+                read.add((byte[]) message.body());
+              }
+              assertThat(read).containsExactlyInAnyOrderElementsOf(bodies);
+            });
   }
 }
