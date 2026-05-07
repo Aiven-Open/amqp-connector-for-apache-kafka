@@ -21,18 +21,29 @@
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd">
 
     <bannerLeft name="Aiven connectors for AMQP on Apache Kafka" href="https://aiven.io" >
-        <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"  />
+        <image width="32px" height="32px" src="./logo.png"/>
     </bannerLeft>
 
     <poweredBy>
         <logo name="Aiven" href="https://aiven.io/">
-            <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"/>
+            <image src="./logo.png"/>
         </logo>
     </poweredBy>
 
     <body>
         <head>
-            <![CDATA[<link rel="icon" href="https://aiven.io/favicons/favicon-32x32.png">]]>
+            <![CDATA[
+                <link rel="icon" type="image/svg+xml" href="./logo.svg">
+                <link rel="icon" type="image/png" href="./logo.png">
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('a.builtBy, #bannerLeft a').forEach(function (link) {
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                        });
+                    });
+                </script>
+            ]]>
         </head>
 
         <breadcrumbs>
