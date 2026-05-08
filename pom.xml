@@ -75,6 +75,14 @@
       <organizationUrl>https://aiven.io</organizationUrl>
       <timezone>Europe/Dublin</timezone>
     </developer>
+    <developer>
+      <id>nosahama</id>
+      <name>Emmanuel Evbuomwan</name>
+      <email>emmanuel.evbuomwan@aiven.io</email>
+      <organization>Aiven, OY</organization>
+      <organizationUrl>https://aiven.io</organizationUrl>
+      <timezone>Europe/Berlin</timezone>
+    </developer>
   </developers>
 
   <modules>
