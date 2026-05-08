@@ -20,13 +20,14 @@
 <site xmlns="http://maven.apache.org/SITE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
 requireParent="true">
-
-    <poweredBy>
-        <logo name="Aiven" href="https://aiven.io/">
-            <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"/>
-        </logo>
-    </poweredBy>
     <body>
+
+        <head>
+            <![CDATA[
+                <link rel="icon" type="image/svg+xml" href="./logo.svg">
+                <link rel="icon" type="image/png" href="./logo.png">
+            ]]>
+        </head>
 
 
         <breadcrumbs>
