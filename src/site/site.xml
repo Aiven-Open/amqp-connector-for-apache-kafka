@@ -73,7 +73,7 @@
 
         <footer>Copyright &copy; Aiven Oy. Licensed under the Apache License, Version 2.0.<![CDATA[<br/>
             Apache Commons Collection, Apache Kafka, and Apache Velocity are trademarks of The Apache Software Foundation.<br/>
-            Salesforce is a trademark of Salesforce, Inc.<br/>
+            AMQP is a protocol specification and related names may be trademarks of their respective owners.<br/>
             All other marks mentioned may be trademarks or registered trademarks of their respective owners.]]></footer>
 
     </body>
@@ -88,7 +88,7 @@
             <sideBarEnabled>true</sideBarEnabled>
             <skipGenerationDate>true</skipGenerationDate>
             <gitHub>
-                <projectId>Aiven-Open/salesforce-connector-for-apache-kafka</projectId>
+                <projectId>Aiven-Open/amqp-connector-for-apache-kafka</projectId>
                 <ribbonOrientation>right</ribbonOrientation>
                 <ribbonColor>orange</ribbonColor>
             </gitHub>

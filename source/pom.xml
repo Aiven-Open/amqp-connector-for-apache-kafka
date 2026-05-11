@@ -248,18 +248,11 @@
                   <directory>../src/site/resources</directory>
                   <includes>
                     <include>logo.png</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>../src/site/resources</directory>
-                  <targetPath>site</targetPath>
-                  <includes>
-                    <include>logo.png</include>
                     <include>logo.svg</include>
                   </includes>
                 </resource>
               </resources>
-              <outputDirectory>${project.build.directory}</outputDirectory>
+              <outputDirectory>${project.build.directory}/generated-site/resources</outputDirectory>
             </configuration>
           </execution>
         </executions>
