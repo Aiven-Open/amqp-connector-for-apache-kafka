@@ -65,7 +65,18 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+      <version>${aiven.kafak.framework.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.aiven.kafka.connect</groupId>
