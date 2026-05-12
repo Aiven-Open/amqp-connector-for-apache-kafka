@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTaskTestIT.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceStorage.class);
   private static final ExtractorRegistry extractorRegistry =
       ExtractorRegistry.builder().add(AmqpExtractor.info()).build();
 
@@ -58,6 +58,23 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   private Sender sender;
   private Receiver receiver;
   private String amqpAddress;
+
+  private void ensureSender() throws ClientException {
+    if (sender == null) {
+      sender = connection.openSender(amqpAddress);
+    }
+  }
+
+  private void ensureReceiver() {
+    if (receiver == null) {
+      try {
+        receiver = connection.openReceiver(amqpAddress);
+      } catch (ClientException e) {
+        LOGGER.error("createStorage error: {}", e.getMessage(), e);
+        throw new RuntimeException(e);
+      }
+    }
+  }
 
   public AmqpSourceStorage(RabbitMQContainer rabbit) throws ClientException {
     this.rabbit = rabbit;
@@ -69,7 +86,7 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
               rabbit.getAmqpPort(),
               new ConnectionOptions()
                   .user(rabbit.getAdminUsername())
-                  .password(rabbit.getAdminUsername()));
+                  .password(rabbit.getAdminPassword()));
     } catch (ClientException e) {
       LOGGER.error("constructor create connection error: {}", e.getMessage(), e);
       throw e;
@@ -89,6 +106,7 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   @Override
   public WriteResult<ULID.Value> writeWithKey(ULID.Value nativeKey, byte[] testDataBytes) {
     try {
+      ensureSender();
       Message<byte[]> message = Message.create(testDataBytes).messageId(nativeKey.toString());
       sender.send(message);
       return new WriteResult<>(null, nativeKey);
@@ -100,6 +118,7 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
 
   public Tracker write(byte[] testDataBytes) {
     try {
+      ensureSender();
       Message<byte[]> message = Message.create(testDataBytes);
       return sender.send(message);
     } catch (ClientException e) {
@@ -119,8 +138,8 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
         .setHost(rabbit.getHost())
         .setPort(rabbit.getAmqpPort())
         .setAddress(amqpAddress)
-        .setUser("guest")
-        .setPassword("guest");
+        .setUser(rabbit.getAdminUsername())
+        .setPassword(rabbit.getAdminPassword());
     return data;
   }
 
@@ -142,7 +161,6 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
     }
     try {
       sender = connection.openSender(amqpAddress);
-      receiver = connection.openReceiver(amqpAddress);
     } catch (ClientException e) {
       LOGGER.error("createStorage error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
@@ -155,14 +173,11 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
       sender.close();
       sender = null;
     }
-    if (receiver != null) {
-      receiver.close();
-      receiver = null;
-    }
   }
 
   @Override
   public List<? extends NativeInfo<ULID.Value, Delivery>> getNativeInfo() {
+    ensureReceiver();
     if (receiver != null) {
       try {
         int limit = (int) Math.min(Integer.MAX_VALUE, receiver.queuedDeliveries());

@@ -20,6 +20,8 @@ package io.aiven.kafka.connect.amqp.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.AbstractSourceIntegrationBase;
@@ -31,9 +33,11 @@ import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.connect.runtime.ConnectorConfig;
+import org.apache.kafka.connect.storage.StringConverter;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.junit.jupiter.api.Test;
@@ -46,8 +50,8 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
 @Testcontainers
 public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Value, Delivery> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceConnectorIT.class);
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final AmqpSourceStorage sourceStorage;
-  private AmqpSourceConnector underTest;
 
   @Container RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
@@ -66,14 +70,19 @@ public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Va
     String topic = getTopic();
     sourceStorage.setAmqpAddress("AMQP_" + topic);
 
-    KafkaManager kafkaManager = setupKafka(Collections.emptyMap());
+    final Map<String, String> workerConfigOverrides =
+        Map.of(
+            ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, StringConverter.class.getName(),
+            ConnectorConfig.VALUE_CONVERTER_CLASS_CONFIG, StringConverter.class.getName());
+    KafkaManager kafkaManager = setupKafka(workerConfigOverrides);
+    kafkaManager.createTopic(topic);
 
     Map<String, String> config = sourceStorage.createConnectorConfig();
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config)
         .extractorClass(AmqpExtractor.class)
         .targetTopic(topic)
-        .ringBufferSize(0);
+        .ringBufferSize(1);
 
     LOGGER.info("{}", config);
 
@@ -86,10 +95,16 @@ public class AmqpSourceConnectorIT extends AbstractSourceIntegrationBase<ULID.Va
 
     // Poll messages from the Kafka topic and verify the consumed data
     final List<String> records =
-        messageConsumer().consumeStringMessages(topic, 4, Duration.ofSeconds(10));
+        messageConsumer().consumeStringMessages(topic, 1, Duration.ofSeconds(10));
 
-    // Verify that the correct data is read from the S3 bucket and pushed to Kafka
-    assertThat(records).containsOnly("hello world");
+    // Verify that the AMQP payload reaches Kafka in the serialized envelope format
+    // and the embedded base64 body decodes to the original message bytes.
+    assertThat(records).hasSize(1);
+    final JsonNode payload = OBJECT_MAPPER.readTree(records.get(0));
+    final String bodyBase64 = payload.path("body").asText();
+    final String decodedBody =
+        new String(Base64.getDecoder().decode(bodyBase64), StandardCharsets.UTF_8);
+    assertThat(decodedBody).isEqualTo(body);
     assertThat(writeResult).isNotNull();
   }
 }

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -148,6 +149,25 @@ public abstract class AbstractSourceIntegrationBase<K extends Comparable<K>, N>
   @Override
   protected Duration getOffsetFlushInterval() {
     return Duration.ofSeconds(5);
+  }
+
+  /**
+   * Set up Kafka using the connector class under test.
+   *
+   * @param configOverrides worker configuration overrides.
+   * @return the KafkaManager instance.
+   * @throws IOException on IO error.
+   */
+  protected final KafkaManager setupKafka(final Map<String, String> configOverrides)
+      throws IOException {
+    try {
+      return super.setupKafka(getConnectorClass(), configOverrides);
+    } catch (ExecutionException e) {
+      throw new IOException("Unable to set up Kafka test cluster", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while setting up Kafka test cluster", e);
+    }
   }
 
   /** Delete the current connector from the running kafka. */

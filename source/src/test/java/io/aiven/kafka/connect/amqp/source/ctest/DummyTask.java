@@ -18,10 +18,12 @@
 */
 package io.aiven.kafka.connect.amqp.source.ctest;
 
+import java.util.Collection;
 import java.util.Map;
-import org.apache.kafka.connect.connector.Task;
+import org.apache.kafka.connect.sink.SinkRecord;
+import org.apache.kafka.connect.sink.SinkTask;
 
-public class DummyTask implements Task {
+public class DummyTask extends SinkTask {
 
   static int startCount = 0;
   static int stopCount = 0;
@@ -35,6 +37,9 @@ public class DummyTask implements Task {
   public void start(Map<String, String> props) {
     ++startCount;
   }
+
+  @Override
+  public void put(Collection<SinkRecord> records) {}
 
   @Override
   public void stop() {

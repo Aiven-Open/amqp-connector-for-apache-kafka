@@ -23,7 +23,12 @@ import org.testcontainers.utility.DockerImageName;
 
 public final class IntegrationTestSetup {
 
+  private static final String TEST_USER = "guest";
+  private static final String TEST_PASSWORD = "guest";
+
   public static RabbitMQContainer rabbitMQContainer() {
-    return new RabbitMQContainer(DockerImageName.parse("rabbitmq:4.2-management-alpine"));
+    return new RabbitMQContainer(DockerImageName.parse("rabbitmq:4.2-management-alpine"))
+        .withEnv("RABBITMQ_DEFAULT_USER", TEST_USER)
+        .withEnv("RABBITMQ_DEFAULT_PASS", TEST_PASSWORD);
   }
 }

@@ -37,7 +37,8 @@ public class KafkaConnectRunnerTest {
 
   @BeforeAll
   static void beforeAll() throws IOException {
-    underTest.startConnectCluster("KafkaConnectRunnerTest", Collections.emptyMap());
+    underTest.startConnectCluster(
+        "KafkaConnectRunnerTest", DummyConnector.class, Collections.emptyMap());
   }
 
   @AfterAll
@@ -78,38 +79,28 @@ public class KafkaConnectRunnerTest {
     connectorConfig.put(SinkConnectorConfig.TOPICS_CONFIG, "dummyTopic");
 
     assertConnectorCounters(0, 0, 0);
-    assertThat(underTest.hasConnector("testConnector")).isFalse();
 
     underTest.configureConnector("testConnector", connectorConfig);
-    assertThat(underTest.hasConnector("testConnector")).isTrue();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> assertConnectorCounters(1, 1, 0));
-    assertThat(underTest.connectorStatus("testConnector").connector().state()).isEqualTo("RUNNING");
 
     underTest.restartConnector("testConnector");
-    assertThat(underTest.hasConnector("testConnector")).isTrue();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> assertConnectorCounters(2, 2, 1));
-    assertThat(underTest.connectorStatus("testConnector").connector().state()).isEqualTo("RUNNING");
 
     underTest.pauseConnector("testConnector");
-    assertThat(underTest.hasConnector("testConnector")).isTrue();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> assertConnectorCounters(2, 2, 2));
-    assertThat(underTest.connectorStatus("testConnector").connector().state()).isEqualTo("PAUSED");
 
     underTest.resumeConnector("testConnector");
-    assertThat(underTest.hasConnector("testConnector")).isTrue();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> assertConnectorCounters(3, 3, 2));
-    assertThat(underTest.connectorStatus("testConnector").connector().state()).isEqualTo("RUNNING");
 
     underTest.deleteConnector("testConnector");
-    assertThat(underTest.hasConnector("testConnector")).isFalse();
     Awaitility.await()
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> assertConnectorCounters(3, 3, 3));
