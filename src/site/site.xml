@@ -20,7 +20,7 @@
 <site xmlns="http://maven.apache.org/SITE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd">
 
-    <bannerLeft name="Aiven connectors for AMQP on Apache Kafka" href="https://aiven.io" >
+    <bannerLeft name="Aiven connectors for AMQP on Apache Kafka" href="https://aiven-open.github.io/amqp-connector-for-apache-kafka" >
         <image width="32px" height="32px" src="./logo.png"/>
     </bannerLeft>
 
@@ -37,7 +37,7 @@
                 <link rel="icon" type="image/png" href="./logo.png">
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {
-                        document.querySelectorAll('a.builtBy, #bannerLeft a').forEach(function (link) {
+                        document.querySelectorAll('a.builtBy').forEach(function (link) {
                             link.target = '_blank';
                             link.rel = 'noopener noreferrer';
                         });
@@ -73,7 +73,7 @@
 
         <footer>Copyright &copy; Aiven Oy. Licensed under the Apache License, Version 2.0.<![CDATA[<br/>
             Apache Commons Collection, Apache Kafka, and Apache Velocity are trademarks of The Apache Software Foundation.<br/>
-            Salesforce is a trademark of Salesforce, Inc.<br/>
+            AMQP is a protocol specification and related names may be trademarks of their respective owners.<br/>
             All other marks mentioned may be trademarks or registered trademarks of their respective owners.]]></footer>
 
     </body>
@@ -88,7 +88,7 @@
             <sideBarEnabled>true</sideBarEnabled>
             <skipGenerationDate>true</skipGenerationDate>
             <gitHub>
-                <projectId>Aiven-Open/salesforce-connector-for-apache-kafka</projectId>
+                <projectId>Aiven-Open/amqp-connector-for-apache-kafka</projectId>
                 <ribbonOrientation>right</ribbonOrientation>
                 <ribbonColor>orange</ribbonColor>
             </gitHub>

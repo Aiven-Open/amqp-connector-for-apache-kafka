@@ -236,6 +236,25 @@
               <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
             </configuration>
           </execution>
+          <execution>
+            <id>copy-shared-site-assets-for-source-site</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>pre-site</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>../src/site/resources</directory>
+                  <includes>
+                    <include>logo.png</include>
+                    <include>logo.svg</include>
+                  </includes>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/generated-site/resources</outputDirectory>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

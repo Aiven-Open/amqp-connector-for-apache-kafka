@@ -19,7 +19,7 @@
 Aiven connectors for AMQP on Apache Kafka
 ======================
 
-[![Main checks](https://github.com/Aiven-Open/amqp-connector-for-apache-kafka/actions/workflows/Merge_check.yml/badge.svg)](https://github.com/Aiven-Open/salesforce-connector-for-apache-kafka/actions/workflows/Merge_check.yml)
+[![Main checks](https://github.com/Aiven-Open/amqp-connector-for-apache-kafka/actions/workflows/Merge_check.yml/badge.svg)](https://github.com/Aiven-Open/amqp-connector-for-apache-kafka/actions/workflows/Merge_check.yml)
 
 This is an open source connector developed by Aiven that integrates with Apache Kafka and AMQP providers.  It provides a source connector.
 
@@ -47,5 +47,5 @@ Please note that the project explicitly does not require a CLA (Contributor Lice
 
 Contact
 ============
-Bug reports and patches are very welcome, please post them as GitHub issues and pull requests at https://github.com/aiven-open/amqp-connector-for-apache-kafka 
+Bug reports and patches are very welcome, please post them as GitHub issues and pull requests at https://github.com/aiven-open/amqp-connector-for-apache-kafka
 To report any possible vulnerabilities or other serious issues please see our [security](SECURITY.md) policy.
