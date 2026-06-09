@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import io.aiven.commons.kafka.connector.source.OffsetManager;
+import io.aiven.commons.kafka.testkit.KafkaIntegrationTestBase;
 import io.aiven.kafka.connect.amqp.common.integration.IntegrationTestSetup;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +45,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 @Testcontainers
-public class AmqpSourceDataIT {
+public class AmqpSourceDataIT extends KafkaIntegrationTestBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceDataIT.class);
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceData underTest;
@@ -71,10 +72,7 @@ public class AmqpSourceDataIT {
 
   @Test
   void getNativeItemIteratorTest() throws ClientException {
-
-    String topic = "getNativeItemIteratorTest";
-    sourceStorage.setAmqpAddress("AMQP_" + topic);
-    sourceStorage.createStorage();
+    sourceStorage.createStorage("AMQP_" + getTopic());
 
     String body = "hello world";
 
@@ -93,7 +91,7 @@ public class AmqpSourceDataIT {
 
     final Iterator[] iter = new Iterator[1];
     await()
-        .atMost(Duration.ofSeconds(60))
+        .atMost(Duration.ofSeconds(5))
         .until(
             () -> {
               iter[0] = underTest.getNativeItemIterator(null);
@@ -109,9 +107,7 @@ public class AmqpSourceDataIT {
   @Test
   void multiRecordNativeItemIteratorTest() throws ClientException {
 
-    String topic = "multiRecordNativeItemIteratorTest";
-    sourceStorage.setAmqpAddress("AMQP_" + topic);
-    sourceStorage.createStorage();
+    sourceStorage.createStorage("AMQP_" + getTopic());
 
     OffsetManager offsetManager = mock(OffsetManager.class);
     Map<String, String> props = sourceStorage.createConnectorConfig();

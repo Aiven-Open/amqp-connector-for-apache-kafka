@@ -80,20 +80,18 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
 
   @Test
   void testMessageRead() throws IOException, ExecutionException, InterruptedException {
-    String topic = getTopic();
-    sourceStorage.setAmqpAddress(topic + "-AMQP");
-    sourceStorage.createStorage();
+    sourceStorage.createStorage("AMQP_" + getTopic());
 
     Map<String, String> config = sourceStorage.createConnectorConfig();
     CommonConfigFragment.setter(config).maxTasks(1);
-    SourceConfigFragment.setter(config).targetTopic(topic);
+    SourceConfigFragment.setter(config).targetTopic(getTopic());
 
     LOGGER.info("{}", config);
 
     String body = "hello world";
 
     ULID ulid = new ULID();
-    SourceStorage.WriteResult<ULID.Value> writeResult =
+    SourceStorage.WriteResult writeResult =
         sourceStorage.writeWithKey(ulid.nextValue(), body.getBytes(StandardCharsets.UTF_8));
     assertThat(writeResult).isNotNull();
 
@@ -131,7 +129,7 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
     assertThat(sourceRecord.timestamp()).isNull();
     assertThat(sourceRecord.valueSchema()).isEqualTo(Schema.STRING_SCHEMA);
     JsonNode node = OBJECT_MAPPER.readTree((String) sourceRecord.value());
-    assertThat(node.get("messageId").asText()).isEqualTo(writeResult.getNativeKey().toString());
+    assertThat(node.get("messageId").asText()).isEqualTo(writeResult.nativeKey().toString());
     assertThat(node.get("body").asText()).isEqualTo("aGVsbG8gd29ybGQ=");
   }
 }

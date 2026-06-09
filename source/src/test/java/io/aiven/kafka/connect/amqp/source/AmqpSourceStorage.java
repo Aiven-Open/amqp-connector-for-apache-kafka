@@ -18,16 +18,19 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
+import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.ExtractorRegistry;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,7 @@ import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.ConnectionOptions;
 import org.apache.qpid.protonj2.client.Delivery;
+import org.apache.qpid.protonj2.client.DeliveryState;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.Sender;
@@ -58,10 +62,18 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   private Sender sender;
   private Receiver receiver;
   private String amqpAddress;
+  private String topic;
+  private Map<Tracker, Message> trackers = new HashMap<>();
+
+  @Override
+  public boolean nullDataIsNullRecord() {
+    return false;
+  }
 
   private void ensureSender() throws ClientException {
     if (sender == null) {
       sender = connection.openSender(amqpAddress);
+      trackers.clear();
     }
   }
 
@@ -104,12 +116,12 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   }
 
   @Override
-  public WriteResult<ULID.Value> writeWithKey(ULID.Value nativeKey, byte[] testDataBytes) {
+  public WriteResult writeWithKey(ULID.Value nativeKey, byte[] testDataBytes) {
     try {
       ensureSender();
       Message<byte[]> message = Message.create(testDataBytes).messageId(nativeKey.toString());
-      sender.send(message);
-      return new WriteResult<>(null, nativeKey);
+      trackers.put(sender.send(message), message);
+      return new WriteResult(null, nativeKey);
     } catch (ClientException e) {
       LOGGER.error("writingWithKey error: {}", e.getMessage(), e);
       throw new RuntimeException(e);
@@ -154,8 +166,27 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
     return AmqpSourceConnector.class;
   }
 
+  /**
+   * Gets the configuration with the AMQP properties and topic set.
+   *
+   * @return the map of properties.
+   */
+  public Map<String, String> getAMQPInitialConfig() {
+    Map<String, String> data = new HashMap<>();
+    AmqpFragment.setter(data)
+        .setAddress(amqpAddress)
+        .setHost(rabbit.getHost())
+        .setPort(rabbit.getAmqpPort())
+        .setUser(rabbit.getAdminUsername())
+        .setPassword(rabbit.getAdminPassword());
+    SourceConfigFragment.setter(data).targetTopic(topic);
+    return data;
+  }
+
   @Override
-  public void createStorage() {
+  public void createStorage(String topic) {
+    amqpAddress = topic;
+    this.topic = topic;
     if (sender != null) {
       removeStorage();
     }
@@ -172,32 +203,33 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
     if (sender != null) {
       sender.close();
       sender = null;
+      trackers.clear();
+    }
+    if (receiver != null) {
+      receiver.close();
+      receiver = null;
     }
   }
 
   @Override
   public List<? extends NativeInfo<ULID.Value, Delivery>> getNativeInfo() {
-    ensureReceiver();
-    if (receiver != null) {
-      try {
-        int limit = (int) Math.min(Integer.MAX_VALUE, receiver.queuedDeliveries());
-        if (limit > 0) {
-          List<NativeInfo<ULID.Value, Delivery>> lst = new ArrayList<>();
-
-          for (int i = 0; i < limit; i++) {
-            NativeInfo<ULID.Value, Delivery> ni =
-                new NativeInfo<>(AmqpSourceNativeInfo.nextValue(), receiver.receive());
-            lst.add(ni);
-          }
-          return lst;
+    // can not read from connector or the data won't be there for real read.  So return what we
+    // think was written.
+    List<NativeInfo<ULID.Value, Delivery>> result = new ArrayList<>();
+    for (Tracker tracker : trackers.keySet()) {
+      if (tracker.remoteState() == DeliveryState.accepted()) {
+        try {
+          Message<?> message = trackers.get(tracker);
+          Delivery delivery = mock(Delivery.class);
+          ULID.Value value = ULID.parseULID(message.messageId().toString());
+          when(delivery.message()).thenReturn(trackers.get(tracker));
+          result.add(new NativeInfo<>(value, delivery));
+        } catch (ClientException e) {
+          throw new RuntimeException(e);
         }
-        return Collections.emptyList();
-      } catch (ClientException e) {
-        LOGGER.error("getNativeInfo error: {}", e.getMessage(), e);
-        throw new RuntimeException(e);
       }
     }
-    throw new RuntimeException("Receiver not open");
+    return result;
   }
 
   @Override
