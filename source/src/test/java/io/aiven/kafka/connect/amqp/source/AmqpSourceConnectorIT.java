@@ -53,46 +53,4 @@ public class AmqpSourceConnectorIT
     return sourceStorage;
   }
 
-  //  @Test
-  //  void testMessageRead() throws IOException, ExecutionException, InterruptedException {
-  //    String topic = getTopic();
-  //    sourceStorage.setAmqpAddress("AMQP_" + topic);
-  //
-  //    final Map<String, String> workerConfigOverrides =
-  //        Map.of(
-  //            ConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, StringConverter.class.getName(),
-  //            ConnectorConfig.VALUE_CONVERTER_CLASS_CONFIG, StringConverter.class.getName());
-  //    KafkaManager kafkaManager = setupKafka(workerConfigOverrides);
-  //    kafkaManager.createTopic(topic);
-  //
-  //    Map<String, String> config = sourceStorage.createConnectorConfig();
-  //    CommonConfigFragment.setter(config).maxTasks(1);
-  //    SourceConfigFragment.setter(config)
-  //        .extractorClass(AmqpExtractor.class)
-  //        .targetTopic(topic)
-  //        .ringBufferSize(1);
-  //
-  //    LOGGER.info("{}", config);
-  //
-  //    kafkaManager.configureConnector(getTopic(), config);
-  //
-  //    String body = "hello world";
-  //
-  //    SourceStorage.WriteResult writeResult = write(topic, body.getBytes(StandardCharsets.UTF_8),
-  // 1);
-  //
-  //    // Poll messages from the Kafka topic and verify the consumed data
-  //    final List<String> records =
-  //        messageConsumer().consumeStringMessages(topic, 1, Duration.ofSeconds(10));
-  //
-  //    // Verify that the AMQP payload reaches Kafka in the serialized envelope format
-  //    // and the embedded base64 body decodes to the original message bytes.
-  //    assertThat(records).hasSize(1);
-  //    final JsonNode payload = OBJECT_MAPPER.readTree(records.get(0));
-  //    final String bodyBase64 = payload.path("body").asText();
-  //    final String decodedBody =
-  //        new String(Base64.getDecoder().decode(bodyBase64), StandardCharsets.UTF_8);
-  //    assertThat(decodedBody).isEqualTo(body);
-  //    assertThat(writeResult).isNotNull();
-  //  }
 }
