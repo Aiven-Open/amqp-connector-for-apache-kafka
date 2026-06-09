@@ -86,8 +86,6 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
     CommonConfigFragment.setter(config).maxTasks(1);
     SourceConfigFragment.setter(config).targetTopic(getTopic());
 
-    LOGGER.info("{}", config);
-
     String body = "hello world";
 
     ULID ulid = new ULID();

@@ -52,5 +52,4 @@ public class AmqpSourceConnectorIT
   protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
     return sourceStorage;
   }
-
 }

@@ -47,7 +47,7 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
 public class AmqpSourceStorageIT extends KafkaIntegrationTestBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceStorageIT.class);
   private AmqpSourceStorage underTest;
-
+  private static final String STORAGE_PREFIX = "AMQP_";
   @Container RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
   AmqpSourceStorageIT() throws ClientException {
@@ -58,7 +58,7 @@ public class AmqpSourceStorageIT extends KafkaIntegrationTestBase {
   @Test
   void sourceStorageTest() throws ClientException {
     ULID ulid = new ULID();
-    underTest.createStorage("AMQP_" + getTopic());
+    underTest.createStorage(STORAGE_PREFIX + getTopic());
     underTest.writeWithKey(ulid.nextValue(), "Hello world".getBytes(StandardCharsets.UTF_8));
     final List<NativeInfo<ULID.Value, Delivery>> lst = new ArrayList<>();
     await()
@@ -78,7 +78,7 @@ public class AmqpSourceStorageIT extends KafkaIntegrationTestBase {
   void sourceStorageTestWithConfigGenClientTest()
       throws ClientException, ExecutionException, InterruptedException {
     ULID ulid = new ULID();
-    underTest.createStorage("AMQP_" + getTopic());
+    underTest.createStorage(STORAGE_PREFIX + getTopic());
 
     Map<String, String> props = underTest.createConnectorConfig();
     AmqpSourceConfig config = new AmqpSourceConfig(props);
