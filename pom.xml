@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>3</version>
+    <version>4</version>
   </parent>
 
   <groupId>io.aiven.kafka.connect</groupId>
@@ -70,7 +70,7 @@
     <developer>
       <id>claudenw</id>
       <name>Claude Warren</name>
-      <email>claude@aiven.io</email>
+      <email>claude.warren@aiven.io</email>
       <organization>Aiven, OY</organization>
       <organizationUrl>https://aiven.io</organizationUrl>
       <timezone>Europe/Dublin</timezone>
@@ -119,8 +119,8 @@
     <jackson.version>2.21.2</jackson.version>
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
-    <aiven.kafka.config.version>0.1.0</aiven.kafka.config.version>
-    <aiven.kafak.framework.version>0.2.0</aiven.kafak.framework.version>
+    <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
+    <aiven.kafka.framework.version>0.3.0</aiven.kafka.framework.version>
     <fasterxml.uuid.version>4.1.0</fasterxml.uuid.version>
     <slf4j.version>2.0.17</slf4j.version>
     <testcontainers.version>2.0.4</testcontainers.version>
@@ -132,7 +132,7 @@
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>framework-for-connectors</artifactId>
-        <version>${aiven.kafak.framework.version}</version>
+        <version>${aiven.kafka.framework.version}</version>
         <type>pom</type>
         <scope>import</scope>
         <exclusions>
@@ -168,12 +168,18 @@
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>framework-common-for-connectors</artifactId>
-        <version>${aiven.kafak.framework.version}</version>
+        <version>${aiven.kafka.framework.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.aiven.commons</groupId>
+        <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+        <version>${aiven.kafka.framework.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
         <artifactId>framework-for-source-connectors</artifactId>
-        <version>${aiven.kafak.framework.version}</version>
+        <version>${aiven.kafka.framework.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.hadoop</groupId>
@@ -472,6 +478,23 @@
               <rules>
                 <dependencyConvergence/>
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <includes>
+                <include>**/*IT</include>
+              </includes>
             </configuration>
           </execution>
         </executions>
