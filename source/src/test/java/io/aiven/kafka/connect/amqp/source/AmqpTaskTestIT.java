@@ -59,7 +59,7 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceTask underTest;
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
+  private static final String STORAGE_PREFIX = "AMQP_";
   @Container static RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
   AmqpTaskTestIT() throws ClientException {
@@ -80,7 +80,7 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
 
   @Test
   void testMessageRead() throws IOException, ExecutionException, InterruptedException {
-    sourceStorage.createStorage("AMQP_" + getTopic());
+    sourceStorage.createStorage(STORAGE_PREFIX + getTopic());
 
     Map<String, String> config = sourceStorage.createConnectorConfig();
     CommonConfigFragment.setter(config).maxTasks(1);

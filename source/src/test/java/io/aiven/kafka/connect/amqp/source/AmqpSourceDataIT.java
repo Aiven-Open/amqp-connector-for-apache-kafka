@@ -49,7 +49,7 @@ public class AmqpSourceDataIT extends KafkaIntegrationTestBase {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceDataIT.class);
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceData underTest;
-
+  private static final String STORAGE_PREFIX = "AMQP_";
   @Container static RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
   AmqpSourceDataIT() throws ClientException {
@@ -72,7 +72,7 @@ public class AmqpSourceDataIT extends KafkaIntegrationTestBase {
 
   @Test
   void getNativeItemIteratorTest() throws ClientException {
-    sourceStorage.createStorage("AMQP_" + getTopic());
+    sourceStorage.createStorage(STORAGE_PREFIX + getTopic());
 
     String body = "hello world";
 
@@ -107,7 +107,7 @@ public class AmqpSourceDataIT extends KafkaIntegrationTestBase {
   @Test
   void multiRecordNativeItemIteratorTest() throws ClientException {
 
-    sourceStorage.createStorage("AMQP_" + getTopic());
+    sourceStorage.createStorage(STORAGE_PREFIX + getTopic());
 
     OffsetManager offsetManager = mock(OffsetManager.class);
     Map<String, String> props = sourceStorage.createConnectorConfig();
