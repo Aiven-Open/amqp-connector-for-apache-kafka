@@ -65,7 +65,18 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+      <version>${aiven.kafka.framework.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.aiven.kafka.connect</groupId>
@@ -234,6 +245,25 @@
                 </resource>
               </resources>
               <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-shared-site-assets-for-source-site</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>pre-site</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>../src/site/resources</directory>
+                  <includes>
+                    <include>logo.png</include>
+                    <include>logo.svg</include>
+                  </includes>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/generated-site/resources</outputDirectory>
             </configuration>
           </execution>
         </executions>

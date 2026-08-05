@@ -58,7 +58,7 @@ To setup a local development environment clone the GitHub repository and execute
 
 ```
 git clone ${project.url}.git
-cd salesforce-connector-for-apache-kafka
+cd amqp-connector-for-apache-kafka
 mvn install
 ```
 

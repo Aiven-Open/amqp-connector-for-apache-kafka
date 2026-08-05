@@ -20,13 +20,22 @@
 <site xmlns="http://maven.apache.org/SITE/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
 requireParent="true">
-
-    <poweredBy>
-        <logo name="Aiven" href="https://aiven.io/">
-            <image src="https://aiven.io/remix-assets/logo-aiven-DLhBz3IO.svg"/>
-        </logo>
-    </poweredBy>
     <body>
+
+        <head>
+            <![CDATA[
+                <link rel="icon" type="image/svg+xml" href="./logo.svg">
+                <link rel="icon" type="image/png" href="./logo.png">
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('a.builtBy').forEach(function (link) {
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                        });
+                    });
+                </script>
+            ]]>
+        </head>
 
 
         <breadcrumbs>
@@ -39,7 +48,7 @@ requireParent="true">
 
         <footer>Copyright &copy; Aiven Oy. Licensed under the Apache License, Version 2.0.<![CDATA[<br/>
             Apache Commons Collection, Apache Kafka, and Apache Velocity are trademarks of The Apache Software Foundation.<br/>
-            Salesforce is a trademark of Salesforce, Inc.<br/>
+            AMQP is a protocol specification and related names may be trademarks of their respective owners.<br/>
             All other marks mentioned may be trademarks or registered trademarks of their respective owners.]]></footer>
     </body>
     <skin>
