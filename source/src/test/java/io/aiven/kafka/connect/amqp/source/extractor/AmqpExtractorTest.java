@@ -119,7 +119,6 @@ public class AmqpExtractorTest {
     List<String> lst = List.of("Hello", "World");
     Message<List<String>> message = ClientMessage.create();
     message.body(lst);
-    String expected = ", body=[Hello, World]";
     List<SchemaAndValue> actual = generateRecords(message);
     assertThat(actual).hasSize(1);
     JsonNode body = parseMessage(actual.get(0)).get("body");

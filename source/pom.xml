@@ -65,7 +65,18 @@
     </dependency>
     <dependency>
       <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-for-connectors-source-integration-tests</artifactId>
+      <version>${aiven.kafka.framework.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
       <artifactId>kafka-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.aiven.kafka.connect</groupId>
@@ -82,7 +93,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
-      <version>4.1.130.Final</version>
+      <version>4.2.15.Final</version>
     </dependency>
 
     <dependency>
@@ -236,7 +247,41 @@
               <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
             </configuration>
           </execution>
+          <execution>
+            <id>copy-shared-site-assets-for-source-site</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>pre-site</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>../src/site/resources</directory>
+                  <includes>
+                    <include>logo.png</include>
+                    <include>logo.svg</include>
+                  </includes>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/generated-site/resources</outputDirectory>
+            </configuration>
+          </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>true</generateReports>
+          <generateProjectInfo>true</generateProjectInfo>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
