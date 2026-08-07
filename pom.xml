@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>4</version>
+    <version>5-SNAPSHOT</version>
   </parent>
 
   <groupId>io.aiven.kafka.connect</groupId>
@@ -114,8 +114,9 @@
 
   <properties>
     <latestRelease>0.1.0</latestRelease>
+    <doxia.version>2.0.0</doxia.version>
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
-    <proton.version>1.1.0</proton.version>
+    <proton.version>1.2.0</proton.version>
     <jackson.version>2.21.5</jackson.version>
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
@@ -344,6 +345,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
+      <version>${commons.collection4.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -388,7 +390,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -538,12 +539,12 @@
           <dependency>
             <groupId>org.apache.maven.doxia</groupId>
             <artifactId>doxia-module-markdown</artifactId>
-            <version>2.0.0</version>
+            <version>${doxia.version}</version>
           </dependency>
           <dependency>
             <groupId>org.apache.maven.doxia</groupId>
             <artifactId>doxia-site-renderer</artifactId>
-            <version>2.0.0</version>
+            <version>${doxia.version}</version>
           </dependency>
           <dependency>
             <groupId>io.aiven.commons</groupId>
@@ -554,6 +555,7 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>${project.artifactId}</artifactId>
             <version>${project.version}</version>
+            <type>pom</type>
           </dependency>
           <dependency>
             <groupId>org.apache.kafka</groupId>
