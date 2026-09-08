@@ -96,7 +96,7 @@ public final class AmqpExtractor extends Extractor {
 
   @Override
   public Stream<SchemaAndValue> generateRecords(EvolvingSourceRecord sourceRecord) {
-    return generateValue((AmqpSourceNativeInfo) sourceRecord.getSourceNativeInfo()).stream();
+    return generateValue(sourceRecord.getSourceNativeInfo()).stream();
   }
 
   @Override

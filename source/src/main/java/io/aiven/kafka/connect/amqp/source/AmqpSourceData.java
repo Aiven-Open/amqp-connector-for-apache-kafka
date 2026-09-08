@@ -18,21 +18,56 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
+import com.google.common.annotations.VisibleForTesting;
 import de.huxhorn.sulky.ulid.ULID;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.kafka.connect.amqp.common.config.AmqpHeaderProperties;
+import io.aiven.kafka.connect.amqp.common.data.AmqpConverter;
+import io.aiven.kafka.connect.amqp.common.data.Converter;
+import io.aiven.kafka.connect.amqp.common.data.KafkaConverter;
+import io.aiven.kafka.connect.amqp.common.data.UniqueTypeConverter;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.SchemaAndValue;
+import org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.header.Headers;
+import org.apache.qpid.protonj2.client.AdvancedMessage;
 import org.apache.qpid.protonj2.client.Delivery;
+import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.apache.qpid.protonj2.types.Binary;
+import org.apache.qpid.protonj2.types.Decimal128;
+import org.apache.qpid.protonj2.types.Decimal32;
+import org.apache.qpid.protonj2.types.Decimal64;
+import org.apache.qpid.protonj2.types.Symbol;
+import org.apache.qpid.protonj2.types.UnsignedByte;
+import org.apache.qpid.protonj2.types.UnsignedInteger;
+import org.apache.qpid.protonj2.types.UnsignedLong;
+import org.apache.qpid.protonj2.types.UnsignedShort;
+import org.apache.qpid.protonj2.types.messaging.Footer;
+import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
+import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +93,8 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
 
   private final int taskId;
 
+  private final Converter dataConverter;
+
   /**
    * Constructor.
    *
@@ -71,9 +108,89 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
     taskId = sourceConfig.getTaskId();
     this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
+    dataConverter = new AmqpConverter().andThen(new UniqueTypeConverter()).andThen(new KafkaConverter());
   }
 
   @Override
+  protected Function<EvolvingSourceRecord, EvolvingSourceRecord> initializeRecordFunction() {
+    return this::initialize;
+  }
+
+  private void writeObject(Headers headers, String name, Object value) {
+    dataConverter.encode(value).ifPresentOrElse(schemaAndValue ->
+      writeSchema(headers, name, schemaAndValue), () -> LOGGER.warn("Unknown data type {} for {}",
+            value.getClass(), name));
+  }
+
+  private void writeSchema(Headers headers, String name, SchemaAndValue schemaAndValue) {
+    headers.add("amqp." + name, schemaAndValue);
+  }
+
+  /**
+   * Converts the message internals into headers.
+   * @param record
+   * @return
+   */
+  @VisibleForTesting
+  EvolvingSourceRecord initialize(EvolvingSourceRecord record) {
+    AmqpSourceNativeInfo sourceNativeInfo = record.getSourceNativeInfo();
+    try {
+      Message<?> message = sourceNativeInfo.getMessage();
+      Headers headers = record.getHeaders();
+      for (AmqpHeaderProperties property : AmqpHeaderProperties.values()) {
+        switch (property) {
+          case MESSAGE_ID -> writeObject(headers, property.getSchemaName(), message.messageId());
+          case USER_ID -> writeObject(headers, property.getSchemaName(), message.to());
+          case SUBJECT -> writeObject(headers, property.getSchemaName(), message.subject());
+          case REPLY_TO -> writeObject(headers, property.getSchemaName(), message.replyTo());
+          case CORRELATION_ID -> writeObject(headers, property.getSchemaName(), message.correlationId());
+          case CONTENT_TYPE -> writeObject(headers, property.getSchemaName(), message.contentType());
+          case CONTENT_ENCODING -> writeObject(headers, property.getSchemaName(), message.contentEncoding());
+          case ABSOLUTE_EXPIRY -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.INT64_SCHEMA, message.absoluteExpiryTime()));
+          case CREATION_TIME -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.INT64_SCHEMA, message.creationTime()));
+          case GROUP_ID -> writeObject(headers, property.getSchemaName(), new SchemaAndValue(Schema.INT32_SCHEMA, message.groupId()));
+          case GROUP_SEQUENCE -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.INT32_SCHEMA, message.groupSequence()));
+          case REPLY_TO_GROUP_ID -> writeObject(headers, property.getSchemaName(), message.replyToGroupId());
+          case DURABLE -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.durable()));
+          case FIRST_ACQUIRER -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.firstAcquirer()));
+          case DELIVERY_COUNT -> writeSchema(headers, property.getSchemaName(), new SchemaAndValue(Schema.INT64_SCHEMA, message.deliveryCount()));
+        }
+      }
+
+
+      if (message.hasAnnotations()) {
+        // LinkedHashMap is used in QPIDD source.
+        Map<Symbol, Object> annotations = new LinkedHashMap<>();
+        message.forEachAnnotation((k, v) -> annotations.put(Symbol.valueOf(k), v));
+        MessageAnnotations messageAnnotations = new MessageAnnotations(annotations);
+        writeObject(headers, "annotations", messageAnnotations);
+      }
+
+      if (message.hasFooters()) {
+        Map<Symbol, Object> footers = new LinkedHashMap<>();
+        message.forEachFooter((k, v) -> footers.put(Symbol.valueOf(k), v));
+        Footer messageFooter = new Footer(footers);
+        writeObject(headers, "footers", messageFooter);
+      }
+
+      record.setHeaders(headers);
+
+      // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just pass the section values they should encode correctly
+      List<Section<?>> body = new ArrayList<>(message.toAdvancedMessage().bodySections());
+      if (!body.isEmpty()) {
+        Optional<SchemaAndValue> schemaAndValue = body.size() == 1 ?
+          dataConverter.encode(body.get(0).getValue()) :
+          dataConverter.encode(body.stream().map(Section::getValue).toList());
+        schemaAndValue.ifPresentOrElse(record::setValueData, () -> LOGGER.error("Unexpected data type in body {}", String.join(", ", body.stream().map(Section::toString).toList())));
+      }
+    } catch (ClientException e) {
+      LOGGER.error("unable to extract message: {}", e.getMessage(), e);
+    }
+    return record;
+  }
+    
+
+      @Override
   public String getSourceName() {
     return "AMQP Source";
   }

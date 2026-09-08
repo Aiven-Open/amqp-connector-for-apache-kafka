@@ -200,7 +200,7 @@
                 <fileset>
                   <directory>src/main/java/io/aiven/kafka/connect/amqp/source</directory>
                   <includes>
-                    <include>AmqpVersionInfo.java</include>
+                    <include>AmqpSourceVersionInfo.java</include>
                   </includes>
                 </fileset>
               </filesets>

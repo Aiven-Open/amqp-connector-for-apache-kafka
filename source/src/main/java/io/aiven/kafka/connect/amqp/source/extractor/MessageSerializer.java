@@ -95,7 +95,7 @@ public final class MessageSerializer extends StdSerializer<Message> {
 
   @Override
   public void serialize(Message msg, JsonGenerator jgen, SerializerProvider provider)
-      throws IOException, JsonProcessingException {
+      throws IOException {
 
     Message<Object> value = (Message<Object>) msg;
     jgen.writeStartObject();
