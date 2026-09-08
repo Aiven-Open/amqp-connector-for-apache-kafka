@@ -77,14 +77,13 @@ public class AmqpSourceDataTest {
           });
 
   private static final Map<String, String> CONFIG =
-      AmqpFragment.setter(new HashMap<String, String>())
+      AmqpFragment.setter(new HashMap<>())
           .setHost("localhost")
           .setAddress("address")
           .setUser("user")
           .setPassword("password")
           .data();
 
-  private Receiver receiver;
   private AmqpSourceConfig sourceConfig;
   private OffsetManager offsetManager;
   private Context context;
@@ -100,7 +99,7 @@ public class AmqpSourceDataTest {
 
   @BeforeEach
   void setup() throws ClientException, ExecutionException, InterruptedException {
-    receiver = mock(Receiver.class);
+    Receiver receiver = mock(Receiver.class);
     when(receiver.connection()).thenReturn(mock(Connection.class));
     when(receiver.connection().client()).thenReturn(mock(Client.class));
     Extractor extractor = new AmqpExtractor(null);
@@ -113,21 +112,23 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void getSourceName() throws ClientException, ExecutionException, InterruptedException {
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
-    assertThat(underTest.getSourceName()).isEqualTo("AMQP Source");
+  void getSourceName() throws Exception {
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      assertThat(underTest.getSourceName()).isEqualTo("AMQP Source");
+    }
   }
 
   @Test
-  void nativeSerde() throws ClientException, ExecutionException, InterruptedException {
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
-    Optional<NativeSourceData.KeySerde<ULID.Value>> optSerde = underTest.getNativeKeySerde();
-    assertThat(optSerde.isPresent()).isTrue();
-    NativeSourceData.KeySerde<ULID.Value> serde = optSerde.get();
+  void nativeSerde() throws Exception {
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      Optional<NativeSourceData.KeySerde<ULID.Value>> optSerde = underTest.getNativeKeySerde();
+      assertThat(optSerde.isPresent()).isTrue();
+      NativeSourceData.KeySerde<ULID.Value> serde = optSerde.get();
 
-    String keyString = serde.toString((ULID.Value) context.getNativeKey());
-    ULID.Value value = serde.fromString(keyString);
-    assertThat(value).isEqualTo(context.getNativeKey());
+      String keyString = serde.toString(context.getNativeKey());
+      ULID.Value value = serde.fromString(keyString);
+      assertThat(value).isEqualTo(context.getNativeKey());
+    }
   }
 
   @Test
@@ -143,33 +144,32 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void createOffsetManagerEntryWithMap()
-      throws ClientException, ExecutionException, InterruptedException {
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
-    OffsetManager.OffsetManagerEntry offsetManagerEntry =
-        underTest.createOffsetManagerEntry(
-            Map.of("ulid", context.getNativeKey(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", context.getNativeKey().toString());
+  void createOffsetManagerEntryWithMap() throws Exception {
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      OffsetManager.OffsetManagerEntry offsetManagerEntry =
+          underTest.createOffsetManagerEntry(
+              Map.of("ulid", context.getNativeKey(), "recordCount", 5));
+      assertThat(offsetManagerEntry.getProperties())
+          .containsEntry("ulid", context.getNativeKey().toString());
 
-    offsetManagerEntry =
-        underTest.createOffsetManagerEntry(
-            Map.of("ulid", context.getNativeKey().toString(), "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", context.getNativeKey().toString());
+      offsetManagerEntry =
+          underTest.createOffsetManagerEntry(
+              Map.of("ulid", context.getNativeKey().toString(), "recordCount", 5));
+      assertThat(offsetManagerEntry.getProperties())
+          .containsEntry("ulid", context.getNativeKey().toString());
 
-    offsetManagerEntry =
-        underTest.createOffsetManagerEntry(
-            Map.of("ulid", "01KKVQF32P85BW8EYKBP1BTQR0", "recordCount", 5));
-    assertThat(offsetManagerEntry.getProperties())
-        .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
+      offsetManagerEntry =
+          underTest.createOffsetManagerEntry(
+              Map.of("ulid", "01KKVQF32P85BW8EYKBP1BTQR0", "recordCount", 5));
+      assertThat(offsetManagerEntry.getProperties())
+          .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
+    }
   }
 
   @Test
   void getOffsetManagerKey() throws Exception {
     try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
-      OffsetManager.OffsetManagerKey key =
-          underTest.getOffsetManagerKey((ULID.Value) context.getNativeKey());
+      OffsetManager.OffsetManagerKey key = underTest.getOffsetManagerKey(context.getNativeKey());
       assertThat(key.getPartitionMap()).containsEntry("ulid", context.getNativeKey().toString());
     }
   }
@@ -191,7 +191,7 @@ public class AmqpSourceDataTest {
     AmqpSourceConfig config2 =
         new AmqpSourceConfig(CONFIG) {
           @Override
-          public Receiver getReceiver(Connection connection) throws ClientException {
+          public Receiver getReceiver(Connection connection) {
             return receiver;
           }
 
@@ -201,7 +201,7 @@ public class AmqpSourceDataTest {
           }
 
           @Override
-          public Connection getConnection(Client client) throws ClientException {
+          public Connection getConnection(Client client) {
             return connection;
           }
         };
@@ -231,7 +231,7 @@ public class AmqpSourceDataTest {
   }
 
   @Test
-  void initializeTest() throws ClientException, ExecutionException, InterruptedException {
+  void initializeTest() throws Exception {
     final long absoluteExpiry = 1788780705417L;
     final long creationTime = 1788780700417L;
     final long deliveryCount = 14L;
@@ -280,81 +280,84 @@ public class AmqpSourceDataTest {
         .footer("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte));
 
     Delivery delivery = mock(Delivery.class);
-    when(delivery.message()).thenReturn((Message) message);
+    when(delivery.message()).thenReturn((Message<Object>) message);
     final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
     final OffsetManager.OffsetManagerEntry offsetManagerEntry =
         mock(OffsetManager.OffsetManagerEntry.class);
 
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
 
-    EvolvingSourceRecord record =
-        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+      EvolvingSourceRecord record =
+          new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
 
-    EvolvingSourceRecord actual = underTest.initialize(record);
+      EvolvingSourceRecord actual = underTest.initialize(record);
 
-    assertThat(actual.getHeaders()).isNotNull();
-    Headers headers = actual.getHeaders();
-    List<String> keys = new ArrayList<>();
-    headers.forEach(header -> keys.add(header.key()));
-    assertThat(keys)
-        .containsExactly(
-            "amqp.messageId",
-            "amqp.userId",
-            "amqp.subject",
-            "amqp.replyTo",
-            "amqp.correlationId",
-            "amqp.contentType",
-            "amqp.contentEncoding",
-            "amqp.absoluteExpiry",
-            "amqp.creationTime",
-            "amqp.groupSequence",
-            "amqp.replyToGroupId",
-            "amqp.durable",
-            "amqp.firstAcquirer",
-            "amqp.deliveryCount",
-            "amqp.annotations",
-            "amqp.footers");
+      assertThat(actual.getHeaders()).isNotNull();
+      Headers headers = actual.getHeaders();
+      List<String> keys = new ArrayList<>();
+      headers.forEach(header -> keys.add(header.key()));
+      assertThat(keys)
+          .containsExactly(
+              "amqp.messageId",
+              "amqp.userId",
+              "amqp.subject",
+              "amqp.replyTo",
+              "amqp.correlationId",
+              "amqp.contentType",
+              "amqp.contentEncoding",
+              "amqp.absoluteExpiry",
+              "amqp.creationTime",
+              "amqp.groupSequence",
+              "amqp.replyToGroupId",
+              "amqp.durable",
+              "amqp.firstAcquirer",
+              "amqp.deliveryCount",
+              "amqp.annotations",
+              "amqp.footers");
 
-    headers.forEach(
-        header -> {
-          switch (header.key()) {
-            case "amqp.messageId" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(uuid.toString());
-            case "amqp.userId" -> assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
-            case "amqp.subject" -> assertThat(header.value()).as(header.key()).isEqualTo("subject");
-            case "amqp.replyTo" ->
-                assertThat(header.value()).as(header.key()).isEqualTo("replyToMsg");
-            case "amqp.correlationId" ->
-                assertThat(header.value()).as(header.key()).isEqualTo("correlationId");
-            case "amqp.contentType" ->
-                assertThat(header.value()).as(header.key()).isEqualTo("text/plain");
-            case "amqp.contentEncoding" ->
-                assertThat(header.value()).as(header.key()).isEqualTo("UTF8");
-            case "amqp.absoluteExpiry" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(absoluteExpiry);
-            case "amqp.creationTime" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(creationTime);
-            case "amqp.groupSequence" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(groupSequence);
-            case "amqp.replyToGroupId" ->
-                assertThat(header.value()).as(header.key()).isEqualTo("replytoGroupId");
-            case "amqp.durable" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(Boolean.TRUE);
-            case "amqp.firstAcquirer" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(Boolean.FALSE);
-            case "amqp.deliveryCount" ->
-                assertThat(header.value()).as(header.key()).isEqualTo(deliveryCount);
-            case "amqp.annotations" -> {
-              assertThat(header.schema().name()).isEqualTo(MessageAnnotations.class.getName());
-              verifyHeaderStruct(header.value());
+      headers.forEach(
+          header -> {
+            switch (header.key()) {
+              case "amqp.messageId" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(uuid.toString());
+              case "amqp.userId" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
+              case "amqp.subject" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("subject");
+              case "amqp.replyTo" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("replyToMsg");
+              case "amqp.correlationId" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("correlationId");
+              case "amqp.contentType" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("text/plain");
+              case "amqp.contentEncoding" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("UTF8");
+              case "amqp.absoluteExpiry" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(absoluteExpiry);
+              case "amqp.creationTime" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(creationTime);
+              case "amqp.groupSequence" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(groupSequence);
+              case "amqp.replyToGroupId" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("replytoGroupId");
+              case "amqp.durable" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(Boolean.TRUE);
+              case "amqp.firstAcquirer" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(Boolean.FALSE);
+              case "amqp.deliveryCount" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo(deliveryCount);
+              case "amqp.annotations" -> {
+                assertThat(header.schema().name()).isEqualTo(MessageAnnotations.class.getName());
+                verifyHeaderStruct(header.value());
+              }
+              case "amqp.footers" -> {
+                assertThat(header.schema().name()).isEqualTo(Footer.class.getName());
+                verifyHeaderStruct(header.value());
+              }
+              default -> fail("Unknown header: " + header);
             }
-            case "amqp.footers" -> {
-              assertThat(header.schema().name()).isEqualTo(Footer.class.getName());
-              verifyHeaderStruct(header.value());
-            }
-            default -> fail("Unknown header: " + header);
-          }
-        });
+          });
+    }
   }
 
   private void verifyHeaderStruct(Object value) {
@@ -400,8 +403,7 @@ public class AmqpSourceDataTest {
 
   @ParameterizedTest
   @MethodSource("bodyValuesTestData")
-  void bodyValuesTest(Object value, Schema expectedSchema)
-      throws ClientException, ExecutionException, InterruptedException {
+  void bodyValuesTest(Object value, Schema expectedSchema) throws Exception {
     ClientMessage<?> message = ClientMessage.create(new AmqpValue<>(value));
     Delivery delivery = mock(Delivery.class);
     when(delivery.message()).thenReturn((Message) message);
@@ -409,14 +411,15 @@ public class AmqpSourceDataTest {
     final OffsetManager.OffsetManagerEntry offsetManagerEntry =
         mock(OffsetManager.OffsetManagerEntry.class);
 
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
 
-    EvolvingSourceRecord record =
-        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+      EvolvingSourceRecord record =
+          new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
 
-    EvolvingSourceRecord actual = underTest.initialize(record);
-    assertThat(actual.getValue().schema()).isEqualTo(expectedSchema);
-    assertThat(actual.getValue().value()).isInstanceOf(value.getClass()).isEqualTo(value);
+      EvolvingSourceRecord actual = underTest.initialize(record);
+      assertThat(actual.getValue().schema()).isEqualTo(expectedSchema);
+      assertThat(actual.getValue().value()).isInstanceOf(value.getClass()).isEqualTo(value);
+    }
   }
 
   static List<Arguments> bodyValuesTestData() {
@@ -433,8 +436,7 @@ public class AmqpSourceDataTest {
 
   @ParameterizedTest
   @MethodSource("bodySequenceTestData")
-  void bodySequenceTest(List<Object> value)
-      throws ClientException, ExecutionException, InterruptedException {
+  void bodySequenceTest(List<Object> value) throws Exception {
     ClientMessage<?> message = ClientMessage.create(new AmqpSequence<>(value));
     Delivery delivery = mock(Delivery.class);
     when(delivery.message()).thenReturn((Message) message);
@@ -442,18 +444,19 @@ public class AmqpSourceDataTest {
     final OffsetManager.OffsetManagerEntry offsetManagerEntry =
         mock(OffsetManager.OffsetManagerEntry.class);
 
-    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
 
-    EvolvingSourceRecord record =
-        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+      EvolvingSourceRecord record =
+          new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
 
-    EvolvingSourceRecord actual = underTest.initialize(record);
-    assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.STRUCT);
-    Struct struct =
-        (Struct) assertThat(actual.getValue().value()).isInstanceOf(Struct.class).actual();
-    List<Field> fields = struct.schema().fields();
-    for (int i = 0; i < value.size(); i++) {
-      assertThat(struct.get(fields.get(i))).isEqualTo(value.get(i));
+      EvolvingSourceRecord actual = underTest.initialize(record);
+      assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.STRUCT);
+      Struct struct =
+          (Struct) assertThat(actual.getValue().value()).isInstanceOf(Struct.class).actual();
+      List<Field> fields = struct.schema().fields();
+      for (int i = 0; i < value.size(); i++) {
+        assertThat(struct.get(fields.get(i))).isEqualTo(value.get(i));
+      }
     }
   }
 
