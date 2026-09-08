@@ -124,6 +124,7 @@
     <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
     <slf4j.version>2.0.18</slf4j.version>
+    <spotless.plugin.version>3.5.1</spotless.plugin.version>
     <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
@@ -426,6 +427,34 @@
   </repositories>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.plugin.version}</version>
+          <configuration>
+            <java>
+              <googleJavaFormat/>
+              <removeUnusedImports/>
+            </java>
+            <pom>
+              <sortPom>
+                <expandEmptyElements>false</expandEmptyElements>
+              </sortPom>
+            </pom>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>compile</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.spdx</groupId>

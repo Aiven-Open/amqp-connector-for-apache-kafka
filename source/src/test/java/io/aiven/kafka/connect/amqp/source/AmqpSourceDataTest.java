@@ -25,7 +25,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import de.huxhorn.sulky.ulid.ULID;
-import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
@@ -34,7 +33,6 @@ import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
-
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,10 +43,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-
-import org.apache.avro.generic.GenericData;
-import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.header.Headers;
 import org.apache.qpid.protonj2.client.Client;
@@ -64,14 +58,16 @@ import org.apache.qpid.protonj2.types.UnsignedLong;
 import org.apache.qpid.protonj2.types.UnsignedShort;
 import org.apache.qpid.protonj2.types.messaging.Footer;
 import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
-import org.apache.yetus.audience.InterfaceStability;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class AmqpSourceDataTest {
 
-  private static final BigInteger TWO_TO_THE_SIXTY_FOUR = new BigInteger(
-          new byte[]{(byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0});
+  private static final BigInteger TWO_TO_THE_SIXTY_FOUR =
+      new BigInteger(
+          new byte[] {
+            (byte) 1, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0
+          });
 
   private static final Map<String, String> CONFIG =
       AmqpFragment.setter(new HashMap<String, String>())
@@ -237,57 +233,55 @@ public class AmqpSourceDataTest {
     final long timeToLive = 50000L;
     final byte[] userId = "Alice".getBytes(StandardCharsets.UTF_8);
 
-
-
     final UUID uuid = UUID.randomUUID();
     ClientMessage<?> message = ClientMessage.create();
 
-      message.absoluteExpiryTime(absoluteExpiry)
-            .to("ToPerson")
-            .messageId(uuid)
-            .contentEncoding("UTF8")
-            .contentType("text/plain")
-            .correlationId("correlationId")
-            .creationTime(creationTime)
-            .deliveryCount(deliveryCount)
-            .durable(true)
-            .firstAcquirer(false)
-            .groupId("myGroup")
-            .groupSequence(groupSequence)
-            .priority(priority)
-            .replyTo("replyToMsg")
-            .replyToGroupId("replytoGroupId")
-            .subject("subject")
-            .timeToLive(timeToLive)
-            .userId(userId)
-
-            .annotation("long", longValue)
-            .annotation("int", intValue)
-            .annotation("short", shortValue)
-            .annotation("byte", byteValue)
-            .annotation("unsignedLong", UnsignedLong.valueOf(unsignedLong))
-            .annotation("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
-            .annotation("unsignedShort", UnsignedShort.valueOf(unsignedShort))
-            .annotation("unsignedByte", UnsignedByte.valueOf((byte)unsignedByte))
-
-            .footer("long", longValue)
-            .footer("int", intValue)
-            .footer("short", shortValue)
-            .footer("byte", byteValue)
-            .footer("unsignedLong", UnsignedLong.valueOf(unsignedLong))
-            .footer("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
-            .footer("unsignedShort", UnsignedShort.valueOf(unsignedShort))
-            .footer("unsignedByte", UnsignedByte.valueOf((byte)unsignedByte));
-
+    message
+        .absoluteExpiryTime(absoluteExpiry)
+        .to("ToPerson")
+        .messageId(uuid)
+        .contentEncoding("UTF8")
+        .contentType("text/plain")
+        .correlationId("correlationId")
+        .creationTime(creationTime)
+        .deliveryCount(deliveryCount)
+        .durable(true)
+        .firstAcquirer(false)
+        .groupId("myGroup")
+        .groupSequence(groupSequence)
+        .priority(priority)
+        .replyTo("replyToMsg")
+        .replyToGroupId("replytoGroupId")
+        .subject("subject")
+        .timeToLive(timeToLive)
+        .userId(userId)
+        .annotation("long", longValue)
+        .annotation("int", intValue)
+        .annotation("short", shortValue)
+        .annotation("byte", byteValue)
+        .annotation("unsignedLong", UnsignedLong.valueOf(unsignedLong))
+        .annotation("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
+        .annotation("unsignedShort", UnsignedShort.valueOf(unsignedShort))
+        .annotation("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte))
+        .footer("long", longValue)
+        .footer("int", intValue)
+        .footer("short", shortValue)
+        .footer("byte", byteValue)
+        .footer("unsignedLong", UnsignedLong.valueOf(unsignedLong))
+        .footer("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
+        .footer("unsignedShort", UnsignedShort.valueOf(unsignedShort))
+        .footer("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte));
 
     Delivery delivery = mock(Delivery.class);
-    when(delivery.message()).thenReturn((Message)message);
+    when(delivery.message()).thenReturn((Message) message);
     final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
-    final OffsetManager.OffsetManagerEntry offsetManagerEntry = mock(OffsetManager.OffsetManagerEntry.class);
+    final OffsetManager.OffsetManagerEntry offsetManagerEntry =
+        mock(OffsetManager.OffsetManagerEntry.class);
 
     AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
 
-    EvolvingSourceRecord record = new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+    EvolvingSourceRecord record =
+        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
 
     EvolvingSourceRecord actual = underTest.initialize(record);
 
@@ -295,38 +289,65 @@ public class AmqpSourceDataTest {
     Headers headers = actual.getHeaders();
     List<String> keys = new ArrayList<>();
     headers.forEach(header -> keys.add(header.key()));
-    assertThat(keys).containsExactly("amqp.messageId", "amqp.userId", "amqp.subject", "amqp.replyTo", "amqp.correlationId", "amqp.contentType", "amqp.contentEncoding",
-            "amqp.absoluteExpiry", "amqp.creationTime", "amqp.groupSequence",
-            "amqp.replyToGroupId", "amqp.durable", "amqp.firstAcquirer", "amqp.deliveryCount", "amqp.annotations", "amqp.footers");
+    assertThat(keys)
+        .containsExactly(
+            "amqp.messageId",
+            "amqp.userId",
+            "amqp.subject",
+            "amqp.replyTo",
+            "amqp.correlationId",
+            "amqp.contentType",
+            "amqp.contentEncoding",
+            "amqp.absoluteExpiry",
+            "amqp.creationTime",
+            "amqp.groupSequence",
+            "amqp.replyToGroupId",
+            "amqp.durable",
+            "amqp.firstAcquirer",
+            "amqp.deliveryCount",
+            "amqp.annotations",
+            "amqp.footers");
 
-    headers.forEach( header -> {
-      switch(header.key()) {
-        case "amqp.messageId" -> assertThat(header.value()).as(header.key()).isEqualTo(uuid.toString());
-        case "amqp.userId" -> assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
-        case "amqp.subject" -> assertThat(header.value()).as(header.key()).isEqualTo("subject");
-        case "amqp.replyTo" -> assertThat(header.value()).as(header.key()).isEqualTo("replyToMsg");
-        case "amqp.correlationId" -> assertThat(header.value()).as(header.key()).isEqualTo("correlationId");
-        case "amqp.contentType" -> assertThat(header.value()).as(header.key()).isEqualTo("text/plain");
-        case "amqp.contentEncoding" -> assertThat(header.value()).as(header.key()).isEqualTo("UTF8");
-        case "amqp.absoluteExpiry" -> assertThat(header.value()).as(header.key()).isEqualTo(absoluteExpiry);
-        case "amqp.creationTime" -> assertThat(header.value()).as(header.key()).isEqualTo(creationTime);
-        case "amqp.groupSequence" -> assertThat(header.value()).as(header.key()).isEqualTo(groupSequence);
-        case "amqp.replyToGroupId" -> assertThat(header.value()).as(header.key()).isEqualTo("replytoGroupId");
-        case "amqp.durable" -> assertThat(header.value()).as(header.key()).isEqualTo(Boolean.TRUE);
-        case "amqp.firstAcquirer" -> assertThat(header.value()).as(header.key()).isEqualTo(Boolean.FALSE);
-        case "amqp.deliveryCount" -> assertThat(header.value()).as(header.key()).isEqualTo(deliveryCount);
-        case "amqp.annotations" -> {
-          assertThat(header.schema().name()).isEqualTo(MessageAnnotations.class.getName());
-          verifyHeaderStruct(header.value());
-        }
-        case "amqp.footers" -> {
-          assertThat(header.schema().name()).isEqualTo(Footer.class.getName());
-          verifyHeaderStruct(header.value());
-        }
-        default -> fail("Unknown header: " + header);
-      }
-    });
-
+    headers.forEach(
+        header -> {
+          switch (header.key()) {
+            case "amqp.messageId" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(uuid.toString());
+            case "amqp.userId" -> assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
+            case "amqp.subject" -> assertThat(header.value()).as(header.key()).isEqualTo("subject");
+            case "amqp.replyTo" ->
+                assertThat(header.value()).as(header.key()).isEqualTo("replyToMsg");
+            case "amqp.correlationId" ->
+                assertThat(header.value()).as(header.key()).isEqualTo("correlationId");
+            case "amqp.contentType" ->
+                assertThat(header.value()).as(header.key()).isEqualTo("text/plain");
+            case "amqp.contentEncoding" ->
+                assertThat(header.value()).as(header.key()).isEqualTo("UTF8");
+            case "amqp.absoluteExpiry" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(absoluteExpiry);
+            case "amqp.creationTime" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(creationTime);
+            case "amqp.groupSequence" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(groupSequence);
+            case "amqp.replyToGroupId" ->
+                assertThat(header.value()).as(header.key()).isEqualTo("replytoGroupId");
+            case "amqp.durable" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(Boolean.TRUE);
+            case "amqp.firstAcquirer" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(Boolean.FALSE);
+            case "amqp.deliveryCount" ->
+                assertThat(header.value()).as(header.key()).isEqualTo(deliveryCount);
+            case "amqp.annotations" -> {
+              assertThat(header.schema().name()).isEqualTo(MessageAnnotations.class.getName());
+              verifyHeaderStruct(header.value());
+            }
+            case "amqp.footers" -> {
+              assertThat(header.schema().name()).isEqualTo(Footer.class.getName());
+              verifyHeaderStruct(header.value());
+            }
+            default -> fail("Unknown header: " + header);
+          }
+        });
   }
 
   private void verifyHeaderStruct(Object value) {
@@ -334,21 +355,39 @@ public class AmqpSourceDataTest {
     List<String> fieldNames = new ArrayList<>();
 
     struct.schema().fields().forEach(field -> fieldNames.add(field.name()));
-    assertThat(fieldNames).containsExactly("long", "int", "short", "byte", "unsignedLong", "unsignedInt", "unsignedShort", "unsignedByte");
-    struct.schema().fields().forEach( field -> {
+    assertThat(fieldNames)
+        .containsExactly(
+            "long",
+            "int",
+            "short",
+            "byte",
+            "unsignedLong",
+            "unsignedInt",
+            "unsignedShort",
+            "unsignedByte");
+    struct
+        .schema()
+        .fields()
+        .forEach(
+            field -> {
               switch (field.name()) {
                 case "long" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(longValue);
                 case "int" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(intValue);
-                case "short" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(shortValue);
+                case "short" ->
+                    assertThat(struct.get(field)).as(field.name()).isEqualTo(shortValue);
                 case "byte" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(byteValue);
-                case "unsignedLong" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedLong.toString());
-                case "unsignedInt" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedInt);
-                case "unsignedShort" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedShort);
-                case "unsignedByte" -> assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedByte);
+                case "unsignedLong" ->
+                    assertThat(struct.get(field))
+                        .as(field.name())
+                        .isEqualTo(unsignedLong.toString());
+                case "unsignedInt" ->
+                    assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedInt);
+                case "unsignedShort" ->
+                    assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedShort);
+                case "unsignedByte" ->
+                    assertThat(struct.get(field)).as(field.name()).isEqualTo(unsignedByte);
                 default -> fail("Unexpected field name: " + field);
               }
-            }
-    );
-
+            });
   }
 }
