@@ -1,64 +1,66 @@
 package io.aiven.kafka.connect.amqp.common.data;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Optional;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.connect.data.Values;
 
+/**
+ * Performs Kafka conversions. This converter will convert
+ *
+ * <ul>
+ *   <li>{@code null} values into an optional byte schema with a null value.
+ *   <li>{@code BigInteger} into a string value
+ *   <li>{@code BigDecimal} into a string value
+ * </ul>
+ */
 public class KafkaConverter extends Converter {
-  // @VisibleForTesting
-  static final String BIG_DECIMAL_NAME = "BigDecimal";
-  // @VisibleForTesting
-  static final String BIG_INTEGER_NAME = "BigInteger";
+  @VisibleForTesting static final String BIG_DECIMAL_NAME = "BigDecimal";
+  @VisibleForTesting static final String BIG_INTEGER_NAME = "BigInteger";
 
   @Override
   public Optional<SchemaAndValue> encode(Object value) {
     if (value == null) {
-      return Optional.of(new SchemaAndValue(Schema.OPTIONAL_BYTES_SCHEMA, value));
+      return Optional.of(new SchemaAndValue(Schema.OPTIONAL_BYTES_SCHEMA, null));
     }
-    if (value instanceof Number n) {
-      if (value instanceof Byte) {
-        return Optional.of(new SchemaAndValue(Schema.INT8_SCHEMA, value));
-      }
-      if (value instanceof Short) {
-        return Optional.of(new SchemaAndValue(Schema.INT16_SCHEMA, value));
-      }
-      if (value instanceof Integer) {
-        return Optional.of(new SchemaAndValue(Schema.INT32_SCHEMA, value));
-      }
-      if (value instanceof Long) {
-        return Optional.of(new SchemaAndValue(Schema.INT64_SCHEMA, value));
-      }
-      if (value instanceof Float) {
-        return Optional.of(new SchemaAndValue(Schema.FLOAT32_SCHEMA, value));
-      }
-      if (value instanceof Double) {
-        return Optional.of(new SchemaAndValue(Schema.FLOAT64_SCHEMA, value));
-      }
-      if (value instanceof BigDecimal) {
-        return Optional.of(
-            new SchemaAndValue(
-                new SchemaBuilder(Schema.Type.STRING).name(BIG_DECIMAL_NAME).build(),
-                value.toString()));
-      }
-      if (value instanceof BigInteger bi) {
-        return Optional.of(
-            new SchemaAndValue(
-                new SchemaBuilder(Schema.Type.STRING).name(BIG_INTEGER_NAME).build(),
-                value.toString()));
-      }
+    Schema schema = Values.inferSchema(value);
+    if (schema != null) {
+      return Optional.of(new SchemaAndValue(schema, value));
     }
-    if (value instanceof String) {
-      return Optional.of(new SchemaAndValue(Schema.STRING_SCHEMA, value));
+
+    if (value instanceof BigDecimal) {
+      return Optional.of(
+          new SchemaAndValue(
+              new SchemaBuilder(Schema.Type.STRING).name(BIG_DECIMAL_NAME).build(),
+              value.toString()));
     }
-    if (value instanceof Boolean) {
-      return Optional.of(new SchemaAndValue(Schema.BOOLEAN_SCHEMA, value));
+    if (value instanceof BigInteger) {
+      return Optional.of(
+          new SchemaAndValue(
+              new SchemaBuilder(Schema.Type.STRING).name(BIG_INTEGER_NAME).build(),
+              value.toString()));
     }
-    if (value instanceof byte[]) {
-      return Optional.of(new SchemaAndValue(Schema.BYTES_SCHEMA, value));
-    }
+
+    //    if (value instanceof String) {
+    //      return Optional.of(new SchemaAndValue(Schema.STRING_SCHEMA, value));
+    //    }
+    //    if (value instanceof Boolean) {
+    //      return Optional.of(new SchemaAndValue(Schema.BOOLEAN_SCHEMA, value));
+    //    }
+    //    if (value instanceof byte[]) {
+    //      return Optional.of(new SchemaAndValue(Schema.BYTES_SCHEMA, value));
+    //    }
+    //
+    //    if (value instanceof List) {
+    //      Schema schema =  Values.inferSchema((List<?>) value);
+    //      if (schema == null) {
+    //
+    //      }
+    //    }
     return Optional.empty();
   }
 

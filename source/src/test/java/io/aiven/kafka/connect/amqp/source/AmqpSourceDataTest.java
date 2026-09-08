@@ -18,7 +18,6 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
-import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.message.MessageSupport.header;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -43,6 +42,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import org.apache.kafka.connect.data.Field;
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.header.Headers;
 import org.apache.qpid.protonj2.client.Client;
@@ -56,10 +58,15 @@ import org.apache.qpid.protonj2.types.UnsignedByte;
 import org.apache.qpid.protonj2.types.UnsignedInteger;
 import org.apache.qpid.protonj2.types.UnsignedLong;
 import org.apache.qpid.protonj2.types.UnsignedShort;
+import org.apache.qpid.protonj2.types.messaging.AmqpSequence;
+import org.apache.qpid.protonj2.types.messaging.AmqpValue;
 import org.apache.qpid.protonj2.types.messaging.Footer;
 import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class AmqpSourceDataTest {
 
@@ -389,5 +396,77 @@ public class AmqpSourceDataTest {
                 default -> fail("Unexpected field name: " + field);
               }
             });
+  }
+
+  @ParameterizedTest
+  @MethodSource("bodyValuesTestData")
+  void bodyValuesTest(Object value, Schema expectedSchema)
+      throws ClientException, ExecutionException, InterruptedException {
+    ClientMessage<?> message = ClientMessage.create(new AmqpValue<>(value));
+    Delivery delivery = mock(Delivery.class);
+    when(delivery.message()).thenReturn((Message) message);
+    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
+    final OffsetManager.OffsetManagerEntry offsetManagerEntry =
+        mock(OffsetManager.OffsetManagerEntry.class);
+
+    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
+
+    EvolvingSourceRecord record =
+        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+
+    EvolvingSourceRecord actual = underTest.initialize(record);
+    assertThat(actual.getValue().schema()).isEqualTo(expectedSchema);
+    assertThat(actual.getValue().value()).isInstanceOf(value.getClass()).isEqualTo(value);
+  }
+
+  static List<Arguments> bodyValuesTestData() {
+    List<Arguments> result = new ArrayList<>();
+    result.add(Arguments.of("Hello world", Schema.STRING_SCHEMA));
+    result.add(Arguments.of(10L, Schema.INT64_SCHEMA));
+    result.add(Arguments.of(5, Schema.INT32_SCHEMA));
+    result.add(
+        Arguments.of(
+            List.of("Hello world", "goodbye cruel world"),
+            SchemaBuilder.array(Schema.STRING_SCHEMA).build()));
+    return result;
+  }
+
+  @ParameterizedTest
+  @MethodSource("bodySequenceTestData")
+  void bodySequenceTest(List<Object> value)
+      throws ClientException, ExecutionException, InterruptedException {
+    ClientMessage<?> message = ClientMessage.create(new AmqpSequence<>(value));
+    Delivery delivery = mock(Delivery.class);
+    when(delivery.message()).thenReturn((Message) message);
+    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
+    final OffsetManager.OffsetManagerEntry offsetManagerEntry =
+        mock(OffsetManager.OffsetManagerEntry.class);
+
+    AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager);
+
+    EvolvingSourceRecord record =
+        new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+
+    EvolvingSourceRecord actual = underTest.initialize(record);
+    assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.STRUCT);
+    Struct struct =
+        (Struct) assertThat(actual.getValue().value()).isInstanceOf(Struct.class).actual();
+    List<Field> fields = struct.schema().fields();
+    for (int i = 0; i < value.size(); i++) {
+      assertThat(struct.get(fields.get(i))).isEqualTo(value.get(i));
+    }
+  }
+
+  static List<Arguments> bodySequenceTestData() {
+    List<Arguments> result = new ArrayList<>();
+    List<Object> lst =
+        List.of(
+            "Hello world",
+            10L,
+            5,
+            List.of("Hello world", "goodbye cruel world"),
+            "this is the end");
+    result.add(Arguments.of(lst, Schema.BYTES_SCHEMA));
+    return result;
   }
 }

@@ -157,6 +157,11 @@
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${com.google.guava.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.google.re2j</groupId>
         <artifactId>re2j</artifactId>
         <version>${com.google.re2j.version}</version>
@@ -334,7 +339,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>
       <artifactId>de.huxhorn.sulky.ulid</artifactId>

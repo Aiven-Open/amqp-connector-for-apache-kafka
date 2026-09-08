@@ -7,12 +7,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class KafkaConverterTest {
 
@@ -188,5 +194,64 @@ public class KafkaConverterTest {
     assertThat(underTest.encode(expectedValue)).isNotPresent();
     assertThat(underTest.decode(new SchemaAndValue(expectedSchema, expectedValue.toString())))
         .isNotPresent();
+  }
+
+  @ParameterizedTest
+  @MethodSource("listTestData")
+  void listTest(List<Object> expected) {
+    Optional<SchemaAndValue> schemaAndValue = underTest.encode(expected);
+    SchemaAndValue sv = assertThat(schemaAndValue).isPresent().get().actual();
+    Collection<Object> actual = (Collection<Object>) sv.value();
+    assertThat(actual).containsExactlyElementsOf(expected);
+  }
+
+  static List<List<Object>> listTestData() {
+    List<List<Object>> result = new ArrayList<>();
+    result.add(List.of(1, 2));
+    result.add(List.of("hello", "world"));
+    result.add(List.of(1L, 2L));
+    result.add(List.of((byte) 1, (byte) 2));
+    result.add(List.of((short) 1, (short) 2));
+    return result;
+  }
+
+  @ParameterizedTest
+  @MethodSource("mapTestData")
+  void mapTest(Map<Object, Object> expected) {
+    Optional<SchemaAndValue> schemaAndValue = underTest.encode(expected);
+    SchemaAndValue sv = assertThat(schemaAndValue).isPresent().get().actual();
+    Map<Object, Object> actual = (Map<Object, Object>) sv.value();
+    assertThat(actual).containsExactlyEntriesOf(expected);
+    // ..containsExactlyElementsOf(expected);
+  }
+
+  static List<Map<Object, Object>> mapTestData() {
+    List<Map<Object, Object>> result = new ArrayList<>();
+    result.add(Map.of("a", 1, "b", 2));
+    result.add(Map.of("hello", "A", "world", "B"));
+    result.add(Map.of("a", 1L, "b", 2L));
+    result.add(Map.of("a", (short) 1, "b", (short) 2));
+    result.add(Map.of("a", (byte) 1, "b", (byte) 2));
+    result.add(Map.of(1, "hello", 2, "world"));
+    return result;
+  }
+
+  @Test
+  void arrayTest() {
+    Integer[] expectedInt = new Integer[] {1, 2};
+    Optional<SchemaAndValue> schemaAndValue = underTest.encode(expectedInt);
+    SchemaAndValue sv = assertThat(schemaAndValue).isPresent().get().actual();
+    Collection<Object> actual = (Collection<Object>) sv.value();
+    assertThat(actual).containsExactly(expectedInt);
+  }
+
+  static List<Object[]> arrayTestData() {
+    List<Object[]> result = new ArrayList<>();
+    result.add((Object[]) new Integer[] {1, 2});
+    result.add(new String[] {"hello", "world"});
+    result.add(new Long[] {1L, 2L});
+    result.add(new Byte[] {(byte) 1, (byte) 2});
+    result.add(new Short[] {(short) 1, (short) 2});
+    return result;
   }
 }

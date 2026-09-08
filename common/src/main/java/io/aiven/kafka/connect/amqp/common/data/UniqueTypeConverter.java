@@ -7,12 +7,20 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 
+/**
+ * Converts Unique type objects. Specifically:
+ *
+ * <ul>
+ *   <li>UUID
+ *   <li>ULID.Value
+ * </ul>
+ */
 public class UniqueTypeConverter extends Converter {
   @Override
   public Optional<SchemaAndValue> encode(Object value) {
 
     if (value instanceof UUID || value instanceof ULID.Value) {
-      String name = value.getClass().getCanonicalName();
+      String name = Converter.asName(value.getClass());
       return Optional.of(
           new SchemaAndValue(
               new SchemaBuilder(Schema.Type.STRING).name(name).build(), value.toString()));

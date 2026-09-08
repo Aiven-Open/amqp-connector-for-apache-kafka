@@ -26,6 +26,7 @@ import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import io.aiven.kafka.connect.amqp.common.config.AmqpHeaderProperties;
 import io.aiven.kafka.connect.amqp.common.data.AmqpConverter;
+import io.aiven.kafka.connect.amqp.common.data.CollectionConverter;
 import io.aiven.kafka.connect.amqp.common.data.Converter;
 import io.aiven.kafka.connect.amqp.common.data.KafkaConverter;
 import io.aiven.kafka.connect.amqp.common.data.UniqueTypeConverter;
@@ -91,7 +92,11 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
     this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
     dataConverter =
-        new AmqpConverter().andThen(new UniqueTypeConverter()).andThen(new KafkaConverter());
+        new Converter.ChainedConverter(
+            new AmqpConverter(),
+            new UniqueTypeConverter(),
+            new KafkaConverter(),
+            new CollectionConverter());
   }
 
   @Override

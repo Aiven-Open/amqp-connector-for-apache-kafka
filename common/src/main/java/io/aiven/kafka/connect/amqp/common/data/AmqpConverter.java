@@ -21,6 +21,7 @@ import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Converts AMQP values. */
 public class AmqpConverter extends Converter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpConverter.class);
@@ -55,25 +56,17 @@ public class AmqpConverter extends Converter {
         if (value instanceof UnsignedShort) {
           return Optional.of(
               new SchemaAndValue(
-                  new SchemaBuilder(Schema.Type.INT32).name(name).build(),
-                  // return Optional.of(new SchemaAndValue(builder.field("value",
-                  // Schema.INT32_SCHEMA).build(),
-                  n.intValue()));
+                  new SchemaBuilder(Schema.Type.INT32).name(name).build(), n.intValue()));
         }
         if (value instanceof UnsignedInteger) {
           return Optional.of(
               new SchemaAndValue(
-                  new SchemaBuilder(Schema.Type.INT64).name(name).build(),
-                  // return Optional.of(new SchemaAndValue(builder.field("value",
-                  // Schema.INT64_SCHEMA).build(),
-                  n.longValue()));
+                  new SchemaBuilder(Schema.Type.INT64).name(name).build(), n.longValue()));
         }
         if (value instanceof UnsignedLong) {
           return Optional.of(
               new SchemaAndValue(
                   new SchemaBuilder(Schema.Type.STRING).name(name).build(), value.toString()));
-          // return Optional.of(new SchemaAndValue(builder.field("value",
-          // Schema.STRING_SCHEMA).build(), value));
         }
       }
 
@@ -102,6 +95,14 @@ public class AmqpConverter extends Converter {
     return Optional.empty();
   }
 
+  /**
+   * Converts a Synmbol/Object map into a struct based SchemaAndValue. Symbol order in the map is
+   * retained as field order in the struct.
+   *
+   * @param name the name of the resulting struct.
+   * @param data the map to place into the struct.
+   * @return the struct based SchemaAndValue.
+   */
   private Optional<SchemaAndValue> symbolObjectMap(String name, Map<Symbol, Object> data) {
     SchemaBuilder schemaBuilder = SchemaBuilder.struct().name(name);
     Map<String, Object> values = new HashMap<>();
