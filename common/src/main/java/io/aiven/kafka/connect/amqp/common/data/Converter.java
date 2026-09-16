@@ -11,6 +11,9 @@ public abstract class Converter {
   /** The converter that is the self for this converter */
   private Converter self;
 
+  /** Default constructor. */
+  protected Converter() {}
+
   /**
    * Determines if the class name is the name provided.
    *

@@ -25,7 +25,7 @@ package io.aiven.kafka.connect.amqp.source;
  * source-generate execution
  */
 public final class AmqpSinkVersionInfo  {
-    private AmqpSourceVersionInfo() {
+    private AmqpSinkVersionInfo() {
         // do not instantiate.
     }
     /** The version of this instance */

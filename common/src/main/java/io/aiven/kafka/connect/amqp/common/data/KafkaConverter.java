@@ -3,24 +3,33 @@ package io.aiven.kafka.connect.amqp.common.data;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Optional;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Values;
 
+import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
+
 /**
- * Performs Kafka conversions. This converter will convert
+ * Performs Kafka conversions.
+ *
+ * <p>This converter will handle;
  *
  * <ul>
  *   <li>{@code null} values into an optional byte schema with a null value.
+ *   <li>Any value that has an infered schema form {@link Values#inferSchema(Object)}
  *   <li>{@code BigInteger} into a string value
  *   <li>{@code BigDecimal} into a string value
  * </ul>
  */
-public class KafkaConverter extends Converter {
+public final class KafkaConverter extends Converter {
   @VisibleForTesting static final String BIG_DECIMAL_NAME = "BigDecimal";
   @VisibleForTesting static final String BIG_INTEGER_NAME = "BigInteger";
+
+  /** Constructor. */
+  public KafkaConverter() {}
 
   @Override
   public Optional<SchemaAndValue> encode(Object value) {
@@ -44,23 +53,6 @@ public class KafkaConverter extends Converter {
               new SchemaBuilder(Schema.Type.STRING).name(BIG_INTEGER_NAME).build(),
               value.toString()));
     }
-
-    //    if (value instanceof String) {
-    //      return Optional.of(new SchemaAndValue(Schema.STRING_SCHEMA, value));
-    //    }
-    //    if (value instanceof Boolean) {
-    //      return Optional.of(new SchemaAndValue(Schema.BOOLEAN_SCHEMA, value));
-    //    }
-    //    if (value instanceof byte[]) {
-    //      return Optional.of(new SchemaAndValue(Schema.BYTES_SCHEMA, value));
-    //    }
-    //
-    //    if (value instanceof List) {
-    //      Schema schema =  Values.inferSchema((List<?>) value);
-    //      if (schema == null) {
-    //
-    //      }
-    //    }
     return Optional.empty();
   }
 
@@ -68,30 +60,6 @@ public class KafkaConverter extends Converter {
   public Optional<Object> decode(SchemaAndValue schemaAndValue) {
     Schema schema = schemaAndValue.schema();
     if (schema != null) {
-      if (schemaAndValue.value() instanceof Number n) {
-        if (schema.equals(Schema.INT8_SCHEMA)) {
-          return Optional.of(n.byteValue());
-        }
-        if (schema.equals(Schema.INT16_SCHEMA)) {
-          return Optional.of(n.shortValue());
-        }
-
-        if (schema.equals(Schema.INT32_SCHEMA)) {
-          return Optional.of(n.intValue());
-        }
-
-        if (schema.equals(Schema.INT64_SCHEMA)) {
-          return Optional.of(n.longValue());
-        }
-
-        if (schema.equals(Schema.FLOAT32_SCHEMA)) {
-          return Optional.of(n.floatValue());
-        }
-
-        if (schema.equals(Schema.FLOAT64_SCHEMA)) {
-          return Optional.of(n.doubleValue());
-        }
-      }
       if (schemaAndValue.value() instanceof String s) {
         if (BIG_DECIMAL_NAME.equals(schema.name())) {
           return Optional.of(new BigDecimal(s));
@@ -104,11 +72,50 @@ public class KafkaConverter extends Converter {
         }
       }
 
-      if (schemaAndValue.value() instanceof Boolean b && Schema.BOOLEAN_SCHEMA.equals(schema)) {
-        return Optional.of(b);
+      if (schemaAndValue.schema().type().isPrimitive()) {
+        return Optional.of(schemaAndValue.value());
       }
-      if (schemaAndValue.value() instanceof byte[] b && Schema.BYTES_SCHEMA.equals(schema)) {
-        return Optional.of(b);
+
+//      if (schemaAndValue.value() instanceof Number n) {
+//        if (schema.equals(Schema.INT8_SCHEMA)) {
+//          return Optional.of(n.byteValue());
+//        }
+//        if (schema.equals(Schema.INT16_SCHEMA)) {
+//          return Optional.of(n.shortValue());
+//        }
+//
+//        if (schema.equals(Schema.INT32_SCHEMA)) {
+//          return Optional.of(n.intValue());
+//        }
+//
+//        if (schema.equals(Schema.INT64_SCHEMA)) {
+//          return Optional.of(n.longValue());
+//        }
+//
+//        if (schema.equals(Schema.FLOAT32_SCHEMA)) {
+//          return Optional.of(n.floatValue());
+//        }
+//
+//        if (schema.equals(Schema.FLOAT64_SCHEMA)) {
+//          return Optional.of(n.doubleValue());
+//        }
+//      }
+//      if (schemaAndValue.value() instanceof String s) {
+//        if (BIG_DECIMAL_NAME.equals(schema.name())) {
+//          return Optional.of(new BigDecimal(s));
+//        }
+//        if (BIG_INTEGER_NAME.equals(schema.name())) {
+//          return Optional.of(new BigInteger(s));
+//        }
+//        if (Schema.STRING_SCHEMA.equals(schema)) {
+//          return Optional.of(s);
+//        }
+//      }
+
+
+      if (schemaAndValue.schema().type() == ARRAY) {
+        List<?> collection = (List<?>) schemaAndValue.value();
+        return Optional.of(collection.toArray());
       }
     }
     return Optional.empty();

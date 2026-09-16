@@ -27,11 +27,9 @@ import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
-import io.aiven.commons.kafka.connector.source.extractor.Extractor;
-import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
-import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -60,6 +58,7 @@ import org.apache.qpid.protonj2.types.UnsignedLong;
 import org.apache.qpid.protonj2.types.UnsignedShort;
 import org.apache.qpid.protonj2.types.messaging.AmqpSequence;
 import org.apache.qpid.protonj2.types.messaging.AmqpValue;
+import org.apache.qpid.protonj2.types.messaging.Data;
 import org.apache.qpid.protonj2.types.messaging.Footer;
 import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +85,7 @@ public class AmqpSourceDataTest {
 
   private AmqpSourceConfig sourceConfig;
   private OffsetManager offsetManager;
-  private Context context;
+  private AmqpContext context;
 
   private final long longValue = 1000L;
   private final int intValue = 500;
@@ -102,13 +101,12 @@ public class AmqpSourceDataTest {
     Receiver receiver = mock(Receiver.class);
     when(receiver.connection()).thenReturn(mock(Connection.class));
     when(receiver.connection().client()).thenReturn(mock(Client.class));
-    Extractor extractor = new AmqpExtractor(null);
+
     sourceConfig = mock(AmqpSourceConfig.class);
     when(sourceConfig.getReceiver()).thenReturn(receiver);
-    when(sourceConfig.getExtractor()).thenReturn(extractor);
 
     offsetManager = mock(OffsetManager.class);
-    context = new Context(new ULID().nextValue());
+    context = new AmqpContext.Builder(new ULID().nextULID(), mock(Delivery.class)).build();
   }
 
   @Test
@@ -121,12 +119,12 @@ public class AmqpSourceDataTest {
   @Test
   void nativeSerde() throws Exception {
     try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
-      Optional<NativeSourceData.KeySerde<ULID.Value>> optSerde = underTest.getNativeKeySerde();
+      Optional<NativeSourceData.KeySerde<String>> optSerde = underTest.getNativeKeySerde();
       assertThat(optSerde.isPresent()).isTrue();
-      NativeSourceData.KeySerde<ULID.Value> serde = optSerde.get();
+      NativeSourceData.KeySerde<String> serde = optSerde.get();
 
       String keyString = serde.toString(context.getNativeKey());
-      ULID.Value value = serde.fromString(keyString);
+      String value = serde.fromString(keyString);
       assertThat(value).isEqualTo(context.getNativeKey());
     }
   }
@@ -137,7 +135,7 @@ public class AmqpSourceDataTest {
       OffsetManager.OffsetManagerEntry offsetManagerEntry =
           underTest.createOffsetManagerEntry(context);
       assertThat(offsetManagerEntry.getProperties())
-          .containsEntry("ulid", context.getNativeKey().toString());
+          .containsEntry(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey().toString());
     } catch (Exception e) {
       fail(e);
     }
@@ -148,21 +146,21 @@ public class AmqpSourceDataTest {
     try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
       OffsetManager.OffsetManagerEntry offsetManagerEntry =
           underTest.createOffsetManagerEntry(
-              Map.of("ulid", context.getNativeKey(), "recordCount", 5));
+              Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey(), AmqpOffsetManagerEntry.RECORD_COUNT, 5));
       assertThat(offsetManagerEntry.getProperties())
-          .containsEntry("ulid", context.getNativeKey().toString());
+          .containsEntry(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey().toString());
 
       offsetManagerEntry =
           underTest.createOffsetManagerEntry(
-              Map.of("ulid", context.getNativeKey().toString(), "recordCount", 5));
+              Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey().toString(), AmqpOffsetManagerEntry.RECORD_COUNT, 5));
       assertThat(offsetManagerEntry.getProperties())
-          .containsEntry("ulid", context.getNativeKey().toString());
+          .containsEntry(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey().toString());
 
       offsetManagerEntry =
           underTest.createOffsetManagerEntry(
-              Map.of("ulid", "01KKVQF32P85BW8EYKBP1BTQR0", "recordCount", 5));
+              Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, "01KKVQF32P85BW8EYKBP1BTQR0", AmqpOffsetManagerEntry.RECORD_COUNT, 5));
       assertThat(offsetManagerEntry.getProperties())
-          .containsEntry("ulid", ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
+          .containsEntry(AmqpOffsetManagerEntry.PRIMARY_KEY, ULID.parseULID("01KKVQF32P85BW8EYKBP1BTQR0").toString());
     }
   }
 
@@ -170,7 +168,7 @@ public class AmqpSourceDataTest {
   void getOffsetManagerKey() throws Exception {
     try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
       OffsetManager.OffsetManagerKey key = underTest.getOffsetManagerKey(context.getNativeKey());
-      assertThat(key.getPartitionMap()).containsEntry("ulid", context.getNativeKey().toString());
+      assertThat(key.getPartitionMap()).containsEntry(AmqpOffsetManagerEntry.PRIMARY_KEY, context.getNativeKey().toString());
     }
   }
 
@@ -281,7 +279,8 @@ public class AmqpSourceDataTest {
 
     Delivery delivery = mock(Delivery.class);
     when(delivery.message()).thenReturn((Message<Object>) message);
-    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
+    context = context.builder().delivery(delivery).build();
+    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(context.getDelivery());
     final OffsetManager.OffsetManagerEntry offsetManagerEntry =
         mock(OffsetManager.OffsetManagerEntry.class);
 
@@ -451,8 +450,12 @@ public class AmqpSourceDataTest {
 
       EvolvingSourceRecord actual = underTest.initialize(record);
       assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.STRUCT);
+      assertThat(actual.getValue().schema().name()).isEqualTo("java.util.ImmutableCollections$ListN");
+      Optional<Object> optObj = AmqpCommonConfig.getCommonConverter().decode(actual.getValue());
+      assertThat(optObj).isPresent();
       Struct struct =
           (Struct) assertThat(actual.getValue().value()).isInstanceOf(Struct.class).actual();
+
       List<Field> fields = struct.schema().fields();
       for (int i = 0; i < value.size(); i++) {
         assertThat(struct.get(fields.get(i))).isEqualTo(value.get(i));
@@ -463,13 +466,84 @@ public class AmqpSourceDataTest {
   static List<Arguments> bodySequenceTestData() {
     List<Arguments> result = new ArrayList<>();
     List<Object> lst =
-        List.of(
-            "Hello world",
-            10L,
-            5,
-            List.of("Hello world", "goodbye cruel world"),
-            "this is the end");
+            List.of(
+                    "Hello world",
+                    10L,
+                    5,
+                    List.of("Hello world", "goodbye cruel world"),
+                    "this is the end");
     result.add(Arguments.of(lst, Schema.BYTES_SCHEMA));
     return result;
   }
+
+  @ParameterizedTest
+  @MethodSource("bodyDataTestData")
+  void bodyDataTest(byte[] value) throws Exception {
+    ClientMessage<?> message = ClientMessage.create(new Data(value));
+    Delivery delivery = mock(Delivery.class);
+    when(delivery.message()).thenReturn((Message) message);
+    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
+    final OffsetManager.OffsetManagerEntry offsetManagerEntry =
+            mock(OffsetManager.OffsetManagerEntry.class);
+
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+
+      EvolvingSourceRecord record =
+              new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+
+      EvolvingSourceRecord actual = underTest.initialize(record);
+      assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.BYTES);
+      Optional<Object> optObj = AmqpCommonConfig.getCommonConverter().decode(actual.getValue());
+      assertThat(optObj).isPresent();
+      byte[] actualValue = (byte[]) actual.getValue().value();
+      assertThat(actualValue).isEqualTo(value);
+    }
+  }
+
+  static List<Arguments> bodyDataTestData() {
+    List<Arguments> result = new ArrayList<>();
+    result.add(Arguments.of("Hello world".getBytes(StandardCharsets.UTF_8)));
+    return result;
+  }
+
+
+
+  @ParameterizedTest
+  @MethodSource("bodyMultiSectionTestData")
+  void bodyMultiSectionTest(String name, Object obj1, Object obj2) throws Exception {
+    ClientMessage<?> message = null;
+    if (obj1 instanceof byte[]) {
+    message = ClientMessage.create(new Data((byte[]) obj1));
+    message.addBodySection(new Data((byte[]) obj2));
+    } else {
+      message = ClientMessage.create(new AmqpSequence<>((List<?>) obj1));
+      message.addBodySection(new AmqpSequence<>((List<?>) obj2));
+    }
+
+    Delivery delivery = mock(Delivery.class);
+    when(delivery.message()).thenReturn((Message) message);
+    final AmqpSourceNativeInfo sourceNativeInfo = new AmqpSourceNativeInfo(delivery);
+    final OffsetManager.OffsetManagerEntry offsetManagerEntry =
+            mock(OffsetManager.OffsetManagerEntry.class);
+
+    try (AmqpSourceData underTest = new AmqpSourceData(sourceConfig, offsetManager)) {
+      EvolvingSourceRecord record =
+              new EvolvingSourceRecord(sourceNativeInfo, offsetManagerEntry, context);
+
+      EvolvingSourceRecord actual = underTest.initialize(record);
+      assertThat(actual.getValue().schema().type()).isEqualTo(Schema.Type.ARRAY);
+      assertThat(actual.getValue().schema().name()).isNull();
+      Optional<Object> optObj = AmqpCommonConfig.getCommonConverter().decode(actual.getValue());
+      assertThat(optObj).isPresent();
+      Object[] actualValue = (Object[]) optObj.get();
+      assertThat(actualValue).containsExactly(obj1, obj2);
+    }
+  }
+
+    static List<Arguments> bodyMultiSectionTestData() {
+      List<Arguments> data = new ArrayList<>();
+      data.add(Arguments.of("byte[]", "Hello world".getBytes(StandardCharsets.UTF_8), "Now is the time".getBytes(StandardCharsets.UTF_8)));
+      data.add(Arguments.of("lists", List.of("Hello World", "Now is the time"), List.of(1,2)));
+      return data;
+    }
 }

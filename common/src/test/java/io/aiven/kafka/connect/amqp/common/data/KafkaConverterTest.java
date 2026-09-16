@@ -222,7 +222,6 @@ public class KafkaConverterTest {
     SchemaAndValue sv = assertThat(schemaAndValue).isPresent().get().actual();
     Map<Object, Object> actual = (Map<Object, Object>) sv.value();
     assertThat(actual).containsExactlyEntriesOf(expected);
-    // ..containsExactlyElementsOf(expected);
   }
 
   static List<Map<Object, Object>> mapTestData() {
@@ -233,25 +232,6 @@ public class KafkaConverterTest {
     result.add(Map.of("a", (short) 1, "b", (short) 2));
     result.add(Map.of("a", (byte) 1, "b", (byte) 2));
     result.add(Map.of(1, "hello", 2, "world"));
-    return result;
-  }
-
-  @Test
-  void arrayTest() {
-    Integer[] expectedInt = new Integer[] {1, 2};
-    Optional<SchemaAndValue> schemaAndValue = underTest.encode(expectedInt);
-    SchemaAndValue sv = assertThat(schemaAndValue).isPresent().get().actual();
-    Collection<Object> actual = (Collection<Object>) sv.value();
-    assertThat(actual).containsExactly(expectedInt);
-  }
-
-  static List<Object[]> arrayTestData() {
-    List<Object[]> result = new ArrayList<>();
-    result.add((Object[]) new Integer[] {1, 2});
-    result.add(new String[] {"hello", "world"});
-    result.add(new Long[] {1L, 2L});
-    result.add(new Byte[] {(byte) 1, (byte) 2});
-    result.add(new Short[] {(short) 1, (short) 2});
     return result;
   }
 }

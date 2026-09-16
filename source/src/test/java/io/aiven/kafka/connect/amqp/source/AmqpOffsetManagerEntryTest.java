@@ -26,18 +26,18 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class AmqpOffsetManagerEntryTest {
-  ULID.Value primaryKey = new ULID().nextValue();
+  String primaryKey = new ULID().nextULID();
 
   @Test
   void constructorTest() {
     AmqpOffsetManagerEntry entry = new AmqpOffsetManagerEntry(primaryKey);
     OffsetManager.OffsetManagerKey key = entry.getManagerKey();
     Map<String, Object> keyMap = key.getPartitionMap();
-    assertThat(keyMap).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
+    assertThat(keyMap).containsExactlyEntriesOf(Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey));
     Map<String, Object> map = entry.getProperties();
     assertThat(map)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of("ulid", primaryKey.toString(), "recordCount", 0));
+            Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey, AmqpOffsetManagerEntry.RECORD_COUNT, 0));
   }
 
   @Test
@@ -45,19 +45,19 @@ public class AmqpOffsetManagerEntryTest {
     AmqpOffsetManagerEntry entry = new AmqpOffsetManagerEntry(primaryKey);
     OffsetManager.OffsetManagerKey key = entry.getManagerKey();
     Map<String, Object> map = key.getPartitionMap();
-    assertThat(map).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
+    assertThat(map).containsExactlyEntriesOf(Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey));
     map = entry.getProperties();
     assertThat(map)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of("ulid", primaryKey.toString(), "recordCount", 0));
+            Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey, AmqpOffsetManagerEntry.RECORD_COUNT, 0));
 
     entry.incrementRecordCount();
 
     map = entry.getManagerKey().getPartitionMap();
-    assertThat(map).containsExactlyEntriesOf(Map.of("ulid", primaryKey.toString()));
+    assertThat(map).containsExactlyEntriesOf(Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey));
     map = entry.getProperties();
     assertThat(map)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of("ulid", primaryKey.toString(), "recordCount", 1));
+            Map.of(AmqpOffsetManagerEntry.PRIMARY_KEY, primaryKey, AmqpOffsetManagerEntry.RECORD_COUNT, 1));
   }
 }

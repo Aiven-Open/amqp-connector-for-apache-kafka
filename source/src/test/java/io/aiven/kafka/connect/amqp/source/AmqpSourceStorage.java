@@ -28,7 +28,6 @@ import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.ExtractorRegistry;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,10 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
-public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delivery> {
+public final class AmqpSourceStorage implements SourceStorage<String, Delivery> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceStorage.class);
-  private static final ExtractorRegistry extractorRegistry =
-      ExtractorRegistry.builder().add(AmqpExtractor.info()).build();
+  private static final ExtractorRegistry extractorRegistry = ExtractorRegistry.builder().build();
 
   private final RabbitMQContainer rabbit;
   private final Client client;
@@ -63,7 +61,8 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   private Receiver receiver;
   private String amqpAddress;
   private String topic;
-  private Map<Tracker, Message> trackers = new HashMap<>();
+  private Map<Tracker, Message<?>> trackers = new HashMap<>();
+  private static final ULID ulid = new ULID();
 
   @Override
   public boolean nullDataIsNullRecord() {
@@ -111,15 +110,15 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   }
 
   @Override
-  public ULID.Value createKey(String topic, int partition) {
-    return AmqpSourceNativeInfo.nextValue();
+  public String createKey(String topic, int partition) {
+    return ulid.nextULID();
   }
 
   @Override
-  public WriteResult writeWithKey(ULID.Value nativeKey, byte[] testDataBytes) {
+  public WriteResult writeWithKey(String nativeKey, byte[] testDataBytes) {
     try {
       ensureSender();
-      Message<byte[]> message = Message.create(testDataBytes).messageId(nativeKey.toString());
+      Message<byte[]> message = Message.create(testDataBytes).messageId(nativeKey);
       trackers.put(sender.send(message), message);
       return new WriteResult(null, nativeKey);
     } catch (ClientException e) {
@@ -212,17 +211,17 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   }
 
   @Override
-  public List<? extends NativeInfo<ULID.Value, Delivery>> getNativeInfo() {
+  public List<? extends NativeInfo<String, Delivery>> getNativeInfo() {
     // can not read from connector or the data won't be there for real read.  So return what we
     // think was written.
-    List<NativeInfo<ULID.Value, Delivery>> result = new ArrayList<>();
+    List<NativeInfo<String, Delivery>> result = new ArrayList<>();
     for (Tracker tracker : trackers.keySet()) {
       if (tracker.remoteState() == DeliveryState.accepted()) {
         try {
           Message<?> message = trackers.get(tracker);
           Delivery delivery = mock(Delivery.class);
-          ULID.Value value = ULID.parseULID(message.messageId().toString());
-          when(delivery.message()).thenReturn(trackers.get(tracker));
+          String value = message.messageId().toString();
+          when(delivery.message()).thenReturn((Message<Object>) trackers.get(tracker));
           result.add(new NativeInfo<>(value, delivery));
         } catch (ClientException e) {
           throw new RuntimeException(e);
@@ -233,7 +232,7 @@ public final class AmqpSourceStorage implements SourceStorage<ULID.Value, Delive
   }
 
   @Override
-  public IOSupplier<InputStream> getInputStream(ULID.Value nativeKey) {
+  public IOSupplier<InputStream> getInputStream(String nativeKey) {
     return null;
   }
 

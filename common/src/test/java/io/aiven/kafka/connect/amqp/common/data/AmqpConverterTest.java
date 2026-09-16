@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +12,7 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
+import org.apache.kafka.connect.data.Struct;
 import org.apache.qpid.protonj2.types.Binary;
 import org.apache.qpid.protonj2.types.Symbol;
 import org.apache.qpid.protonj2.types.UnsignedByte;
@@ -198,8 +198,8 @@ public class AmqpConverterTest {
         .describedAs("Fields should be in the original order")
         .containsExactlyElementsOf(annotations.keySet().stream().map(Symbol::toString).toList());
 
-    assertThat(encoded.value()).isInstanceOf(List.class);
-    List<Object> values = (List<Object>) encoded.value();
+    assertThat(encoded.value()).isInstanceOf(Struct.class);
+    Struct values = (Struct) encoded.value();
 
     Optional<Object> decoded = compositConverter.decode(encoded);
     assertThat(decoded)
@@ -237,8 +237,8 @@ public class AmqpConverterTest {
         .describedAs("Fields should be in the original order")
         .containsExactlyElementsOf(footers.keySet().stream().map(Symbol::toString).toList());
 
-    assertThat(encoded.value()).isInstanceOf(List.class);
-    List<Object> values = (List<Object>) encoded.value();
+    assertThat(encoded.value()).isInstanceOf(Struct.class);
+    Struct values = (Struct) encoded.value();
 
     Optional<Object> decoded = compositConverter.decode(encoded);
     assertThat(decoded).isPresent().get().isInstanceOf(Footer.class).isEqualTo(messageFooters);

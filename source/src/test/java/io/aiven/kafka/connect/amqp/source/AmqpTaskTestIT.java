@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTaskContext;
 import org.apache.kafka.connect.storage.OffsetStorageReader;
@@ -90,7 +91,7 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
 
     ULID ulid = new ULID();
     SourceStorage.WriteResult writeResult =
-        sourceStorage.writeWithKey(ulid.nextValue(), body.getBytes(StandardCharsets.UTF_8));
+        sourceStorage.writeWithKey(ulid.nextULID(), body.getBytes(StandardCharsets.UTF_8));
     assertThat(writeResult).isNotNull();
 
     SourceTaskContext context = mock(SourceTaskContext.class);
@@ -116,18 +117,17 @@ public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
 
     SourceRecord sourceRecord = result.get(0);
     Map<String, ?> partition = sourceRecord.sourcePartition();
-    assertThat(partition.keySet()).containsExactly("ulid");
+    assertThat(partition.keySet()).containsExactly(AmqpOffsetManagerEntry.PRIMARY_KEY);
     Map<String, ?> offset = sourceRecord.sourceOffset();
-    assertThat(offset.keySet()).containsExactly("ulid", "recordCount");
-    assertThat(offset.get("ulid")).isEqualTo(partition.get("ulid"));
-    assertThat(offset.get("recordCount")).isEqualTo(0);
+    assertThat(offset.keySet()).containsExactly(AmqpOffsetManagerEntry.PRIMARY_KEY, AmqpOffsetManagerEntry.RECORD_COUNT);
+    assertThat(offset.get(AmqpOffsetManagerEntry.PRIMARY_KEY)).isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
+    assertThat(offset.get(AmqpOffsetManagerEntry.RECORD_COUNT)).isEqualTo(0);
     assertThat(sourceRecord.kafkaPartition()).isNull();
     assertThat(sourceRecord.keySchema()).isEqualTo(Schema.STRING_SCHEMA);
-    assertThat(sourceRecord.key()).isEqualTo(partition.get("ulid"));
+    assertThat(sourceRecord.key()).isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
     assertThat(sourceRecord.timestamp()).isNull();
-    assertThat(sourceRecord.valueSchema()).isEqualTo(Schema.STRING_SCHEMA);
-    JsonNode node = OBJECT_MAPPER.readTree((String) sourceRecord.value());
-    assertThat(node.get("messageId").asText()).isEqualTo(writeResult.nativeKey().toString());
-    assertThat(node.get("body").asText()).isEqualTo("aGVsbG8gd29ybGQ=");
+    assertThat(sourceRecord.valueSchema()).isEqualTo(Schema.BYTES_SCHEMA);
+    assertThat(sourceRecord.value()).isEqualTo(body.getBytes(StandardCharsets.UTF_8));
+    assertThat(sourceRecord.headers().lastWithName("amqp.messageId").value()).isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
   }
 }

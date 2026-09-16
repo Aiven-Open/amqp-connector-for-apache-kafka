@@ -31,6 +31,7 @@ import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.ConnectionOptions;
 import org.apache.qpid.protonj2.client.Receiver;
+import org.apache.qpid.protonj2.client.Sender;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
 /** The AMQP Fragment. */
@@ -167,6 +168,12 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   public Receiver getReceiver(Connection connection)
       throws ClientException, ExecutionException, InterruptedException {
     return connection.openReceiver(dataAccess.getString(ADDRESS)).openFuture().get();
+  }
+
+  @Override
+  public Sender getSender(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException {
+    return connection.openSender(dataAccess.getString(ADDRESS)).openFuture().get();
   }
 
   /** The Setter for the AMQP fragment. */

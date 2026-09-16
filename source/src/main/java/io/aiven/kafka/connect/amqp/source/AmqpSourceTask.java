@@ -19,12 +19,21 @@
 package io.aiven.kafka.connect.amqp.source;
 
 import io.aiven.commons.kafka.connector.source.AbstractSourceTask;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
+
+import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+
+import org.apache.commons.io.HexDump;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +44,9 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTask.class);
 
   private AmqpSourceData amqpSourceData;
+
+  private final ConcurrentHashMap<OffsetManager.OffsetManagerKey, Delivery> trackingMap =
+      new ConcurrentHashMap<>();
 
   /** Default constructor. */
   public AmqpSourceTask() {}
@@ -69,5 +81,29 @@ public final class AmqpSourceTask extends AbstractSourceTask {
   @Override
   public String version() {
     return AmqpSourceVersionInfo.VERSION;
+  }
+
+  @Override
+  public void commitRecord(SourceRecord record, RecordMetadata metadata) {
+    OffsetManager.OffsetManagerKey kafkaCommitKey =
+        new OffsetManager.OffsetManagerKey(record.sourcePartition());
+    trackingMap.computeIfPresent(
+        kafkaCommitKey,
+        (k, v) -> {
+          try {
+            v.accept();
+          } catch (ClientException e) {
+            LOGGER.error("Unable to accept AMQP delivery: {}", e.getMessage(), e);
+          }
+          return null;
+        });
+  }
+
+  @Override
+  public EvolvingSourceRecord lastEvolution(EvolvingSourceRecord record) {
+    trackingMap.computeIfAbsent(
+        record.getOffsetManagerEntry().getManagerKey(),
+        k -> ((AmqpContext) record.getContext()).getDelivery());
+    return record;
   }
 }

@@ -35,7 +35,7 @@ public class UniqueTypeConverterTest {
     ULID.Value expectedValue = ulid.nextValue();
 
     Schema expectedSchema =
-        new SchemaBuilder(Schema.Type.STRING).name(ULID.Value.class.getCanonicalName()).build();
+        new SchemaBuilder(Schema.Type.STRING).name(ULID.Value.class.getName()).build();
 
     Optional<SchemaAndValue> result = underTest.encode(expectedValue);
     SchemaAndValue sv = assertThat(result).isPresent().get().actual();

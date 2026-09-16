@@ -24,16 +24,12 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpHeaderProperties;
-import io.aiven.kafka.connect.amqp.common.data.AmqpConverter;
-import io.aiven.kafka.connect.amqp.common.data.CollectionConverter;
 import io.aiven.kafka.connect.amqp.common.data.Converter;
-import io.aiven.kafka.connect.amqp.common.data.KafkaConverter;
-import io.aiven.kafka.connect.amqp.common.data.UniqueTypeConverter;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -47,9 +43,6 @@ import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
-import org.apache.qpid.protonj2.types.Symbol;
-import org.apache.qpid.protonj2.types.messaging.Footer;
-import org.apache.qpid.protonj2.types.messaging.MessageAnnotations;
 import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +57,8 @@ import org.slf4j.LoggerFactory;
  * unique ID, this implementation uses a {@link ULID} for the native key. ULIDs are generated in the
  * {@link AmqpSourceNativeInfo} class.
  */
-public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
+public final class AmqpSourceData extends NativeSourceData<String> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
-
-  private static final ULIDSerde serde = new ULIDSerde();
 
   private final Receiver receiver;
 
@@ -91,12 +82,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
     taskId = sourceConfig.getTaskId();
     this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
-    dataConverter =
-        new Converter.ChainedConverter(
-            new AmqpConverter(),
-            new UniqueTypeConverter(),
-            new KafkaConverter(),
-            new CollectionConverter());
+    dataConverter = AmqpCommonConfig.getCommonConverter();
   }
 
   @Override
@@ -105,117 +91,134 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   }
 
   private void writeObject(Headers headers, String name, Object value) {
-    dataConverter
-        .encode(value)
-        .ifPresentOrElse(
-            schemaAndValue -> writeSchema(headers, name, schemaAndValue),
-            () -> LOGGER.warn("Unknown data type {} for {}", value.getClass(), name));
+    if (value != null) {
+      dataConverter
+              .encode(value)
+              .ifPresentOrElse(
+                      schemaAndValue -> writeSchema(headers, name, schemaAndValue),
+                      () -> LOGGER.warn("Unknown data type {} for {}", value.getClass(), name));
+    }
   }
 
   private void writeSchema(Headers headers, String name, SchemaAndValue schemaAndValue) {
     headers.add("amqp." + name, schemaAndValue);
   }
 
+  private void setKeyValue(final EvolvingSourceRecord result, final String defaultKey) {
+    dataConverter.encode(result.getContext().getNativeKey()).ifPresentOrElse(result::setKeyData,
+            () -> {
+              LOGGER.error(
+                      "Unexpected data type in native key {}.  Using: {}", result.getContext().getNativeKey().getClass(),
+                      defaultKey);
+              result.setKeyData(new SchemaAndValue(Schema.STRING_SCHEMA, defaultKey));
+            });
+  }
+
+  private Headers processHeaders(Headers headers, Message<?> message) throws ClientException {
+    for (AmqpHeaderProperties property : AmqpHeaderProperties.values()) {
+      switch (property) {
+        case MESSAGE_ID -> writeObject(headers, property.getSchemaName(), message.messageId());
+        case USER_ID -> writeObject(headers, property.getSchemaName(), message.to());
+        case SUBJECT -> writeObject(headers, property.getSchemaName(), message.subject());
+        case REPLY_TO -> writeObject(headers, property.getSchemaName(), message.replyTo());
+        case CORRELATION_ID -> writeObject(headers, property.getSchemaName(), message.correlationId());
+        case CONTENT_TYPE -> writeObject(headers, property.getSchemaName(), message.contentType());
+        case CONTENT_ENCODING -> writeObject(headers, property.getSchemaName(), message.contentEncoding());
+        case ABSOLUTE_EXPIRY -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.INT64_SCHEMA, message.absoluteExpiryTime()));
+        case CREATION_TIME -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.INT64_SCHEMA, message.creationTime()));
+        case GROUP_ID -> writeObject(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.INT32_SCHEMA, message.groupId()));
+        case GROUP_SEQUENCE -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.INT32_SCHEMA, message.groupSequence()));
+        case REPLY_TO_GROUP_ID -> writeObject(headers, property.getSchemaName(), message.replyToGroupId());
+        case DURABLE -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.durable()));
+        case FIRST_ACQUIRER -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.firstAcquirer()));
+        case DELIVERY_COUNT -> writeSchema(
+                headers,
+                property.getSchemaName(),
+                new SchemaAndValue(Schema.INT64_SCHEMA, message.deliveryCount()));
+      }
+    }
+
+    if (message.hasAnnotations()) {
+      writeObject(headers, "annotations", message.toAdvancedMessage().annotations());
+    }
+
+    if (message.hasFooters()) {
+      writeObject(headers, "footers", message.toAdvancedMessage().footer());
+    }
+    return headers;
+
+  }
+
+  private void processBody(final EvolvingSourceRecord result, List<Section<?>> body ) {
+    // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just pass
+    // the section values they should encode correctly
+    if (!body.isEmpty()) {
+      Optional<SchemaAndValue> schemaAndValue =
+      body.size() == 1 ?
+        dataConverter.encode(body.get(0).getValue()) :
+      dataConverter.encode(body.stream().map(Section::getValue).toList());
+
+      schemaAndValue.ifPresentOrElse(
+              result::setValueData,
+              () ->
+                      LOGGER.error(
+                              "Unexpected data type in body {}",
+                              String.join(", ", body.stream().map(Section::toString).toList())));
+    }
+  }
   /**
    * Converts the message internals into headers.
    *
-   * @param record
-   * @return
+   * @param record The initial EvolvingSourceRecord to initialize
+   * @return an initialized record.  May be the same or different instance.
    */
   @VisibleForTesting
   EvolvingSourceRecord initialize(EvolvingSourceRecord record) {
     AmqpSourceNativeInfo sourceNativeInfo = record.getSourceNativeInfo();
+    EvolvingSourceRecord result = record;
     try {
       Message<?> message = sourceNativeInfo.getMessage();
-      Headers headers = record.getHeaders();
-      for (AmqpHeaderProperties property : AmqpHeaderProperties.values()) {
-        switch (property) {
-          case MESSAGE_ID -> writeObject(headers, property.getSchemaName(), message.messageId());
-          case USER_ID -> writeObject(headers, property.getSchemaName(), message.to());
-          case SUBJECT -> writeObject(headers, property.getSchemaName(), message.subject());
-          case REPLY_TO -> writeObject(headers, property.getSchemaName(), message.replyTo());
-          case CORRELATION_ID ->
-              writeObject(headers, property.getSchemaName(), message.correlationId());
-          case CONTENT_TYPE ->
-              writeObject(headers, property.getSchemaName(), message.contentType());
-          case CONTENT_ENCODING ->
-              writeObject(headers, property.getSchemaName(), message.contentEncoding());
-          case ABSOLUTE_EXPIRY ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.INT64_SCHEMA, message.absoluteExpiryTime()));
-          case CREATION_TIME ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.INT64_SCHEMA, message.creationTime()));
-          case GROUP_ID ->
-              writeObject(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.INT32_SCHEMA, message.groupId()));
-          case GROUP_SEQUENCE ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.INT32_SCHEMA, message.groupSequence()));
-          case REPLY_TO_GROUP_ID ->
-              writeObject(headers, property.getSchemaName(), message.replyToGroupId());
-          case DURABLE ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.durable()));
-          case FIRST_ACQUIRER ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.BOOLEAN_SCHEMA, message.firstAcquirer()));
-          case DELIVERY_COUNT ->
-              writeSchema(
-                  headers,
-                  property.getSchemaName(),
-                  new SchemaAndValue(Schema.INT64_SCHEMA, message.deliveryCount()));
-        }
+      // if the messageID is provided use it for the context which sets the default key
+      // may change the result object.
+      if (message.messageId() != null) {
+        AmqpContext ctxt =
+            ((AmqpContext) record.getContext()).builder().nativeKey(message.messageId().toString()).build();
+        result =
+            new EvolvingSourceRecord(
+                sourceNativeInfo, createOffsetManagerEntry(ctxt), ctxt);
       }
 
-      if (message.hasAnnotations()) {
-        // LinkedHashMap is used in QPIDD source.
-        Map<Symbol, Object> annotations = new LinkedHashMap<>();
-        message.forEachAnnotation((k, v) -> annotations.put(Symbol.valueOf(k), v));
-        MessageAnnotations messageAnnotations = new MessageAnnotations(annotations);
-        writeObject(headers, "annotations", messageAnnotations);
-      }
+      // start setting result values
 
-      if (message.hasFooters()) {
-        Map<Symbol, Object> footers = new LinkedHashMap<>();
-        message.forEachFooter((k, v) -> footers.put(Symbol.valueOf(k), v));
-        Footer messageFooter = new Footer(footers);
-        writeObject(headers, "footers", messageFooter);
-      }
+      setKeyValue(result, sourceNativeInfo.nativeKey());
 
-      record.setHeaders(headers);
+      result.setHeaders(processHeaders(record.getHeaders(), message));
 
-      // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just pass
-      // the section values they should encode correctly
-      List<Section<?>> body = new ArrayList<>(message.toAdvancedMessage().bodySections());
-      if (!body.isEmpty()) {
-        Optional<SchemaAndValue> schemaAndValue =
-            body.size() == 1
-                ? dataConverter.encode(body.get(0).getValue())
-                : dataConverter.encode(body.stream().map(Section::getValue).toList());
-        schemaAndValue.ifPresentOrElse(
-            record::setValueData,
-            () ->
-                LOGGER.error(
-                    "Unexpected data type in body {}",
-                    String.join(", ", body.stream().map(Section::toString).toList())));
-      }
+      processBody(result, new ArrayList<>(message.toAdvancedMessage().bodySections()));
+
     } catch (ClientException e) {
       LOGGER.error("unable to extract message: {}", e.getMessage(), e);
     }
-    return record;
+
+    return result;
   }
 
   @Override
@@ -224,7 +227,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   }
 
   @Override
-  public Iterator<AmqpSourceNativeInfo> getNativeItemIterator(ULID.Value ignore) {
+  public Iterator<AmqpSourceNativeInfo> getNativeItemIterator(String ignore) {
     try {
       long waiting = receiver.queuedDeliveries();
       int limit = (int) Math.min(waiting, receiveLimit);
@@ -257,16 +260,16 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
 
   @Override
   protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
-    return new AmqpOffsetManagerEntry((ULID.Value) context.getNativeKey());
+    return new AmqpOffsetManagerEntry((String) context.getNativeKey());
   }
 
   @Override
-  protected Optional<KeySerde<ULID.Value>> getNativeKeySerde() {
-    return Optional.of(serde);
+  protected Optional<KeySerde<String>> getNativeKeySerde() {
+    return Optional.of(KeySerde.STRING_SERDE);
   }
 
   @Override
-  public OffsetManager.OffsetManagerKey getOffsetManagerKey(ULID.Value nativeKey) {
+  public OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
     return new AmqpOffsetManagerEntry(nativeKey).getManagerKey();
   }
 
@@ -275,23 +278,6 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
     super.close();
     try (receiver) {
       LOGGER.info("Closing the open receiver");
-    }
-  }
-
-  /** The AMQP native source data implementation of NativeSourceData.KeySerde. */
-  public static class ULIDSerde implements NativeSourceData.KeySerde<ULID.Value> {
-
-    /** Default constructor */
-    public ULIDSerde() {}
-
-    @Override
-    public String toString(ULID.Value nativeKey) {
-      return nativeKey.toString();
-    }
-
-    @Override
-    public ULID.Value fromString(String nativeKeyString) {
-      return ULID.parseULID(nativeKeyString);
     }
   }
 }

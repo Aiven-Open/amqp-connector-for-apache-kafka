@@ -21,7 +21,6 @@ package io.aiven.kafka.connect.amqp.source;
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.common.NativeInfo;
 import io.aiven.commons.kafka.connector.source.AbstractSourceNativeInfo;
-import io.aiven.commons.kafka.connector.source.task.Context;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,13 +33,9 @@ import org.apache.qpid.protonj2.client.exceptions.ClientException;
  * that has both the key and the value associated with that key. This implementation creates a ULID
  * value for every Delivery from AMQP.
  */
-public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<ULID.Value, Delivery> {
+public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<String, Delivery> {
   /** The ULID to generate keys with */
   private static final ULID ulid = new ULID();
-
-  static ULID.Value nextValue() {
-    return ulid.nextValue();
-  }
 
   /**
    * Construct native info for a Delivery from AMQP.
@@ -48,12 +43,12 @@ public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<ULID.Va
    * @param delivery the AMQP delivery object to process.
    */
   public AmqpSourceNativeInfo(Delivery delivery) {
-    super(new NativeInfo<>(ulid.nextValue(), delivery));
+    super(new NativeInfo<>(ulid.nextULID(), delivery));
   }
 
   @Override
-  public Context getContext() {
-    return new Context(nativeInfo.nativeKey());
+  public AmqpContext getContext() {
+    return new AmqpContext.Builder(nativeInfo.nativeKey(), nativeInfo.nativeItem()).build();
   }
 
   @Override

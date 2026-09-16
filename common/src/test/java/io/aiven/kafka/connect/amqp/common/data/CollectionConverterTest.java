@@ -10,6 +10,9 @@ import java.util.UUID;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.Struct;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class CollectionConverterTest {
 
@@ -17,17 +20,28 @@ public class CollectionConverterTest {
       new Converter.ChainedConverter(
           new KafkaConverter(), new CollectionConverter(), new UniqueTypeConverter());
 
-  @Test
-  void arrayTest() {
-    ULID.Value ulid = new ULID().nextValue();
-    UUID uuid = UUID.randomUUID();
-    Object[] expected = new Object[] {uuid, ulid};
+  @ParameterizedTest
+  @MethodSource("arrayTestData")
+  void arrayTest(Object expected1, Object expected2) {
+    Object[] expected = {expected1, expected2};
     SchemaAndValue encoded = assertThat(underTest.encode(expected)).isPresent().get().actual();
     assertThat(encoded.value()).isInstanceOf(Struct.class);
     Object decoded = assertThat(underTest.decode(encoded)).isPresent().get().actual();
     assertThat(decoded.getClass().isArray()).isTrue();
     Object[] ary = (Object[]) decoded;
     assertThat(ary).containsExactly(expected);
+  }
+
+  static List<Arguments> arrayTestData() {
+    List<Arguments> result =
+        List.of(
+            Arguments.of(1, 2),
+            Arguments.of("hello", "world"),
+            Arguments.of(1L, 2L),
+            Arguments.of((byte) 1, (byte) 2),
+            Arguments.of((short) 1, (short) 2),
+            Arguments.of(new ULID().nextValue(), UUID.randomUUID()));
+    return result;
   }
 
   @Test
