@@ -1,11 +1,8 @@
 package io.aiven.kafka.connect.amqp.sink;
 
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
-import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
-import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.sink.config.AmqpSinkConfigDef;
 import io.aiven.kafka.connect.amqp.source.AmqpSinkVersionInfo;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

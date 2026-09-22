@@ -4,13 +4,9 @@ import io.aiven.commons.kafka.connector.source.task.Context;
 import java.util.Objects;
 import org.apache.qpid.protonj2.client.Delivery;
 
-/**
- * The context for the AMQP processes.
- */
+/** The context for the AMQP processes. */
 public class AmqpContext extends Context {
-  /**
-   * The key for the delivery property.
-   */
+  /** The key for the delivery property. */
   public static final String DELIVERY_KEY = Delivery.class.getName();
 
   private AmqpContext(AmqpContext.Builder builder) {
@@ -19,6 +15,7 @@ public class AmqpContext extends Context {
 
   /**
    * Gets the Delivery
+   *
    * @return the Delivery.
    */
   public Delivery getDelivery() {
@@ -30,20 +27,17 @@ public class AmqpContext extends Context {
     return new Builder(this);
   }
 
-  /**
-   * The builder fro the AMQP Context.
-   */
+  /** The builder fro the AMQP Context. */
   public static class Builder extends Context.Builder<AmqpContext.Builder> {
 
-    /**
-     * Validator for delivery property.
-     */
+    /** Validator for delivery property. */
     private static final Validator deliveryValidator =
         properties ->
             Objects.requireNonNull(properties.get(DELIVERY_KEY), "delivery must not be null");
 
     /**
      * Construct the builder from a context.
+     *
      * @param context the context to create the builder from.
      */
     public Builder(Context context) {
@@ -53,6 +47,7 @@ public class AmqpContext extends Context {
 
     /**
      * Construct a builder from a native key and a Delivery object.
+     *
      * @param nativeKey the native key.
      * @param delivery the Delivery object.
      */
@@ -64,6 +59,7 @@ public class AmqpContext extends Context {
 
     /**
      * Set the delivery in the context.
+     *
      * @param delivery the delivery value for the context.
      * @return this.
      */

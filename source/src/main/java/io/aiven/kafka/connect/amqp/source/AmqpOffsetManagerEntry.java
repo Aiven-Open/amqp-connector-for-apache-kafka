@@ -35,10 +35,8 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
   private int recordCount;
   private final Map<String, Object> properties;
 
-  @VisibleForTesting
-  static final String PRIMARY_KEY = "messageKey";
-  @VisibleForTesting
-  static final String RECORD_COUNT = "recordCount";
+  @VisibleForTesting static final String PRIMARY_KEY = "messageKey";
+  @VisibleForTesting static final String RECORD_COUNT = "recordCount";
   private static final List<String> RESTRICTED = List.of(PRIMARY_KEY, RECORD_COUNT);
 
   AmqpOffsetManagerEntry(String primaryKey) {

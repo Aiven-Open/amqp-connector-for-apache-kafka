@@ -1,6 +1,5 @@
 package io.aiven.kafka.connect.amqp.sink;
 
-import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.sink.config.AmqpSinkConfig;
 import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
 import io.aiven.kafka.connect.amqp.sink.strategy.AmqpBodyFmt;
@@ -17,6 +16,9 @@ import org.apache.kafka.connect.sink.SinkTask;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
+/**
+ * An AMQP sink task that implements a single strategy.
+ */
 public class AmqpSinkTask extends SinkTask {
   private Strategy strategy;
   private ErrantRecordHandler errantRecordHandler;

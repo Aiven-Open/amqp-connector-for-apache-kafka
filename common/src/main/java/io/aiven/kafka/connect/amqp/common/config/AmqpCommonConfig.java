@@ -112,9 +112,6 @@ public interface AmqpCommonConfig {
    */
   static EncoderDecoder getCommonConverter() {
     return new EncoderDecoder.ChainedEnDec(
-        new AmqpEnDec(),
-        new UniqueTypeEnDec(),
-        new KafkaEnDec(),
-        new CollectionEnDec());
+        new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec(), new CollectionEnDec());
   }
 }

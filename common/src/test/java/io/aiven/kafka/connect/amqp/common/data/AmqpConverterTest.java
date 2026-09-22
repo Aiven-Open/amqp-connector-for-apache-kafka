@@ -205,8 +205,7 @@ public class AmqpConverterTest {
     MessageAnnotations messageAnnotations = new MessageAnnotations(annotations);
 
     EncoderDecoder compositConverter =
-        new EncoderDecoder.ChainedEnDec(
-            new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec());
+        new EncoderDecoder.ChainedEnDec(new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec());
     SchemaAndValue encoded =
         assertThat(compositConverter.encode(messageAnnotations)).isPresent().actual().get();
     Schema encodedSchema = encoded.schema();
@@ -244,8 +243,7 @@ public class AmqpConverterTest {
     Footer messageFooters = new Footer(footers);
 
     EncoderDecoder compositConverter =
-        new EncoderDecoder.ChainedEnDec(
-            new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec());
+        new EncoderDecoder.ChainedEnDec(new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec());
     SchemaAndValue encoded =
         assertThat(compositConverter.encode(messageFooters)).isPresent().actual().get();
     Schema encodedSchema = encoded.schema();

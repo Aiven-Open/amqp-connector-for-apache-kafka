@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -96,49 +95,53 @@ public final class AmqpSourceData extends NativeSourceData<String> {
     return this::initialize;
   }
 
-
   private void setKeyValue(final EvolvingSourceRecord result, final String defaultKey) {
-    dataConverter.encode(result.getContext().getNativeKey()).ifPresentOrElse(result::setKeyData,
+    dataConverter
+        .encode(result.getContext().getNativeKey())
+        .ifPresentOrElse(
+            result::setKeyData,
             () -> {
               LOGGER.error(
-                      "Unexpected data type in native key {}.  Using: {}", result.getContext().getNativeKey().getClass(),
-                      defaultKey);
+                  "Unexpected data type in native key {}.  Using: {}",
+                  result.getContext().getNativeKey().getClass(),
+                  defaultKey);
               result.setKeyData(new SchemaAndValue(Schema.STRING_SCHEMA, defaultKey));
             });
   }
 
-  private void processBody(final EvolvingSourceRecord result, AdvancedMessage<?> message, List<Section<?>> body) throws ClientException {
+  private void processBody(
+      final EvolvingSourceRecord result, AdvancedMessage<?> message, List<Section<?>> body)
+      throws ClientException {
     Optional<SchemaAndValue> schemaAndValue = Optional.empty();
     switch (config.getMessageFormat()) {
       case BODY -> {
-        // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just pass
+        // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just
+        // pass
         // the section values they should encode correctly
         if (!body.isEmpty()) {
           schemaAndValue =
-                  body.size() == 1 ?
-                          dataConverter.encode(body.get(0).getValue()) :
-                          dataConverter.encode(body.stream().map(Section::getValue).toList());
-
-
+              body.size() == 1
+                  ? dataConverter.encode(body.get(0).getValue())
+                  : dataConverter.encode(body.stream().map(Section::getValue).toList());
         }
       }
       case RAW -> {
         schemaAndValue = Optional.of(new SchemaAndValue(null, message));
       }
-
     }
     schemaAndValue.ifPresentOrElse(
-            result::setValueData,
-            () -> LOGGER.error(
-                    "Unexpected data type in body {}",
-                    String.join(", ", body.stream().map(Section::toString).toList())));
+        result::setValueData,
+        () ->
+            LOGGER.error(
+                "Unexpected data type in body {}",
+                String.join(", ", body.stream().map(Section::toString).toList())));
   }
 
   /**
    * Converts the message internals into headers.
    *
    * @param record The initial EvolvingSourceRecord to initialize
-   * @return an initialized record.  May be the same or different instance.
+   * @return an initialized record. May be the same or different instance.
    */
   @VisibleForTesting
   EvolvingSourceRecord initialize(EvolvingSourceRecord record) {
@@ -150,10 +153,11 @@ public final class AmqpSourceData extends NativeSourceData<String> {
       // may change the result object.
       if (message.messageId() != null) {
         AmqpContext ctxt =
-            ((AmqpContext) record.getContext()).builder().nativeKey(message.messageId().toString()).build();
-        result =
-            new EvolvingSourceRecord(
-                sourceNativeInfo, createOffsetManagerEntry(ctxt), ctxt);
+            ((AmqpContext) record.getContext())
+                .builder()
+                .nativeKey(message.messageId().toString())
+                .build();
+        result = new EvolvingSourceRecord(sourceNativeInfo, createOffsetManagerEntry(ctxt), ctxt);
       }
 
       // start setting result values
@@ -161,7 +165,6 @@ public final class AmqpSourceData extends NativeSourceData<String> {
       setKeyValue(result, sourceNativeInfo.nativeKey());
 
       result.setHeaders(headerExtractor.processHeaders(record.getHeaders(), message));
-
 
       processBody(result, message, new ArrayList<>(message.toAdvancedMessage().bodySections()));
 

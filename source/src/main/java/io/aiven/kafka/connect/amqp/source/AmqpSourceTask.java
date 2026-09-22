@@ -24,13 +24,9 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecordIterator;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
-
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-
-import org.apache.commons.io.HexDump;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.qpid.protonj2.client.Delivery;

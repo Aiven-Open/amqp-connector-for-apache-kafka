@@ -6,42 +6,35 @@ import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.config.validator.EnumValidator;
 import io.aiven.commons.kafka.connector.common.config.ConnectorCommonConfigDef;
-import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 import java.util.Map;
-
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigValue;
-import org.apache.kafka.connect.sink.SinkTask;
 
 public class AmqpSinkConfigDef extends ConnectorCommonConfigDef {
 
   static final String STRATEGY = "amqp.strategy";
   private static final String SINK_GROUP = "AMQP Sink";
+
   /** Constructor. */
   public AmqpSinkConfigDef() {
     super();
     AmqpFragment.update(this);
     int sinkCounter = 0;
     SinceInfo.Builder siBuilder =
-            SinceInfo.builder()
-                    .groupId("io.aiven.kafka.connect")
-                    .artifactId("sink-connector-for-amqp");
+        SinceInfo.builder().groupId("io.aiven.kafka.connect").artifactId("sink-connector-for-amqp");
 
     this.define(
-            ExtendedConfigKey.builder(STRATEGY)
-                    .group(SINK_GROUP)
-                    .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
-                    .orderInGroup(++sinkCounter)
-                    .since(siBuilder.version("0.2.0").build())
-                    .type(ConfigDef.Type.STRING)
-                    .validator(EnumValidator.caseInsensitive(AmqpStrategy.class))
-                    .importance(ConfigDef.Importance.MEDIUM)
-                    .documentation("The strategy for building the AMQP message.")
-                    .build());
+        ExtendedConfigKey.builder(STRATEGY)
+            .group(SINK_GROUP)
+            .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
+            .orderInGroup(++sinkCounter)
+            .since(siBuilder.version("0.2.0").build())
+            .type(ConfigDef.Type.STRING)
+            .validator(EnumValidator.caseInsensitive(AmqpStrategy.class))
+            .importance(ConfigDef.Importance.MEDIUM)
+            .documentation("The strategy for building the AMQP message.")
+            .build());
   }
 
   /**
@@ -81,8 +74,5 @@ public class AmqpSinkConfigDef extends ConnectorCommonConfigDef {
     public Setter strategy(AmqpStrategy strategy) {
       return setValue(STRATEGY, strategy.name());
     }
-
   }
-
-
 }

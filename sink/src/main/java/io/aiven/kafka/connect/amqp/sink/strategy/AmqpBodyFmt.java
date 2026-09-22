@@ -2,12 +2,10 @@ package io.aiven.kafka.connect.amqp.sink.strategy;
 
 import io.aiven.kafka.connect.amqp.common.AmqpParseException;
 import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -34,11 +32,13 @@ import org.slf4j.LoggerFactory;
 public class AmqpBodyFmt extends AbstractAmqpStrategy {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpBodyFmt.class);
 
-  public AmqpBodyFmt(Sender sender, ErrantRecordHandler errantRecordHandler) throws ClientException {
+  public AmqpBodyFmt(Sender sender, ErrantRecordHandler errantRecordHandler)
+      throws ClientException {
     super(sender, errantRecordHandler);
   }
 
-  ClientMessage<?> createClientMessage(SinkRecord sinkRecord) throws AmqpParseException, ClientException {
+  ClientMessage<?> createClientMessage(SinkRecord sinkRecord)
+      throws AmqpParseException, ClientException {
     ClientMessage<?> message = constructMessage(sinkRecord);
     for (Header h : sinkRecord.headers()) {
       parseHeader(message, h);
@@ -61,9 +61,9 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
       return ClientMessage.create(new AmqpValue<>(str));
     }
     throw new AmqpParseException(
-            String.format(
-                    "body value does not have a schema and is not a String or byte[]: %s",
-                    sinkRecord.value().getClass()));
+        String.format(
+            "body value does not have a schema and is not a String or byte[]: %s",
+            sinkRecord.value().getClass()));
   }
 
   private Section<?> parseBody(Schema bodySchema, Object bodyValue) throws AmqpParseException {
@@ -106,7 +106,7 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
           message.messageId(value);
         }
       }
-      case "amqp.userId" -> message.userId(Base64.decodeBase64((String)value));
+      case "amqp.userId" -> message.userId(Base64.decodeBase64((String) value));
       case "amqp.to" -> message.to(value.toString());
       case "amqp.subject" -> message.subject(value.toString());
       case "amqp.replyTo" -> message.replyTo(value.toString());
@@ -142,26 +142,28 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
         }
       }
       case "amqp.footers" -> {
-        Map<String,?> map = (Map<String, ?>) value;
+        Map<String, ?> map = (Map<String, ?>) value;
 
-        map.forEach((k, v) -> {
-          try {
-            message.footer(k, v);
-          } catch (ClientException e) {
-            LOGGER.error("Unable to write footer {}: {}", key, v);
-          }
-        });
+        map.forEach(
+            (k, v) -> {
+              try {
+                message.footer(k, v);
+              } catch (ClientException e) {
+                LOGGER.error("Unable to write footer {}: {}", key, v);
+              }
+            });
       }
       case "amqp.annotations" -> {
-        Map<String,?> map = (Map<String, ?>) value;
+        Map<String, ?> map = (Map<String, ?>) value;
 
-        map.forEach((k, v) -> {
-          try {
-            message.annotation(k, v);
-          } catch (ClientException e) {
-            LOGGER.error("Unable to write annotation {}: {}", key, v);
-          }
-        });
+        map.forEach(
+            (k, v) -> {
+              try {
+                message.annotation(k, v);
+              } catch (ClientException e) {
+                LOGGER.error("Unable to write annotation {}: {}", key, v);
+              }
+            });
       }
     }
   }

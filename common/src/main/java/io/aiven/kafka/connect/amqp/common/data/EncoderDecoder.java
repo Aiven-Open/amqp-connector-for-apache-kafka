@@ -91,8 +91,8 @@ public abstract class EncoderDecoder {
   }
 
   /**
-   * A method to set the EncoderDecoder against which recursive calls should be made. In most cases this
-   * will not be called except when the converter is used in a {@link ChainedEnDec}.
+   * A method to set the EncoderDecoder against which recursive calls should be made. In most cases
+   * this will not be called except when the converter is used in a {@link ChainedEnDec}.
    *
    * @param converter the converter against which recursive calls should be made.
    */
@@ -110,16 +110,15 @@ public abstract class EncoderDecoder {
    * encode/decode a value.
    *
    * @param nextConverter the converter to call if this converter can not encode/decode a value.
-   * @return a new {@link ChainedEnDec} comprised of this converter and the @{code
-   *     nextConverter}.
+   * @return a new {@link ChainedEnDec} comprised of this converter and the @{code nextConverter}.
    */
   public final EncoderDecoder andThen(EncoderDecoder nextConverter) {
     return new ChainedEnDec(this, nextConverter);
   }
 
   /**
-   * A EncoderDecoder that chains multiple converters together. When {@link #encode(Object)} or {@link
-   * #decode(SchemaAndValue)} is called the converters are called in chain order. The first
+   * A EncoderDecoder that chains multiple converters together. When {@link #encode(Object)} or
+   * {@link #decode(SchemaAndValue)} is called the converters are called in chain order. The first
    * non-empty {@code Optional} (if any) is returned.
    */
   public static final class ChainedEnDec extends EncoderDecoder {

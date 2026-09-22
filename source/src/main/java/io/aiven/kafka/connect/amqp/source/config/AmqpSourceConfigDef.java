@@ -22,8 +22,6 @@ import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
 import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigValue;
 
@@ -55,11 +53,12 @@ public final class AmqpSourceConfigDef extends SourceCommonConfig.SourceCommonCo
     Map<String, ConfigValue> values = super.multiValidate(valueMap);
     // validate that the config fragment options are good.
     FragmentDataAccess fragmentDataAccess = FragmentDataAccess.from(valueMap);
-    AmqpFragment amqpFragment = new  AmqpFragment(fragmentDataAccess);
+    AmqpFragment amqpFragment = new AmqpFragment(fragmentDataAccess);
     amqpFragment.validate(values);
     ConfigValue formatValue = valueMap.get(AmqpFragment.FORMAT);
     if (amqpFragment.getMessageFormat().equals(AmqpFormat.NOT_AMQP)) {
-      formatValue.addErrorMessage(AmqpFragment.FORMAT + " may not be " + AmqpFormat.NOT_AMQP + " in the source connector.");
+      formatValue.addErrorMessage(
+          AmqpFragment.FORMAT + " may not be " + AmqpFormat.NOT_AMQP + " in the source connector.");
     }
     return values;
   }

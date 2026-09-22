@@ -117,8 +117,10 @@ public class AmqpSourceTaskTestIT extends KafkaIntegrationTestBase {
     Map<String, ?> partition = sourceRecord.sourcePartition();
     assertThat(partition.keySet()).containsExactly(AmqpOffsetManagerEntry.PRIMARY_KEY);
     Map<String, ?> offset = sourceRecord.sourceOffset();
-    assertThat(offset.keySet()).containsExactly(AmqpOffsetManagerEntry.PRIMARY_KEY, AmqpOffsetManagerEntry.RECORD_COUNT);
-    assertThat(offset.get(AmqpOffsetManagerEntry.PRIMARY_KEY)).isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
+    assertThat(offset.keySet())
+        .containsExactly(AmqpOffsetManagerEntry.PRIMARY_KEY, AmqpOffsetManagerEntry.RECORD_COUNT);
+    assertThat(offset.get(AmqpOffsetManagerEntry.PRIMARY_KEY))
+        .isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
     assertThat(offset.get(AmqpOffsetManagerEntry.RECORD_COUNT)).isEqualTo(0);
     assertThat(sourceRecord.kafkaPartition()).isNull();
     assertThat(sourceRecord.keySchema()).isEqualTo(Schema.STRING_SCHEMA);
@@ -126,6 +128,7 @@ public class AmqpSourceTaskTestIT extends KafkaIntegrationTestBase {
     assertThat(sourceRecord.timestamp()).isNull();
     assertThat(sourceRecord.valueSchema()).isEqualTo(Schema.BYTES_SCHEMA);
     assertThat(sourceRecord.value()).isEqualTo(body.getBytes(StandardCharsets.UTF_8));
-    assertThat(sourceRecord.headers().lastWithName("amqp.messageId").value()).isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
+    assertThat(sourceRecord.headers().lastWithName("amqp.messageId").value())
+        .isEqualTo(partition.get(AmqpOffsetManagerEntry.PRIMARY_KEY));
   }
 }

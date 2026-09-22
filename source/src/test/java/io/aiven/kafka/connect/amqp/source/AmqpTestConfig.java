@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.BytesDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -97,15 +96,16 @@ public class AmqpTestConfig extends TestConfig {
       List<SourceStorage.WriteResult> writeResult,
       Duration timeout) {
 
-    List<ConsumerRecord<String, Bytes>> result = messageConsumer.consumeMessages(
-                    topic,
-                    new ConsumerPropertiesBuilder(bootstrapServers.get()),
-                    testData.size(),
-                    timeout,
-                    StringDeserializer.class,
-                    BytesDeserializer.class)
+    List<ConsumerRecord<String, Bytes>> result =
+        messageConsumer
+            .consumeMessages(
+                topic,
+                new ConsumerPropertiesBuilder(bootstrapServers.get()),
+                testData.size(),
+                timeout,
+                StringDeserializer.class,
+                BytesDeserializer.class)
             .toList();
-
 
     List<String> expected =
         testData.stream()
@@ -115,17 +115,19 @@ public class AmqpTestConfig extends TestConfig {
 
     Object[] actualValue = result.stream().map(ConsumerRecord::value).toArray();
     Object[] actualKey = result.stream().map(ConsumerRecord::key).toArray();
-    Object[] actualMsgId = result.stream().map(cr -> new String(cr.headers().lastHeader("amqp.messageId").value())).toArray();
+    Object[] actualMsgId =
+        result.stream()
+            .map(cr -> new String(cr.headers().lastHeader("amqp.messageId").value()))
+            .toArray();
 
-
-    Object[] expectedValue = testData.stream().map(td ->
-      td.expected() == null ? null : new Bytes((byte[]) td.expected())
-    ).toArray();
+    Object[] expectedValue =
+        testData.stream()
+            .map(td -> td.expected() == null ? null : new Bytes((byte[]) td.expected()))
+            .toArray();
     Object[] expectedKey = writeResult.stream().map(SourceStorage.WriteResult::nativeKey).toArray();
 
     assertThat(actualValue).containsExactlyInAnyOrder(expectedValue);
     assertThat(actualKey).containsExactlyInAnyOrder(expectedKey);
     assertThat(actualMsgId).containsExactlyInAnyOrder(expectedKey);
-
   }
 }
