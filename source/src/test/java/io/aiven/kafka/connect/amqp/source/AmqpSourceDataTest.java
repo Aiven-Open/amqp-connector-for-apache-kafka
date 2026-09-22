@@ -237,8 +237,8 @@ public class AmqpSourceDataTest {
     final byte priority = 0x2;
     final long timeToLive = 50000L;
     final byte[] userId = "Alice".getBytes(StandardCharsets.UTF_8);
-
     final UUID uuid = UUID.randomUUID();
+
     ClientMessage<?> message = ClientMessage.create();
 
     message

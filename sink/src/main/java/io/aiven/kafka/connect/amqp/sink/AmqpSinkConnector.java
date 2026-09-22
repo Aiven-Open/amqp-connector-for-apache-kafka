@@ -1,6 +1,13 @@
 package io.aiven.kafka.connect.amqp.sink;
 
+import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
+import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
+import io.aiven.kafka.connect.amqp.sink.config.AmqpSinkConfigDef;
 import io.aiven.kafka.connect.amqp.source.AmqpSinkVersionInfo;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.kafka.common.config.ConfigDef;
@@ -8,8 +15,12 @@ import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.sink.SinkConnector;
 
 public class AmqpSinkConnector extends SinkConnector {
+  Map<String, String> props;
+
   @Override
-  public void start(Map<String, String> props) {}
+  public void start(Map<String, String> props) {
+    this.props = props;
+  }
 
   @Override
   public Class<? extends Task> taskClass() {
@@ -18,7 +29,11 @@ public class AmqpSinkConnector extends SinkConnector {
 
   @Override
   public List<Map<String, String>> taskConfigs(int maxTasks) {
-    return List.of();
+    List<Map<String, String>> result = new ArrayList<>();
+    for (int i = 0; i < maxTasks; i++) {
+      result.add(CommonConfigFragment.setter(new HashMap<>(props)).taskId(i).data());
+    }
+    return result;
   }
 
   @Override
@@ -26,7 +41,7 @@ public class AmqpSinkConnector extends SinkConnector {
 
   @Override
   public ConfigDef config() {
-    return null;
+    return new AmqpSinkConfigDef();
   }
 
   @Override

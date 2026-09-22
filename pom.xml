@@ -89,6 +89,7 @@
     <module>common</module>
     <module>source</module>
     <module>sink</module>
+    <module>roundTripTests</module>
   </modules>
 
   <scm>
@@ -300,7 +301,7 @@
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
+        <artifactId>slf4j-simple</artifactId>
         <version>${slf4j.version}</version>
         <scope>test</scope>
       </dependency>
@@ -568,6 +569,10 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

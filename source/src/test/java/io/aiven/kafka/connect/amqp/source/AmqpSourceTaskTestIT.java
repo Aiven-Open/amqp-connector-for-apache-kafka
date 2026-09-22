@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
@@ -40,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.apache.kafka.connect.data.Schema;
-import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTaskContext;
 import org.apache.kafka.connect.storage.OffsetStorageReader;
@@ -55,15 +53,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 @Testcontainers
-public class AmqpTaskTestIT extends KafkaIntegrationTestBase {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpTaskTestIT.class);
+public class AmqpSourceTaskTestIT extends KafkaIntegrationTestBase {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceTaskTestIT.class);
   private final AmqpSourceStorage sourceStorage;
   private AmqpSourceTask underTest;
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String STORAGE_PREFIX = "AMQP_";
   @Container static RabbitMQContainer rabbit = IntegrationTestSetup.rabbitMQContainer();
 
-  AmqpTaskTestIT() throws ClientException {
+  AmqpSourceTaskTestIT() throws ClientException {
     rabbit.start();
     sourceStorage = new AmqpSourceStorage(rabbit);
   }

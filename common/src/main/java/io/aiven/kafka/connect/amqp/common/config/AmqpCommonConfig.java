@@ -18,11 +18,11 @@
 */
 package io.aiven.kafka.connect.amqp.common.config;
 
-import io.aiven.kafka.connect.amqp.common.data.AmqpConverter;
-import io.aiven.kafka.connect.amqp.common.data.CollectionConverter;
-import io.aiven.kafka.connect.amqp.common.data.Converter;
-import io.aiven.kafka.connect.amqp.common.data.KafkaConverter;
-import io.aiven.kafka.connect.amqp.common.data.UniqueTypeConverter;
+import io.aiven.kafka.connect.amqp.common.data.AmqpEnDec;
+import io.aiven.kafka.connect.amqp.common.data.CollectionEnDec;
+import io.aiven.kafka.connect.amqp.common.data.EncoderDecoder;
+import io.aiven.kafka.connect.amqp.common.data.KafkaEnDec;
+import io.aiven.kafka.connect.amqp.common.data.UniqueTypeEnDec;
 import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
@@ -98,15 +98,23 @@ public interface AmqpCommonConfig {
   }
 
   /**
+   * Gets the expected format for the AMQP message. This is the conversion strategy AMQP and Kafka
+   * message formats.
+   *
+   * @return the expected Amqp message format.
+   */
+  AmqpFormat getMessageFormat();
+
+  /**
    * Creates the common converter with AMQP, UniqueType, Kafka, and Collection converters.
    *
    * @return the common converter with AMQP, UniqueType, Kafka, and Collection converters.
    */
-  static Converter getCommonConverter() {
-    return new Converter.ChainedConverter(
-        new AmqpConverter(),
-        new UniqueTypeConverter(),
-        new KafkaConverter(),
-        new CollectionConverter());
+  static EncoderDecoder getCommonConverter() {
+    return new EncoderDecoder.ChainedEnDec(
+        new AmqpEnDec(),
+        new UniqueTypeEnDec(),
+        new KafkaEnDec(),
+        new CollectionEnDec());
   }
 }

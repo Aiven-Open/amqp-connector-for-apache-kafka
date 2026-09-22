@@ -23,6 +23,7 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -75,6 +76,11 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   @Override
   public Connection getConnection(Client client) throws ClientException {
     return amqpFragment.getConnection(client);
+  }
+
+  @Override
+  public AmqpFormat getMessageFormat() {
+    return amqpFragment.getMessageFormat();
   }
 
   /**

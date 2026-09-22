@@ -1,8 +1,10 @@
 package io.aiven.kafka.connect.amqp.sink;
 
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.sink.config.AmqpSinkConfig;
 import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
-import io.aiven.kafka.connect.amqp.sink.strategy.AmqpFmt;
+import io.aiven.kafka.connect.amqp.sink.strategy.AmqpBodyFmt;
+import io.aiven.kafka.connect.amqp.sink.strategy.AmqpRawFmt;
 import io.aiven.kafka.connect.amqp.sink.strategy.Strategy;
 import io.aiven.kafka.connect.amqp.source.AmqpSinkVersionInfo;
 import java.util.Collection;
@@ -23,8 +25,7 @@ public class AmqpSinkTask extends SinkTask {
   @Override
   public void initialize(SinkTaskContext context) {
     super.initialize(context);
-    ErrantRecordHandler errantRecordHandler =
-        new ErrantRecordHandler(context.errantRecordReporter());
+    errantRecordHandler = new ErrantRecordHandler(context.errantRecordReporter());
   }
 
   @Override
@@ -36,7 +37,10 @@ public class AmqpSinkTask extends SinkTask {
   public void start(Map<String, String> props) {
     config = new AmqpSinkConfig(props);
     try {
-      strategy = new AmqpFmt(config.getSender(), errantRecordHandler);
+      switch (config.getWriteStrategy()) {
+        case BODY -> strategy = new AmqpBodyFmt(config.getSender(), errantRecordHandler);
+        case RAW -> strategy = new AmqpRawFmt(config.getSender(), errantRecordHandler);
+      }
     } catch (ClientException | ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }

@@ -23,6 +23,9 @@ import io.aiven.commons.kafka.config.SinceInfo;
 import io.aiven.commons.kafka.config.fragment.AbstractFragmentSetter;
 import io.aiven.commons.kafka.config.fragment.ConfigFragment;
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
+import io.aiven.commons.kafka.config.validator.EnumValidator;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.apache.kafka.common.config.ConfigDef;
@@ -38,12 +41,16 @@ import org.apache.qpid.protonj2.client.exceptions.ClientException;
 public final class AmqpFragment extends ConfigFragment implements AmqpCommonConfig {
 
   private static final String GROUP_AMQP_CONNECTIVITY = "AMQP Connectivity";
+  private static final String GROUP_AMQP_FORMAT = "AMQP Format";
 
   private static final String HOST = "amqp.host";
   private static final String PORT = "amqp.port";
   private static final String ADDRESS = "amqp.address";
   private static final String USER = "amqp.user";
   private static final String PASSWORD = "amqp.password";
+
+  /** The key for the AMQP Message IO format. */
+  public static final String FORMAT = "amqp.format";
 
   /**
    * Construct the ConfigFragment.
@@ -63,6 +70,7 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   public static ConfigDef update(final ConfigDef configDef) {
     // later
     addAMQPConnectivity(configDef);
+    addAMQPFormat(configDef);
     return configDef;
   }
 
@@ -149,6 +157,35 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
                 .build());
   }
 
+  /**
+   * @param configDef
+   */
+  static void addAMQPFormat(final ConfigDef configDef) {
+    SinceInfo.Builder siBuilder =
+        SinceInfo.builder()
+            .groupId("io.aiven.kafka.connect")
+            .artifactId("connectors-common-for-amqp");
+    int formatCounter = 0;
+
+    configDef.define(
+        ExtendedConfigKey.builder(FORMAT)
+            .group(GROUP_AMQP_FORMAT)
+            .defaultValue(ConfigDef.NO_DEFAULT_VALUE)
+            .orderInGroup(++formatCounter)
+            .since(siBuilder.version("0.2.0").build())
+            .type(ConfigDef.Type.STRING)
+            .validator(EnumValidator.caseInsensitive(AmqpFormat.class))
+            .importance(ConfigDef.Importance.MEDIUM)
+            .documentation(
+                "The format for the AMQP message IO. "
+                    + String.join(
+                        " ",
+                        Arrays.stream(AmqpFormat.values())
+                            .map(f -> f.name() + " - " + f.getDescription())
+                            .toList()))
+            .build());
+  }
+
   @Override
   public Client getClient() {
     return Client.create();
@@ -174,6 +211,11 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
   public Sender getSender(Connection connection)
       throws ClientException, ExecutionException, InterruptedException {
     return connection.openSender(dataAccess.getString(ADDRESS)).openFuture().get();
+  }
+
+  @Override
+  public AmqpFormat getMessageFormat() {
+    return AmqpFormat.valueOf(dataAccess.getString(FORMAT).toUpperCase(Locale.ROOT));
   }
 
   /** The Setter for the AMQP fragment. */
@@ -236,6 +278,16 @@ public final class AmqpFragment extends ConfigFragment implements AmqpCommonConf
      */
     public Setter setPassword(String password) {
       return setValue(PASSWORD, password);
+    }
+
+    /**
+     * Sets the format for AMQP Message IO.
+     *
+     * @param format the format.
+     * @return this.
+     */
+    public Setter setMessageFormat(AmqpFormat format) {
+      return setValue(FORMAT, format.toString());
     }
   }
 }

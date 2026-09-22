@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.aiven.kafka.connect.amqp.common.KafkaRecordKey;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
-import io.aiven.kafka.connect.amqp.common.data.Converter;
+import io.aiven.kafka.connect.amqp.common.data.EncoderDecoder;
 import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
 import io.aiven.kafka.connect.amqp.sink.errant.TestingErrantRecordReporter;
 import java.util.List;
@@ -28,9 +28,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class AmqpFmtTest {
+public class AmqpBodyFmtTest {
 
-  private AmqpFmt underTest;
+  private AmqpBodyFmt underTest;
   private Sender sender;
   private TestingErrantRecordReporter reporter;
 
@@ -39,7 +39,7 @@ public class AmqpFmtTest {
     sender = mock(Sender.class);
     reporter = new TestingErrantRecordReporter();
     ErrantRecordHandler errantRecordHandler = new ErrantRecordHandler(reporter);
-    underTest = new AmqpFmt(sender, errantRecordHandler);
+    underTest = new AmqpBodyFmt(sender, errantRecordHandler);
   }
 
   @Test
@@ -79,14 +79,14 @@ public class AmqpFmtTest {
     assertThat(message.hasProperties()).isFalse();
     assertThat(underTest.commitMap).hasSize(1);
     KafkaRecordKey key = new KafkaRecordKey(sinkRecord);
-    AmqpFmt.TrackerSinkRecord trackerRecord =
+    AmqpBodyFmt.TrackerSinkRecord trackerRecord =
         assertThat(underTest.commitMap.get(key)).isNotNull().actual();
     assertThat(trackerRecord.trackerFuture().get()).isEqualTo(tracker);
   }
 
   @Test
   void writeWithHeadersTest() throws ClientException, ExecutionException, InterruptedException {
-    Converter converter = AmqpCommonConfig.getCommonConverter();
+    EncoderDecoder converter = AmqpCommonConfig.getCommonConverter();
     Tracker tracker = mock(Tracker.class);
     when(tracker.settlementFuture()).thenReturn(CompletableFuture.completedFuture(tracker));
     when(sender.send(any(Message.class))).thenReturn(tracker);
@@ -135,7 +135,7 @@ public class AmqpFmtTest {
 
     assertThat(underTest.commitMap).hasSize(1);
     KafkaRecordKey key = new KafkaRecordKey(sinkRecord);
-    AmqpFmt.TrackerSinkRecord trackerRecord =
+    AmqpBodyFmt.TrackerSinkRecord trackerRecord =
         assertThat(underTest.commitMap.get(key)).isNotNull().actual();
     assertThat(trackerRecord.trackerFuture().get()).isEqualTo(tracker);
   }

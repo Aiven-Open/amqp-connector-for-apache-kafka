@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.aiven.kafka.connect.amqp.common.data;
 
 import java.lang.reflect.Array;
@@ -16,14 +32,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Converts collections and maps with arbitrary values into Kafka {@link Struct} types. */
-public final class CollectionConverter extends Converter {
-  private static final Logger LOGGER = LoggerFactory.getLogger(CollectionConverter.class);
+public final class CollectionEnDec extends EncoderDecoder {
+  private static final Logger LOGGER = LoggerFactory.getLogger(CollectionEnDec.class);
 
   /** Constructor. */
-  public CollectionConverter() {}
+  public CollectionEnDec() {}
 
   /**
    * Create a struct that contains the items from the collection.
+   *
    * @param schemaBuilder the schema builder to add the schema to.
    * @param collection the collection to process.
    * @return the completed schema.
@@ -59,6 +76,7 @@ public final class CollectionConverter extends Converter {
           SchemaBuilder.struct().name(asName(value.getClass())), (Collection<?>) value);
     }
     if (value instanceof Map) {
+      // construct a struct that preserves the natural order of the map.
       SchemaBuilder schemaBuilder = SchemaBuilder.struct().name(asName(value.getClass()));
       final List<Object> values = new ArrayList<>();
 
@@ -133,10 +151,10 @@ public final class CollectionConverter extends Converter {
             Field field = fields.get(i);
             final SchemaAndValue sv = new SchemaAndValue(field.schema(), struct.get(field));
             self()
-                    .decode(sv)
-                    .ifPresentOrElse(
-                            value -> map.put(field.name(), value),
-                            () -> LOGGER.warn("unable to decode {} with {}", sv, self().toString()));
+                .decode(sv)
+                .ifPresentOrElse(
+                    value -> map.put(field.name(), value),
+                    () -> LOGGER.warn("unable to decode {} with {}", sv, self().toString()));
           }
           return Optional.of(map);
         }
@@ -145,6 +163,10 @@ public final class CollectionConverter extends Converter {
         LOGGER.warn("Class {} not found in {}", schemaAndValue.schema().name(), self().toString());
         return Optional.empty();
       }
+    }
+
+    if (schemaAndValue.schema().type() == Schema.Type.MAP) {
+      return Optional.of((Map<?, ?>) schemaAndValue.value());
     }
 
     return Optional.empty();

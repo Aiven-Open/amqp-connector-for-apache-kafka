@@ -1,3 +1,21 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.common.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,11 +32,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class CollectionConverterTest {
+public class CollectionEnDecTest {
 
-  Converter underTest =
-      new Converter.ChainedConverter(
-          new KafkaConverter(), new CollectionConverter(), new UniqueTypeConverter());
+  EncoderDecoder underTest =
+      new EncoderDecoder.ChainedEnDec(
+          new UniqueTypeEnDec(), new KafkaEnDec(), new CollectionEnDec());
 
   @ParameterizedTest
   @MethodSource("arrayTestData")
@@ -59,14 +77,16 @@ public class CollectionConverterTest {
 
   @Test
   void MapTest() {
-    Map<Number, Object> expected = Map.of(1, "One is the lonelest Number", 3.14, UUID.randomUUID());
-    SchemaAndValue encoded = assertThat(underTest.encode(expected)).isPresent().get().actual();
+    Map<Number, Object> originalData =
+        Map.of(1, "One is the lonelest Number", 3.14, UUID.randomUUID());
+
+    SchemaAndValue encoded = assertThat(underTest.encode(originalData)).isPresent().get().actual();
     assertThat(encoded.value()).isInstanceOf(Struct.class);
     Object decoded = assertThat(underTest.decode(encoded)).isPresent().get().actual();
     Map<String, Object> map =
         (Map<String, Object>) assertThat(decoded).isInstanceOf(Map.class).actual();
-    Map<String, Object> expMap = new LinkedHashMap<>();
-    expected.forEach((k, v) -> expMap.put(k.toString(), v));
-    assertThat(map).containsExactlyEntriesOf(expMap);
+    Map<String, Object> expected = new LinkedHashMap<>();
+    originalData.forEach((k, v) -> expected.put(k.toString(), v));
+    assertThat(map).containsExactlyEntriesOf(expected);
   }
 }

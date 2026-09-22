@@ -1,27 +1,20 @@
 package io.aiven.kafka.connect.amqp.sink.strategy;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.aiven.kafka.connect.amqp.common.AmqpParseException;
-import io.aiven.kafka.connect.amqp.common.KafkaRecordKey;
-import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
-import io.aiven.kafka.connect.amqp.common.data.Converter;
 import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Future;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
+import java.util.UUID;
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Sender;
-import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.client.impl.ClientMessage;
 import org.apache.qpid.protonj2.types.messaging.AmqpSequence;
@@ -38,37 +31,22 @@ import org.slf4j.LoggerFactory;
  *   <li>The body is encoded with schema. If no schema is provided bytes are assumed.
  * </ul>
  */
-public class AmqpFmt implements Strategy {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpFmt.class);
-  private final Converter converter;
-  private final Sender sender;
-  @VisibleForTesting final ConcurrentSkipListMap<KafkaRecordKey, TrackerSinkRecord> commitMap;
-  private final ErrantRecordHandler errantRecordHandler;
+public class AmqpBodyFmt extends AbstractAmqpStrategy {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmqpBodyFmt.class);
 
-  public AmqpFmt(Sender sender, ErrantRecordHandler errantRecordHandler) throws ClientException {
-    converter = AmqpCommonConfig.getCommonConverter();
-    this.sender = sender;
-    commitMap = new ConcurrentSkipListMap<>();
-    this.errantRecordHandler = errantRecordHandler;
+  public AmqpBodyFmt(Sender sender, ErrantRecordHandler errantRecordHandler) throws ClientException {
+    super(sender, errantRecordHandler);
   }
 
-  @Override
-  public void write(SinkRecord sinkRecord) {
-    try {
-
-      ClientMessage<?> message = createClientMessage(sinkRecord);
-      for (Header h : sinkRecord.headers()) {
-        parseHeader(message, h);
-      }
-      Future<Tracker> futureTracker = sender.send(message).settlementFuture();
-      commitMap.put(
-          new KafkaRecordKey(sinkRecord), new TrackerSinkRecord(futureTracker, sinkRecord));
-    } catch (AmqpParseException | ClientException e) {
-      errantRecordHandler.reportErrantRecord(sinkRecord, e);
+  ClientMessage<?> createClientMessage(SinkRecord sinkRecord) throws AmqpParseException, ClientException {
+    ClientMessage<?> message = constructMessage(sinkRecord);
+    for (Header h : sinkRecord.headers()) {
+      parseHeader(message, h);
     }
+    return message;
   }
 
-  private ClientMessage<?> createClientMessage(SinkRecord sinkRecord) throws AmqpParseException {
+  private ClientMessage<?> constructMessage(SinkRecord sinkRecord) throws AmqpParseException {
     if (sinkRecord.value() == null) {
       return ClientMessage.create();
     }
@@ -83,55 +61,9 @@ public class AmqpFmt implements Strategy {
       return ClientMessage.create(new AmqpValue<>(str));
     }
     throw new AmqpParseException(
-        String.format(
-            "body value does not have a schema and is not a String or byte[]: %s",
-            sinkRecord.value().getClass()));
-  }
-
-  @Override
-  public Map<TopicPartition, OffsetAndMetadata> preCommit(
-      Map<TopicPartition, OffsetAndMetadata> currentOffsets) {
-    Map<TopicPartition, OffsetAndMetadata> result = new HashMap<>();
-    currentOffsets.forEach(
-        (tp, om) -> {
-          KafkaRecordKey key = new KafkaRecordKey(tp, om.offset());
-          KafkaRecordKey highestNoBreak = null;
-          boolean sawBreak = false;
-          /* check the key range remove all completed records before the suggested offset.  If there are any remaining return the
-          record that occurred just before that.  If it is the first entry then don't commit any for that topic/partition pair.
-          */
-          ConcurrentNavigableMap<KafkaRecordKey, TrackerSinkRecord> subMap =
-              commitMap.subMap(new KafkaRecordKey(tp, 0), true, key, true);
-          for (Map.Entry<KafkaRecordKey, TrackerSinkRecord> entry : subMap.entrySet()) {
-            if (entry.getValue().trackerFuture.isDone()) {
-              if (entry.getValue().trackerFuture.isCancelled()) {
-                errantRecordHandler.reportErrantRecord(
-                    entry.getValue().sinkRecord, "Delivery cancelled");
-              }
-              subMap.remove(entry.getKey());
-              if (!sawBreak) {
-                highestNoBreak = entry.getKey();
-              }
-            } else {
-              sawBreak = true;
-            }
-          }
-
-          /* default case in this if block is not to commit any messages for the topic/partition. */
-          if (subMap.isEmpty()) {
-            result.put(tp, om);
-          } else if (highestNoBreak != null) {
-            result.put(
-                new TopicPartition(highestNoBreak.topic(), highestNoBreak.partition()),
-                new OffsetAndMetadata(highestNoBreak.offset()));
-          }
-        });
-    return result;
-  }
-
-  @Override
-  public void flush(Map<TopicPartition, OffsetAndMetadata> currentOffsets) {
-    LOGGER.error("flush() Should not be called from the AmqpFmt strategy");
+            String.format(
+                    "body value does not have a schema and is not a String or byte[]: %s",
+                    sinkRecord.value().getClass()));
   }
 
   private Section<?> parseBody(Schema bodySchema, Object bodyValue) throws AmqpParseException {
@@ -163,8 +95,19 @@ public class AmqpFmt implements Strategy {
 
   private void setValue(String key, Message<?> message, Object value) throws ClientException {
     switch (key) {
-      case "amqp.messageId" -> message.messageId(value);
-      case "amqp.userId" -> message.to(value.toString());
+      case "amqp.messageId" -> {
+        if (value instanceof String str) {
+          try {
+            message.messageId(UUID.fromString((str)));
+          } catch (IllegalArgumentException expected) {
+            message.messageId(value);
+          }
+        } else {
+          message.messageId(value);
+        }
+      }
+      case "amqp.userId" -> message.userId(Base64.decodeBase64((String)value));
+      case "amqp.to" -> message.to(value.toString());
       case "amqp.subject" -> message.subject(value.toString());
       case "amqp.replyTo" -> message.replyTo(value.toString());
       case "amqp.correlationId" -> message.correlationId(value);
@@ -198,6 +141,28 @@ public class AmqpFmt implements Strategy {
           message.deliveryCount(n.get().longValue());
         }
       }
+      case "amqp.footers" -> {
+        Map<String,?> map = (Map<String, ?>) value;
+
+        map.forEach((k, v) -> {
+          try {
+            message.footer(k, v);
+          } catch (ClientException e) {
+            LOGGER.error("Unable to write footer {}: {}", key, v);
+          }
+        });
+      }
+      case "amqp.annotations" -> {
+        Map<String,?> map = (Map<String, ?>) value;
+
+        map.forEach((k, v) -> {
+          try {
+            message.annotation(k, v);
+          } catch (ClientException e) {
+            LOGGER.error("Unable to write annotation {}: {}", key, v);
+          }
+        });
+      }
     }
   }
 
@@ -222,6 +187,4 @@ public class AmqpFmt implements Strategy {
       }
     }
   }
-
-  record TrackerSinkRecord(Future<Tracker> trackerFuture, SinkRecord sinkRecord) {}
 }

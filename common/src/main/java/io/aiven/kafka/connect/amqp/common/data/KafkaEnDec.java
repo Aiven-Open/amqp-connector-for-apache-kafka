@@ -1,4 +1,24 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.common.data;
+
+import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
@@ -9,8 +29,6 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Values;
-
-import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
 
 /**
  * Performs Kafka conversions.
@@ -24,12 +42,12 @@ import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
  *   <li>{@code BigDecimal} into a string value
  * </ul>
  */
-public final class KafkaConverter extends Converter {
+public final class KafkaEnDec extends EncoderDecoder {
   @VisibleForTesting static final String BIG_DECIMAL_NAME = "BigDecimal";
   @VisibleForTesting static final String BIG_INTEGER_NAME = "BigInteger";
 
   /** Constructor. */
-  public KafkaConverter() {}
+  public KafkaEnDec() {}
 
   @Override
   public Optional<SchemaAndValue> encode(Object value) {
@@ -76,42 +94,41 @@ public final class KafkaConverter extends Converter {
         return Optional.of(schemaAndValue.value());
       }
 
-//      if (schemaAndValue.value() instanceof Number n) {
-//        if (schema.equals(Schema.INT8_SCHEMA)) {
-//          return Optional.of(n.byteValue());
-//        }
-//        if (schema.equals(Schema.INT16_SCHEMA)) {
-//          return Optional.of(n.shortValue());
-//        }
-//
-//        if (schema.equals(Schema.INT32_SCHEMA)) {
-//          return Optional.of(n.intValue());
-//        }
-//
-//        if (schema.equals(Schema.INT64_SCHEMA)) {
-//          return Optional.of(n.longValue());
-//        }
-//
-//        if (schema.equals(Schema.FLOAT32_SCHEMA)) {
-//          return Optional.of(n.floatValue());
-//        }
-//
-//        if (schema.equals(Schema.FLOAT64_SCHEMA)) {
-//          return Optional.of(n.doubleValue());
-//        }
-//      }
-//      if (schemaAndValue.value() instanceof String s) {
-//        if (BIG_DECIMAL_NAME.equals(schema.name())) {
-//          return Optional.of(new BigDecimal(s));
-//        }
-//        if (BIG_INTEGER_NAME.equals(schema.name())) {
-//          return Optional.of(new BigInteger(s));
-//        }
-//        if (Schema.STRING_SCHEMA.equals(schema)) {
-//          return Optional.of(s);
-//        }
-//      }
-
+      //      if (schemaAndValue.value() instanceof Number n) {
+      //        if (schema.equals(Schema.INT8_SCHEMA)) {
+      //          return Optional.of(n.byteValue());
+      //        }
+      //        if (schema.equals(Schema.INT16_SCHEMA)) {
+      //          return Optional.of(n.shortValue());
+      //        }
+      //
+      //        if (schema.equals(Schema.INT32_SCHEMA)) {
+      //          return Optional.of(n.intValue());
+      //        }
+      //
+      //        if (schema.equals(Schema.INT64_SCHEMA)) {
+      //          return Optional.of(n.longValue());
+      //        }
+      //
+      //        if (schema.equals(Schema.FLOAT32_SCHEMA)) {
+      //          return Optional.of(n.floatValue());
+      //        }
+      //
+      //        if (schema.equals(Schema.FLOAT64_SCHEMA)) {
+      //          return Optional.of(n.doubleValue());
+      //        }
+      //      }
+      //      if (schemaAndValue.value() instanceof String s) {
+      //        if (BIG_DECIMAL_NAME.equals(schema.name())) {
+      //          return Optional.of(new BigDecimal(s));
+      //        }
+      //        if (BIG_INTEGER_NAME.equals(schema.name())) {
+      //          return Optional.of(new BigInteger(s));
+      //        }
+      //        if (Schema.STRING_SCHEMA.equals(schema)) {
+      //          return Optional.of(s);
+      //        }
+      //      }
 
       if (schemaAndValue.schema().type() == ARRAY) {
         List<?> collection = (List<?>) schemaAndValue.value();
