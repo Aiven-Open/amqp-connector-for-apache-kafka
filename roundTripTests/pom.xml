@@ -29,8 +29,6 @@
   <name>Aiven connectors round trip integration tests for AMQP on Apache Kafka</name>
 
   <properties>
-    <maven.compiler.source>23</maven.compiler.source>
-    <maven.compiler.target>23</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
