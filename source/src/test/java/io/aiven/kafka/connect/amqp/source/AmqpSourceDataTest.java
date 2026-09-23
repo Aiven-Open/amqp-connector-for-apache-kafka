@@ -28,6 +28,7 @@ import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.math.BigInteger;
@@ -81,6 +82,7 @@ public class AmqpSourceDataTest {
           .setAddress("address")
           .setUser("user")
           .setPassword("password")
+          .setMessageFormat(AmqpFormat.BODY)
           .data();
 
   private AmqpSourceConfig sourceConfig;
@@ -104,6 +106,7 @@ public class AmqpSourceDataTest {
 
     sourceConfig = mock(AmqpSourceConfig.class);
     when(sourceConfig.getReceiver()).thenReturn(receiver);
+    when(sourceConfig.getMessageFormat()).thenReturn(AmqpFormat.BODY);
 
     offsetManager = mock(OffsetManager.class);
     context = new AmqpContext.Builder(new ULID().nextULID(), mock(Delivery.class)).build();
@@ -314,6 +317,7 @@ public class AmqpSourceDataTest {
           .containsExactly(
               "amqp.messageId",
               "amqp.userId",
+              "amqp.to",
               "amqp.subject",
               "amqp.replyTo",
               "amqp.correlationId",
@@ -321,6 +325,7 @@ public class AmqpSourceDataTest {
               "amqp.contentEncoding",
               "amqp.absoluteExpiry",
               "amqp.creationTime",
+              "amqp.groupId",
               "amqp.groupSequence",
               "amqp.replyToGroupId",
               "amqp.durable",
@@ -334,8 +339,8 @@ public class AmqpSourceDataTest {
             switch (header.key()) {
               case "amqp.messageId" ->
                   assertThat(header.value()).as(header.key()).isEqualTo(uuid.toString());
-              case "amqp.userId" ->
-                  assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
+              case "amqp.userId" -> assertThat(header.value()).as(header.key()).isEqualTo(userId);
+              case "amqp.to" -> assertThat(header.value()).as(header.key()).isEqualTo("ToPerson");
               case "amqp.subject" ->
                   assertThat(header.value()).as(header.key()).isEqualTo("subject");
               case "amqp.replyTo" ->
@@ -350,6 +355,8 @@ public class AmqpSourceDataTest {
                   assertThat(header.value()).as(header.key()).isEqualTo(absoluteExpiry);
               case "amqp.creationTime" ->
                   assertThat(header.value()).as(header.key()).isEqualTo(creationTime);
+              case "amqp.groupId" ->
+                  assertThat(header.value()).as(header.key()).isEqualTo("myGroup");
               case "amqp.groupSequence" ->
                   assertThat(header.value()).as(header.key()).isEqualTo(groupSequence);
               case "amqp.replyToGroupId" ->

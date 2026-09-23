@@ -1,3 +1,21 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.sink.config;
 
 import io.aiven.commons.kafka.config.fragment.FragmentDataAccess;
@@ -15,6 +33,7 @@ import org.apache.qpid.protonj2.client.Sender;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.LoggerFactory;
 
+/** The AMQP Sink configuration. */
 public class AmqpSinkConfig extends ConnectorCommonConfig implements AmqpCommonConfig {
   private final AmqpFragment amqpFragment;
   private final FragmentDataAccess dataAccess;
@@ -35,8 +54,6 @@ public class AmqpSinkConfig extends ConnectorCommonConfig implements AmqpCommonC
    * change default values for "secondary defaults" if required.
    *
    * @param parsedValues unmodifiable map of current configuration
-   * @return a map of updates that should be applied to the configuration (will be validated to
-   *     prevent bad updates)
    */
   protected void fragmentPostProcess(ChangeTrackingMap parsedValues) {
     super.fragmentPostProcess(parsedValues);
@@ -82,6 +99,11 @@ public class AmqpSinkConfig extends ConnectorCommonConfig implements AmqpCommonC
     return amqpFragment.getMessageFormat();
   }
 
+  /**
+   * Gets the write strategy for this sink.
+   *
+   * @return the Write strategy for this sink.
+   */
   public AmqpStrategy getWriteStrategy() {
     return AmqpStrategy.valueOf(
         dataAccess.getString(AmqpSinkConfigDef.STRATEGY).toUpperCase(Locale.ROOT));

@@ -1,3 +1,21 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.sink;
 
 import io.aiven.kafka.connect.amqp.sink.config.AmqpSinkConfig;
@@ -5,7 +23,6 @@ import io.aiven.kafka.connect.amqp.sink.errant.ErrantRecordHandler;
 import io.aiven.kafka.connect.amqp.sink.strategy.AmqpBodyFmt;
 import io.aiven.kafka.connect.amqp.sink.strategy.AmqpRawFmt;
 import io.aiven.kafka.connect.amqp.sink.strategy.Strategy;
-import io.aiven.kafka.connect.amqp.source.AmqpSinkVersionInfo;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -16,13 +33,13 @@ import org.apache.kafka.connect.sink.SinkTask;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
-/**
- * An AMQP sink task that implements a single strategy.
- */
+/** An AMQP sink task that implements a single strategy. */
 public class AmqpSinkTask extends SinkTask {
   private Strategy strategy;
   private ErrantRecordHandler errantRecordHandler;
-  private AmqpSinkConfig config;
+
+  /** Constructor. */
+  public AmqpSinkTask() {}
 
   @Override
   public void initialize(SinkTaskContext context) {
@@ -37,7 +54,7 @@ public class AmqpSinkTask extends SinkTask {
 
   @Override
   public void start(Map<String, String> props) {
-    config = new AmqpSinkConfig(props);
+    AmqpSinkConfig config = new AmqpSinkConfig(props);
     try {
       switch (config.getWriteStrategy()) {
         case BODY -> strategy = new AmqpBodyFmt(config.getSender(), errantRecordHandler);

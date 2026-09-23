@@ -18,10 +18,21 @@
 */
 package io.aiven.kafka.connect.amqp.sink.config;
 
-/** An enumeration of write strategies */
-public enum AmqpStrategy {
-  /** the Kafka message value contains the AMQP message body. */
-  BODY,
-  /** The Kafka message value contains the entire AMQP message */
-  RAW
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.aiven.commons.kafka.config.docs.ConfigDefBeanFactory;
+import io.aiven.commons.kafka.config.docs.ExtendedConfigKeyBean;
+import org.junit.jupiter.api.Test;
+
+public class AmqpSinkConfigDefTest {
+
+  @Test
+  void sinceTest() {
+    for (ExtendedConfigKeyBean bean :
+        new ConfigDefBeanFactory().open(AmqpSinkConfigDef.class.getName()).configKeys()) {
+      if (bean.since() != null) {
+        assertThat(bean.since()).as(bean.getName()).isIn("0.1.0", "0.2.0", "Kafka 0.9.0.0");
+      }
+    }
+  }
 }

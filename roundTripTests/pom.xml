@@ -8,6 +8,7 @@
   </parent>
 
   <artifactId>roundTripTests</artifactId>
+  <name>Aiven connectors round trip integration tests for AMQP on Apache Kafka</name>
 
   <properties>
     <maven.compiler.source>23</maven.compiler.source>

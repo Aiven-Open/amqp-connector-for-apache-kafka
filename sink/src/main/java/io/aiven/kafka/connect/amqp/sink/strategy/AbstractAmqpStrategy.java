@@ -1,3 +1,21 @@
+/*
+        Copyright 2026 Aiven Oy and project contributors
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+       https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing,
+       software distributed under the License is distributed on an
+       "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+       KIND, either express or implied.  See the License for the
+       specific language governing permissions and limitations
+       under the License.
+
+       SPDX-License-Identifier: Apache-2.0
+*/
 package io.aiven.kafka.connect.amqp.sink.strategy;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -20,18 +38,43 @@ import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Base implementation for AMQP strategies. Handles reporting when messages have been confirmed as
+ * sent to AMQP destination.
+ */
 public abstract class AbstractAmqpStrategy implements Strategy {
-  protected final EncoderDecoder converter = AmqpCommonConfig.getCommonConverter();
+  /** The Encoder/Decoder to use */
+  protected final EncoderDecoder encoderDecoder = AmqpCommonConfig.getCommonConverter();
+
+  /** The sender to send AMQP messages */
   protected final Sender sender;
+
+  /** The handler for failed messages */
   protected final ErrantRecordHandler errantRecordHandler;
+
+  /** The map of KafkaRecordKeys to Trackers */
   @VisibleForTesting final ConcurrentSkipListMap<KafkaRecordKey, TrackerSinkRecord> commitMap;
 
+  /**
+   * Constructs a strategy with the specified sender and errant record handler.
+   *
+   * @param sender the Sender to use.
+   * @param errantRecordHandler The errant record handler to use.
+   */
   protected AbstractAmqpStrategy(Sender sender, ErrantRecordHandler errantRecordHandler) {
     this.sender = sender;
     this.errantRecordHandler = errantRecordHandler;
     commitMap = new ConcurrentSkipListMap<>();
   }
 
+  /**
+   * Creates an AMQP message that contains the data from the sink record.
+   *
+   * @param sinkRecord the sink record to extract data from.
+   * @return a populated AMQP message.
+   * @throws AmqpParseException on AMQP data error.
+   * @throws ClientException on AMQP connection error.
+   */
   abstract Message<?> createClientMessage(SinkRecord sinkRecord)
       throws AmqpParseException, ClientException;
 

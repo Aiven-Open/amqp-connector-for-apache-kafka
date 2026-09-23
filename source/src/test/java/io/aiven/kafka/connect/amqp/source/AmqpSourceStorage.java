@@ -27,6 +27,7 @@ import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.extractor.ExtractorRegistry;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -150,7 +151,8 @@ public final class AmqpSourceStorage implements SourceStorage<String, Delivery> 
         .setPort(rabbit.getAmqpPort())
         .setAddress(amqpAddress)
         .setUser(rabbit.getAdminUsername())
-        .setPassword(rabbit.getAdminPassword());
+        .setPassword(rabbit.getAdminPassword())
+        .setMessageFormat(AmqpFormat.BODY);
     return data;
   }
 

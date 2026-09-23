@@ -26,6 +26,8 @@ import io.aiven.commons.kafka.connector.source.AbstractSourceIntegrationBase;
 import io.aiven.commons.kafka.connector.source.ConsumerPropertiesBuilder;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.TestConfig;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -58,10 +60,13 @@ public class AmqpTestConfig extends TestConfig {
 
   @Override
   public Map<String, String> initialConfig() {
-    return CommonConfigFragment.setter(sourceStorage.getAMQPInitialConfig())
-        .keyConverter(StringConverter.class.getName())
-        .valueConverter(ByteArrayConverter.class.getName())
-        .data();
+    Map<String, String> data =
+        CommonConfigFragment.setter(sourceStorage.getAMQPInitialConfig())
+            .keyConverter(StringConverter.class.getName())
+            .valueConverter(ByteArrayConverter.class.getName())
+            .data();
+    AmqpFragment.setter(data).setMessageFormat(AmqpFormat.BODY);
+    return data;
   }
 
   @Override
