@@ -44,8 +44,10 @@ import org.slf4j.LoggerFactory;
  * Standard AMQP message strategy. This message assumes that:
  *
  * <ul>
- *   <li>The Kafka message value is the same as the AMQP message body.  Different encoding, same data.
- *   <li>The Kafka headers contains entries that start with "amqp" that are to be used to populate the AMQP message properties, footers, and attributes.</li>
+ *   <li>The Kafka message value is the same as the AMQP message body. Different encoding, same
+ *       data.
+ *   <li>The Kafka headers contains entries that start with "amqp" that are to be used to populate
+ *       the AMQP message properties, footers, and attributes.
  * </ul>
  */
 public class AmqpBodyFmt extends AbstractAmqpStrategy {
@@ -100,6 +102,7 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
 
   /**
    * Transcode the schema and body values from the Kafka sink record into the AMQP body.
+   *
    * @param bodySchema the sink record body schema.
    * @param bodyValue the sink record body value.
    * @return A QPID Section that is the AMQP encoding for the body value.
@@ -134,7 +137,8 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
 
   /**
    * Sets the AMQP message property from the object.
-   * @param key the header key.  These are prefixed with "amqp."
+   *
+   * @param key the header key. These are prefixed with "amqp."
    * @param message the message to set the value in.
    * @param value the value to encode into the proper AMQP format.
    * @throws ClientException on AMQP error.
@@ -222,7 +226,8 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
 
   /**
    * Converts an object to a number, if it is not already one.
-   * @param key the key.  Used for error reporting.
+   *
+   * @param key the key. Used for error reporting.
    * @param object the object to convert.
    * @return and Optional number if the number cojuld be converted, an empty optional otherwise.
    */
@@ -235,8 +240,9 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
   }
 
   /**
-   * Gets the boolean value of the object.
-   * If the object is an instance of Boolean return it, othersie parse the string value of the object as a boolean.
+   * Gets the boolean value of the object. If the object is an instance of Boolean return it,
+   * othersie parse the string value of the object as a boolean.
+   *
    * @param object the object to convert.
    * @return the boolean value.
    */
@@ -245,8 +251,9 @@ public class AmqpBodyFmt extends AbstractAmqpStrategy {
   }
 
   /**
-   * Parse and Kafka header into the proper value in the AMQP message.
-   * Will only process headers whos key starts with "amqp." all others are ignored.
+   * Parse and Kafka header into the proper value in the AMQP message. Will only process headers
+   * whos key starts with "amqp." all others are ignored.
+   *
    * @param message the message to populate.
    * @param header the header to convert.
    * @throws ClientException if the message value can not be set.

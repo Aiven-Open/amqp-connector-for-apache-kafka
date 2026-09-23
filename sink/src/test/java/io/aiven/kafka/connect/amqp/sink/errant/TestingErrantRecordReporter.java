@@ -28,7 +28,8 @@ import org.apache.kafka.connect.sink.ErrantRecordReporter;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 /**
- * An ErrantRecordReporter for testing.  Captures the errant records and their associated errors for later retrieval.
+ * An ErrantRecordReporter for testing. Captures the errant records and their associated errors for
+ * later retrieval.
  */
 public class TestingErrantRecordReporter implements ErrantRecordReporter {
   List<Pair<SinkRecord, Throwable>> lst = new ArrayList<>();
@@ -41,6 +42,7 @@ public class TestingErrantRecordReporter implements ErrantRecordReporter {
 
   /**
    * Get the list of captured errant records and their issues.
+   *
    * @return the list of captured errant records and their issues.
    */
   public List<Pair<SinkRecord, Throwable>> getErrors() {
