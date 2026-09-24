@@ -216,7 +216,6 @@ public class AmqpConverterTest {
         .containsExactlyElementsOf(annotations.keySet().stream().map(Symbol::toString).toList());
 
     assertThat(encoded.value()).isInstanceOf(Struct.class);
-    Struct values = (Struct) encoded.value();
 
     Optional<Object> decoded = compositConverter.decode(encoded);
     assertThat(decoded)
@@ -254,7 +253,6 @@ public class AmqpConverterTest {
         .containsExactlyElementsOf(footers.keySet().stream().map(Symbol::toString).toList());
 
     assertThat(encoded.value()).isInstanceOf(Struct.class);
-    Struct values = (Struct) encoded.value();
 
     Optional<Object> decoded = compositConverter.decode(encoded);
     assertThat(decoded).isPresent().get().isInstanceOf(Footer.class).isEqualTo(messageFooters);

@@ -19,6 +19,7 @@
 package io.aiven.kafka.connect.amqp.roundtrip;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
@@ -67,7 +68,6 @@ import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Message;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.Sender;
-import org.apache.qpid.protonj2.client.Tracker;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 import org.apache.qpid.protonj2.types.UnsignedByte;
 import org.apache.qpid.protonj2.types.UnsignedInteger;
@@ -96,12 +96,13 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     rabbit.start();
   }
 
-  private void setupKafka(AmqpFormat sourceFormat, AmqpFormat sinkFormat, AmqpStrategy sinkStrategy)
+  private void setupKafka(
+      AmqpFormat sourceFormat, AmqpFormat sinkFormat, AmqpStrategy sinkStrategy, String topic)
       throws IOException {
     KafkaManager kafkaManager = setupKafka(null, Collections.emptyMap());
-    kafkaManager.createTopic(getTopic());
-    kafkaManager.configureConnector("Amqp-source", sourceConfig(sourceFormat));
-    kafkaManager.configureConnector("Amqp-sink", sinkConfig(sinkFormat, sinkStrategy));
+    kafkaManager.createTopic(topic);
+    kafkaManager.configureConnector("Amqp-source", sourceConfig(sourceFormat, topic));
+    kafkaManager.configureConnector("Amqp-sink", sinkConfig(sinkFormat, sinkStrategy, topic));
   }
 
   private Map<String, String> amqpConfig(String direction) {
@@ -115,10 +116,10 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     return data;
   }
 
-  private Map<String, String> sourceConfig(AmqpFormat amqpFormat) {
+  private Map<String, String> sourceConfig(AmqpFormat amqpFormat, String topic) {
     Map<String, String> data = amqpConfig("source");
     AmqpFragment.setter(data).setMessageFormat(amqpFormat);
-    SourceConfigFragment.setter(data).targetTopic(getTopic());
+    SourceConfigFragment.setter(data).targetTopic(topic);
     CommonConfigFragment.setter(data).maxTasks(1);
     data.put(SourceConnectorConfig.CONNECTOR_CLASS_CONFIG, AmqpSourceConnector.class.getName());
     data.put(SourceConnectorConfig.KEY_CONVERTER_CLASS_CONFIG, StringConverter.class.getName());
@@ -133,7 +134,8 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     return data;
   }
 
-  private Map<String, String> sinkConfig(AmqpFormat amqpFormat, AmqpStrategy strategy) {
+  private Map<String, String> sinkConfig(
+      AmqpFormat amqpFormat, AmqpStrategy strategy, String topic) {
     Map<String, String> data = amqpConfig("sink");
     new AmqpSinkConfigDef.Setter(data).strategy(strategy);
 
@@ -141,7 +143,7 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
 
     CommonConfigFragment.setter(data).maxTasks(1);
     data.put(SinkConnectorConfig.CONNECTOR_CLASS_CONFIG, AmqpSinkConnector.class.getName());
-    data.put("topics", getTopic());
+    data.put("topics", topic);
     data.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     switch (amqpFormat) {
       case RAW ->
@@ -157,7 +159,8 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
   @MethodSource("roundTripData")
   void roundTrip(AmqpFormat sourceFormat, AmqpFormat sinkFormat, AmqpStrategy sinkStrategy)
       throws ClientException, IOException {
-    setupKafka(sourceFormat, sinkFormat, sinkStrategy);
+    String topicName = getTopic(sourceFormat.name(), sinkFormat.name(), sinkStrategy.name());
+    setupKafka(sourceFormat, sinkFormat, sinkStrategy, topicName);
     Message<?> expected = createMessage();
 
     try (Client client = Client.create();
@@ -173,8 +176,11 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
       Receiver receiver = connection.openReceiver(getTopic("sink"));
 
       // send the message and wait for it to be received.
-      Tracker sendTracker = sender.send(expected);
+      sender.send(expected);
       Delivery delivery = receiver.receive(2, TimeUnit.MINUTES);
+      if (delivery == null) {
+        fail("No delivery received");
+      }
       Message<?> actual = delivery.message();
       switch (sinkStrategy) {
         case RAW -> assertSameRaw(actual, expected);
@@ -208,44 +214,34 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     final int unsignedShort = 0xffff;
     final short unsignedByte = 0xff;
 
-    Message<?> message =
-        Message.create("Hello world")
-            .absoluteExpiryTime(absoluteExpiry)
-            .to("ToPerson")
-            .messageId(uuid)
-            .contentEncoding("UTF8")
-            .contentType("text/plain")
-            .correlationId("correlationId")
-            .creationTime(creationTime)
-            .deliveryCount(deliveryCount)
-            .durable(true)
-            .firstAcquirer(false)
-            .groupId("myGroup")
-            .groupSequence(groupSequence)
-            .priority(priority)
-            .replyTo("replyToMsg")
-            .replyToGroupId("replytoGroupId")
-            .subject("subject")
-            .timeToLive(timeToLive)
-            .userId(rabbit.getAdminUsername().getBytes(StandardCharsets.UTF_8))
-            //                .annotation("response‑address‑cookie", "My
-            // cookie".getBytes(StandardCharsets.UTF_8))
-            //                .annotation("int", intValue)
-            //                .annotation("short", shortValue)
-            //                .annotation("byte", byteValue)
-            //                .annotation("unsignedLong", UnsignedLong.valueOf(unsignedLong))
-            //                .annotation("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
-            //                .annotation("unsignedShort", UnsignedShort.valueOf(unsignedShort))
-            //                .annotation("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte))
-            .footer("long", longValue)
-            .footer("int", intValue)
-            .footer("short", shortValue)
-            .footer("byte", byteValue)
-            .footer("unsignedLong", UnsignedLong.valueOf(unsignedLong))
-            .footer("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
-            .footer("unsignedShort", UnsignedShort.valueOf(unsignedShort))
-            .footer("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte));
-    return message;
+    return Message.create("Hello world")
+        .absoluteExpiryTime(absoluteExpiry)
+        .to("ToPerson")
+        .messageId(uuid)
+        .contentEncoding("UTF8")
+        .contentType("text/plain")
+        .correlationId("correlationId")
+        .creationTime(creationTime)
+        .deliveryCount(deliveryCount)
+        .durable(true)
+        .firstAcquirer(false)
+        .groupId("myGroup")
+        .groupSequence(groupSequence)
+        .priority(priority)
+        .replyTo("replyToMsg")
+        .replyToGroupId("replytoGroupId")
+        .subject("subject")
+        .timeToLive(timeToLive)
+        .userId(rabbit.getAdminUsername().getBytes(StandardCharsets.UTF_8))
+        // annotations are a controled vocabulary -- do not try to set.
+        .footer("long", longValue)
+        .footer("int", intValue)
+        .footer("short", shortValue)
+        .footer("byte", byteValue)
+        .footer("unsignedLong", UnsignedLong.valueOf(unsignedLong))
+        .footer("unsignedInt", UnsignedInteger.valueOf(unsignedInt))
+        .footer("unsignedShort", UnsignedShort.valueOf(unsignedShort))
+        .footer("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte));
   }
 
   private void assertSameRaw(Message<?> actual, Message<?> expected) throws ClientException {
@@ -260,9 +256,7 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     assertThat(actual.contentType()).as("contentType").isEqualTo(expected.contentType());
     assertThat(actual.correlationId()).as("correlationId").isEqualTo(expected.correlationId());
     assertThat(actual.creationTime()).as("creationTime").isEqualTo(expected.creationTime());
-    // assertThat(actual.deliveryCount()).as("deliveryCount").isEqualTo(expected.deliveryCount());
     assertThat(actual.durable()).as("durable").isEqualTo(expected.durable());
-    // assertThat(actual.firstAcquirer()).as("firstAcquirer").isEqualTo(expected.firstAcquirer());
     assertThat(actual.groupId()).as("groupId").isEqualTo(expected.groupId());
     assertThat(actual.groupSequence()).as("groupSequence").isEqualTo(expected.groupSequence());
     assertThat(actual.priority()).as("priority").isEqualTo(expected.priority());
@@ -300,19 +294,12 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     assertThat(actual.contentType()).as("contentType").isEqualTo(expected.contentType());
     assertThat(actual.correlationId()).as("correlationId").isEqualTo(expected.correlationId());
     assertThat(actual.creationTime()).as("creationTime").isEqualTo(expected.creationTime());
-    //
-    // assertThat(actual.deliveryCount()).as("deliveryCount").isEqualTo(expected.deliveryCount());
     assertThat(actual.durable()).as("durable").isEqualTo(expected.durable());
-    //
-    // assertThat(actual.firstAcquirer()).as("firstAcquirer").isEqualTo(expected.firstAcquirer());
     assertThat(actual.groupId()).as("groupId").isEqualTo(expected.groupId());
     assertThat(actual.groupSequence()).as("groupSequence").isEqualTo(expected.groupSequence());
-    // assertThat(actual.priority()).as("priority").isEqualTo(expected.priority());
     assertThat(actual.replyTo()).as("replyTo").isEqualTo(expected.replyTo());
     assertThat(actual.replyToGroupId()).as("replyToGroupId").isEqualTo(expected.replyToGroupId());
     assertThat(actual.subject()).as("subject").isEqualTo(expected.subject());
-    //        assertThat(actual.timeToLive()).as("timeToLive").isEqualTo(expected.timeToLive());
-    //        assertThat(actual.userId()).as("userId").isEqualTo(expected.userId());
 
     Map<String, Object> actualAnnotations = new TreeMap<>();
     actual.forEachAnnotation(actualAnnotations::put);
@@ -365,7 +352,7 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     KafkaManager kafkaManager = setupKafka(null, Collections.emptyMap());
     kafkaManager.createTopic(getTopic());
     kafkaManager.configureConnector(
-        "Amqp-sink", sinkConfig(AmqpFormat.NOT_AMQP, AmqpStrategy.BODY));
+        "Amqp-sink", sinkConfig(AmqpFormat.NOT_AMQP, AmqpStrategy.BODY, getTopic()));
     Message<?> expected = createMessage();
 
     // Set up the producer properties
@@ -387,7 +374,7 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
       Receiver receiver = connection.openReceiver(getTopic("sink"));
 
       // Create the producer
-      try (Producer<String, String> producer = new KafkaProducer<>(props); ) {
+      try (Producer<String, String> producer = new KafkaProducer<>(props)) {
         // Send the record
         producer.send(producerRecord);
       }

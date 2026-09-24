@@ -21,7 +21,10 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.kafka.connect.data.SchemaAndValue;
 
-/** Abstract class to convert objects to SchemaAnValue objects. */
+/**
+ * Abstract class to encode objects as SchemaAndValue objects and to decode SchemaAndValue object
+ * into Objects.
+ */
 public abstract class EncoderDecoder {
 
   /** The converter that is the self for this converter */

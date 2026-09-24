@@ -55,6 +55,7 @@ public class AmqpSinkConfig extends ConnectorCommonConfig implements AmqpCommonC
    *
    * @param parsedValues unmodifiable map of current configuration
    */
+  @Override
   protected void fragmentPostProcess(ChangeTrackingMap parsedValues) {
     super.fragmentPostProcess(parsedValues);
     if (parsedValues.get(AmqpFragment.FORMAT).toString().equalsIgnoreCase(AmqpFormat.RAW.name())

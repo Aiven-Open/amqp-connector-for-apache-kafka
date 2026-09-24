@@ -58,20 +58,6 @@ public final class AmqpEnDec extends EncoderDecoder {
     String name = asName(value.getClass());
     if (name.startsWith("org.apache.qpid.protonj2.types.")) {
       if (value instanceof Number n) {
-        //                if (value instanceof Decimal32) {
-        //                    return Optional.of(new SchemaAndValue(builder.field("value",
-        // Schema.FLOAT32_SCHEMA), n.floatValue()));
-        //                }
-        //                if (value instanceof Decimal64) {
-        //                    return Optional.of(new SchemaAndValue(builder.field("value",
-        // Schema.FLOAT64_SCHEMA), n.doubleValue()));
-        //                }
-        //                if (value instanceof Decimal128 d) {
-        //                    return Optional.of(new SchemaAndValue(builder.field("msb",
-        // Schema.FLOAT64_SCHEMA)
-        //                            .field("lsb", Schema.FLOAT64_SCHEMA), new
-        // long[]{d.getMostSignificantBits(), d.getLeastSignificantBits()}));
-        //                }
         if (value instanceof UnsignedByte) {
           return Optional.of(
               new SchemaAndValue(

@@ -31,7 +31,28 @@ import org.apache.kafka.connect.data.Struct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Converts collections and maps with arbitrary values into Kafka {@link Struct} types. */
+/**
+ * Converts collections and maps with arbitrary values into Kafka {@link Struct} types.
+ *
+ * <p>This Encodeer/Decoder should come after KafkaEnDec if it is used in order to allow the
+ * standard Kafka conversion to occur before the conversions here.
+ *
+ * <p>This Encoder/Decorder handles the following types and in the following order:
+ *
+ * <ul>
+ *   <li>Arbitrary {@code java.util.Collection} implementation - converts to a Struct with fields
+ *       names by the numeric index of the natural order of the collection. Values of the fields are
+ *       encoded/decoded using the current EncoderDecoder instance. The struct itself is named as
+ *       the class name of the collection implementation.
+ *   <li>Arbitrary {@code java.util.Map} implementation - converts to a struct where each field is
+ *       named by the {@code toString} representation of the key and the value is encoded/decoded
+ *       using the current EncoderDecoder instance. The struct itself is named as the class name of
+ *       the Map implementation.
+ *   <Li>Array of arbitrary objects - converts to a Struct with fields names by the numeric index of
+ *       the array. Values of the array are encoded/decoded using the current EncoderDecoder
+ *       instance. The struct itself is named as the class name of the array implementation.
+ * </ul>
+ */
 public final class CollectionEnDec extends EncoderDecoder {
   private static final Logger LOGGER = LoggerFactory.getLogger(CollectionEnDec.class);
 
@@ -115,8 +136,7 @@ public final class CollectionEnDec extends EncoderDecoder {
     List<Object> result = new ArrayList<>();
     List<Field> fields = schemaAndValue.schema().fields();
     Struct struct = (Struct) schemaAndValue.value();
-    for (int i = 0; i < fields.size(); i++) {
-      Field field = fields.get(i);
+    for (Field field : fields) {
       final SchemaAndValue sv = new SchemaAndValue(field.schema(), struct.get(field));
       self()
           .decode(sv)

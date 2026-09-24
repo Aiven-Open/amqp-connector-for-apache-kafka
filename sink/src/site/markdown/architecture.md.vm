@@ -17,16 +17,38 @@
     SPDX-License-Identifier: Apache-2.0
 -->
 
-AMQP Source Connector Architecture Notes
+AMQP Sink Connector Architecture Notes
 ==============================
 
-${project.name} connects to an [AMQP](https://www.amqp.org/) provider using the [protonj2 client](https://qpid.apache.org/proton/index.html) from the [Apache QPID&trade;](https://qpid.apache.org/) messaging library to read AMQP messages. It utilizes the [Aiven Kafka Connector Framework](https://github.com/Aiven-Open/aiven-kafka-connector-framework) to do most of the heavy lifting.
+${project.name} connects to an [AMQP](https://www.amqp.org/) provider using the [protonj2 client](https://qpid.apache.org/proton/index.html) from the [Apache QPID&trade;](https://qpid.apache.org/) messaging library to write AMQP messages. It utilizes the [Aiven Kafka Connector Framework](https://github.com/Aiven-Open/aiven-kafka-connector-framework) to do most of the heavy lifting.
 
-**At this time ${project.name} only supports queue type messages.**  This means that the Apache QPID will distribute the inbound messages across all the listeners.  In effect the number of Kafka Connect tasks becomes the number of simultaneous messages that can be processed.
+The sink processor uses a write strategy to write the Kafka messages into the AMQP message format and deliver them to the AMQP system.
 
-The AMQP message provider contract does not require that a message have a unique key, the connector framework expects that each message will have a unique ID and that those IDs can be lexically ordered.  The framework calls these IDs NativeKeys.  To meet the native key requirement we assign every message that arrives in the system a [ULID](https://github.com/ulid/spec). We use the [Sulky java implementation of ULID](https://github.com/huxi/sulky/blob/27c8d809f2e3af6eafa9c7324f158cd9b482b351/sulky-ulid/README.md) from [Jörn Huxhorn](https://github.com/huxi).
+As of this writing the AMQP sink connector supports two strategies:
 
-Each set Message property with the exception of `body` becomes a kafka header.
+## RAW
+
+The raw strategy assumes that the entire AMQP message was serialized into the Kafka message value as a `byte[]`.  The format for this buffer is found in the `AmqpConverter` code in the `connectors-common-for-amqp` package.  This strategy is intended for use with the Aiven AMQP source connector RAW format and the `AmqpConverter`.  If messages are places into the Kafka system using Aiven AMQP source connector and the RAW format and the AMQPConverter is used for the value converter then the Aiven AMQP sink connector using the RAW format and RAW strategy will place the same message on the AMQP queue.  There are some changes to the data elements for the receiving AMQP system.
+
+### Elements that change
+
+When the messages placed on AMQP queue by the sink processor in RAW strategy are read by another AMQP client the following data items will have been changed.
+
+1. Delivery count - The delivery count on the receiver will reflect the delivery count since the message was placed on the queue by the sink process.  The original message count will be lost to the remote.  However, the original delivery count is available in the sink processor as the `amqp.deliveryCount` Kafka message header and may be used in an SMT to preserve the value.
+2. First acquirer - The first acquirer recorded on the receiver will reflect the first acquirer since the message was placed on the queue by the sink process.  The original first acquirer will be lost to the remote.  However, the original first acquirer is available in the sink processor as the `amqp.firstAcquirer` Kafka message header and may be used in an SMT to preserve the value.
+
+## BODY
+
+The body strategy assumes that the Kafka value object should be placed in the AMQP body field.  All other settings are set based on the presence of kafka headers that have keys that start with `amqp.`.  This strategy is useful when the original source is not the Aiven AMQP Sourxe connector.  The additional header information should be placed in the Kafka headers.  This may be done when the original Kafka message is created or though the uses of SMTs.  There are some changes to the data elements for the receiving AMQP system.
+
+### Elements that change
+
+1. Delivery count - The delivery count on the receiver will reflect the delivery count since the message was placed on the queue by the sink process.  The original message count will be lost to the remote.  However, the original delivery count is available in the sink processor as the `amqp.deliveryCount` Kafka message header and may be used in an SMT to preserve the value.
+2. First acquirer - The first acquirer recorded on the receiver will reflect the first acquirer since the message was placed on the queue by the sink process.  The original first acquirer will be lost to the remote.  However, the original first acquirer is available in the sink processor as the `amqp.firstAcquirer` Kafka message header and may be used in an SMT to preserve the value.
+3. Priority - The priority of the message will be set by the priority defined in the AMQP system.
+4. Time to live (TTL) - The time to live will be reset to and based on the time the new message is delivered to the AMQP system.
+5. User Id - The user id will be changed to the ID that the the sink connector uses to communicate with the AMQP system.  The original user id will be lost to the remote.  However, the original user id is available in the sink processor as the `amqp.userId` Kafka message header and may be used in an SMT to preserve the value.
+
 
 Data Mapping
 -------------
@@ -53,9 +75,4 @@ The Headers generated from the message has a number of properties.  If the prope
 * `to` : The intended destination of the message if set.
 * `userId` : The Id of the user that created the message if it was provided.
 
-
-Data Serialization
-------------------
-
-Data is serialized using the Jackson JSON serialization libraries.  The system can serialize any object that Jackson can natively serialize. In addition, custom serializers are used to serialize the AMQP native components so that they can be rendered by into a JSON format that is readable outside the Kafka environment.  The Kafka data is a JSON string.  Using the JSON converter will return the expected JSON object, using a String converter will return the JSON string.  All other converters will probably fail to work.
 

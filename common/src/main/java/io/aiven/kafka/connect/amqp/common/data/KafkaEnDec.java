@@ -36,24 +36,43 @@ import org.apache.kafka.connect.data.Values;
  * <p>This converter will handle;
  *
  * <ul>
- *   <li>{@code null} values into an optional byte schema with a null value.
- *   <li>Any value that has an infered schema form {@link Values#inferSchema(Object)}
- *   <li>{@code BigInteger} into a string value
- *   <li>{@code BigDecimal} into a string value
+ *   <li>{@code null} values into an optional byte schema with a null value. This only occurs if the
+ *       includeNull flag is set in the constructor.
+ *   <li>Any value that has an inferred schema form {@link Values#inferSchema(Object)}
+ *   <li>{@code BigInteger} into a string value. The schema name for the encoded value is
+ *       "BigInteger"
+ *   <li>{@code BigDecimal} into a string value. The schema name for the encoded value is
+ *       "BigDecimal"
  * </ul>
  */
 public final class KafkaEnDec extends EncoderDecoder {
   @VisibleForTesting static final String BIG_DECIMAL_NAME = "BigDecimal";
   @VisibleForTesting static final String BIG_INTEGER_NAME = "BigInteger";
 
-  /** Constructor. */
-  public KafkaEnDec() {}
+  /** null conversion flag. */
+  private final boolean includeNull;
+
+  /** Constructs an encoder that <em>does</em> convert {@code null} values. */
+  public KafkaEnDec() {
+    this(true);
+  }
+
+  /**
+   * Constructor.
+   *
+   * @param includeNull if {@code true} nulls are converted, if {@code false} nulls are not
+   *     converted.
+   */
+  private KafkaEnDec(boolean includeNull) {
+    this.includeNull = includeNull;
+  }
 
   @Override
   public Optional<SchemaAndValue> encode(Object value) {
-    if (value == null) {
+    if (value == null && includeNull) {
       return Optional.of(new SchemaAndValue(Schema.OPTIONAL_BYTES_SCHEMA, null));
     }
+
     Schema schema = Values.inferSchema(value);
     if (schema != null) {
       return Optional.of(new SchemaAndValue(schema, value));
@@ -94,46 +113,15 @@ public final class KafkaEnDec extends EncoderDecoder {
         return Optional.of(schemaAndValue.value());
       }
 
-      //      if (schemaAndValue.value() instanceof Number n) {
-      //        if (schema.equals(Schema.INT8_SCHEMA)) {
-      //          return Optional.of(n.byteValue());
-      //        }
-      //        if (schema.equals(Schema.INT16_SCHEMA)) {
-      //          return Optional.of(n.shortValue());
-      //        }
-      //
-      //        if (schema.equals(Schema.INT32_SCHEMA)) {
-      //          return Optional.of(n.intValue());
-      //        }
-      //
-      //        if (schema.equals(Schema.INT64_SCHEMA)) {
-      //          return Optional.of(n.longValue());
-      //        }
-      //
-      //        if (schema.equals(Schema.FLOAT32_SCHEMA)) {
-      //          return Optional.of(n.floatValue());
-      //        }
-      //
-      //        if (schema.equals(Schema.FLOAT64_SCHEMA)) {
-      //          return Optional.of(n.doubleValue());
-      //        }
-      //      }
-      //      if (schemaAndValue.value() instanceof String s) {
-      //        if (BIG_DECIMAL_NAME.equals(schema.name())) {
-      //          return Optional.of(new BigDecimal(s));
-      //        }
-      //        if (BIG_INTEGER_NAME.equals(schema.name())) {
-      //          return Optional.of(new BigInteger(s));
-      //        }
-      //        if (Schema.STRING_SCHEMA.equals(schema)) {
-      //          return Optional.of(s);
-      //        }
-      //      }
-
       if (schemaAndValue.schema().type() == ARRAY) {
         List<?> collection = (List<?>) schemaAndValue.value();
         return Optional.of(collection.toArray());
       }
+
+      //      if (schemaAndValue.schema().type() == MAP
+      //          && schemaAndValue.value() instanceof Map<?, ?> map) {
+      //        return Optional.of(map);
+      //      }
     }
     return Optional.empty();
   }
