@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.aiven.kafka.connect</groupId>
     <artifactId>connectors-for-amqp</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>sink-connector-for-amqp</artifactId>
@@ -38,4 +38,149 @@
     </site>
   </distributionManagement>
 
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>connectors-common-for-amqp</artifactId>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.kafka.connect</groupId>
+      <artifactId>connectors-common-for-amqp</artifactId>
+      <version>${project.parent.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>framework-common-for-connectors</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>connect-runtime</artifactId>
+      <!--        <version>${kafka.version}</version>-->
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-rabbitmq</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.aiven.commons</groupId>
+      <artifactId>kafka-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>auto-clean</id>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <phase>clean</phase>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>src/main/java/io/aiven/kafka/connect/amqp/sink</directory>
+                  <includes>
+                    <include>AmqpSinkVersionInfo.java</include>
+                  </includes>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!--      <plugin>-->
+      <!--        <groupId>org.apache.maven.plugins</groupId>-->
+      <!--        <artifactId>maven-assembly-plugin</artifactId>-->
+      <!--        <executions>-->
+      <!--          <execution>-->
+      <!--            <goals>-->
+      <!--              <goal>single</goal>-->
+      <!--            </goals>-->
+      <!--            <phase>package</phase>-->
+      <!--            <configuration>-->
+      <!--              <finalName>${project.artifactId}-${project.version}</finalName>-->
+      <!--              <appendAssemblyId>false</appendAssemblyId>-->
+      <!--              <descriptors>-->
+      <!--                <descriptor>src/main/assembly/release.xml</descriptor>-->
+      <!--              </descriptors>-->
+      <!--              <tarLongFileMode>posix</tarLongFileMode>-->
+      <!--            </configuration>-->
+      <!--          </execution>-->
+      <!--        </executions>-->
+      <!--      </plugin>-->
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-version-info</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/main/filtered-source</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+          <!--          <execution>-->
+          <!--            <id>copy-shared-site-assets-for-source-site</id>-->
+          <!--            <goals>-->
+          <!--              <goal>copy-resources</goal>-->
+          <!--            </goals>-->
+          <!--            <phase>pre-site</phase>-->
+          <!--            <configuration>-->
+          <!--              <resources>-->
+          <!--                <resource>-->
+          <!--                  <directory>../src/site/resources</directory>-->
+          <!--                  <includes>-->
+          <!--                    <include>logo.png</include>-->
+          <!--                    <include>logo.svg</include>-->
+          <!--                  </includes>-->
+          <!--                </resource>-->
+          <!--              </resources>-->
+          <!--              <outputDirectory>${project.build.directory}/generated-site/resources</outputDirectory>-->
+          <!--            </configuration>-->
+          <!--          </execution>-->
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <generateReports>true</generateReports>
+          <generateProjectInfo>true</generateProjectInfo>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>${project.artifactId}</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
 </project>

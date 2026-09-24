@@ -18,10 +18,15 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
+import com.google.common.annotations.VisibleForTesting;
 import de.huxhorn.sulky.ulid.ULID;
+import io.aiven.commons.kafka.connector.source.EvolvingSourceRecord;
 import io.aiven.commons.kafka.connector.source.NativeSourceData;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import io.aiven.commons.kafka.connector.source.task.Context;
+import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
+import io.aiven.kafka.connect.amqp.common.data.EncoderDecoder;
+import io.aiven.kafka.connect.amqp.common.data.HeaderExtractor;
 import io.aiven.kafka.connect.amqp.source.config.AmqpSourceConfig;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,10 +34,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.SchemaAndValue;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.qpid.protonj2.client.AdvancedMessage;
 import org.apache.qpid.protonj2.client.Delivery;
 import org.apache.qpid.protonj2.client.Receiver;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
+import org.apache.qpid.protonj2.types.messaging.Section;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +56,8 @@ import org.slf4j.LoggerFactory;
  * unique ID, this implementation uses a {@link ULID} for the native key. ULIDs are generated in the
  * {@link AmqpSourceNativeInfo} class.
  */
-public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
+public final class AmqpSourceData extends NativeSourceData<String> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpSourceData.class);
-
-  private static final ULIDSerde serde = new ULIDSerde();
 
   private final Receiver receiver;
 
@@ -57,6 +65,12 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   private final int receiveLimit;
 
   private final int taskId;
+
+  private final EncoderDecoder dataConverter;
+
+  private final AmqpSourceConfig config;
+
+  private final HeaderExtractor headerExtractor;
 
   /**
    * Constructor.
@@ -68,9 +82,97 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   AmqpSourceData(final AmqpSourceConfig sourceConfig, final OffsetManager offsetManager)
       throws ClientException, ExecutionException, InterruptedException {
     super(sourceConfig, offsetManager);
+    config = sourceConfig;
     taskId = sourceConfig.getTaskId();
     this.receiver = sourceConfig.getReceiver();
     receiveLimit = 500; // TODO make this configurable
+    dataConverter = AmqpCommonConfig.getCommonConverter();
+    headerExtractor = new HeaderExtractor(AmqpCommonConfig.getCommonConverter());
+  }
+
+  @Override
+  protected Function<EvolvingSourceRecord, EvolvingSourceRecord> initializeRecordFunction() {
+    return this::initialize;
+  }
+
+  private void setKeyValue(final EvolvingSourceRecord result, final String defaultKey) {
+    dataConverter
+        .encode(result.getContext().getNativeKey())
+        .ifPresentOrElse(
+            result::setKeyData,
+            () -> {
+              LOGGER.error(
+                  "Unexpected data type in native key {}.  Using: {}",
+                  result.getContext().getNativeKey().getClass(),
+                  defaultKey);
+              result.setKeyData(new SchemaAndValue(Schema.STRING_SCHEMA, defaultKey));
+            });
+  }
+
+  private void processBody(
+      final EvolvingSourceRecord result, AdvancedMessage<?> message, List<Section<?>> body)
+      throws ClientException {
+    Optional<SchemaAndValue> schemaAndValue = Optional.empty();
+    switch (config.getMessageFormat()) {
+      case BODY -> {
+        // valid body types are Data (byte[]), AmqpSequence: (List<>), AmqpValue, but if we just
+        // pass
+        // the section values they should encode correctly
+        if (!body.isEmpty()) {
+          schemaAndValue =
+              body.size() == 1
+                  ? dataConverter.encode(body.get(0).getValue())
+                  : dataConverter.encode(body.stream().map(Section::getValue).toList());
+        }
+      }
+      case RAW -> {
+        schemaAndValue = Optional.of(new SchemaAndValue(null, message));
+      }
+    }
+    schemaAndValue.ifPresentOrElse(
+        result::setValueData,
+        () ->
+            LOGGER.error(
+                "Unexpected data type in body {}",
+                String.join(", ", body.stream().map(Section::toString).toList())));
+  }
+
+  /**
+   * Converts the message internals into headers.
+   *
+   * @param record The initial EvolvingSourceRecord to initialize
+   * @return an initialized record. May be the same or different instance.
+   */
+  @VisibleForTesting
+  EvolvingSourceRecord initialize(EvolvingSourceRecord record) {
+    AmqpSourceNativeInfo sourceNativeInfo = record.getSourceNativeInfo();
+    EvolvingSourceRecord result = record;
+    try {
+      AdvancedMessage<?> message = sourceNativeInfo.getMessage().toAdvancedMessage();
+      // if the messageID is provided use it for the context which sets the default key
+      // may change the result object.
+      if (message.messageId() != null) {
+        AmqpContext ctxt =
+            ((AmqpContext) record.getContext())
+                .builder()
+                .nativeKey(message.messageId().toString())
+                .build();
+        result = new EvolvingSourceRecord(sourceNativeInfo, createOffsetManagerEntry(ctxt), ctxt);
+      }
+
+      // start setting result values
+
+      setKeyValue(result, sourceNativeInfo.nativeKey());
+
+      result.setHeaders(headerExtractor.processHeaders(record.getHeaders(), message));
+
+      processBody(result, message, new ArrayList<>(message.toAdvancedMessage().bodySections()));
+
+    } catch (ClientException e) {
+      LOGGER.error("unable to extract message: {}", e.getMessage(), e);
+    }
+
+    return result;
   }
 
   @Override
@@ -79,7 +181,7 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
   }
 
   @Override
-  public Iterator<AmqpSourceNativeInfo> getNativeItemIterator(ULID.Value ignore) {
+  public Iterator<AmqpSourceNativeInfo> getNativeItemIterator(String ignore) {
     try {
       long waiting = receiver.queuedDeliveries();
       int limit = (int) Math.min(waiting, receiveLimit);
@@ -112,16 +214,16 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
 
   @Override
   protected OffsetManager.OffsetManagerEntry createOffsetManagerEntry(Context context) {
-    return new AmqpOffsetManagerEntry((ULID.Value) context.getNativeKey());
+    return new AmqpOffsetManagerEntry((String) context.getNativeKey());
   }
 
   @Override
-  protected Optional<KeySerde<ULID.Value>> getNativeKeySerde() {
-    return Optional.of(serde);
+  protected Optional<KeySerde<String>> getNativeKeySerde() {
+    return Optional.of(KeySerde.STRING_SERDE);
   }
 
   @Override
-  public OffsetManager.OffsetManagerKey getOffsetManagerKey(ULID.Value nativeKey) {
+  public OffsetManager.OffsetManagerKey getOffsetManagerKey(String nativeKey) {
     return new AmqpOffsetManagerEntry(nativeKey).getManagerKey();
   }
 
@@ -130,23 +232,6 @@ public final class AmqpSourceData extends NativeSourceData<ULID.Value> {
     super.close();
     try (receiver) {
       LOGGER.info("Closing the open receiver");
-    }
-  }
-
-  /** The AMQP native source data implementation of NativeSourceData.KeySerde. */
-  public static class ULIDSerde implements NativeSourceData.KeySerde<ULID.Value> {
-
-    /** Default constructor */
-    public ULIDSerde() {}
-
-    @Override
-    public String toString(ULID.Value nativeKey) {
-      return nativeKey.toString();
-    }
-
-    @Override
-    public ULID.Value fromString(String nativeKeyString) {
-      return ULID.parseULID(nativeKeyString);
     }
   }
 }

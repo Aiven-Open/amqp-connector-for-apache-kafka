@@ -18,10 +18,16 @@
 */
 package io.aiven.kafka.connect.amqp.common.config;
 
+import io.aiven.kafka.connect.amqp.common.data.AmqpEnDec;
+import io.aiven.kafka.connect.amqp.common.data.CollectionEnDec;
+import io.aiven.kafka.connect.amqp.common.data.EncoderDecoder;
+import io.aiven.kafka.connect.amqp.common.data.KafkaEnDec;
+import io.aiven.kafka.connect.amqp.common.data.UniqueTypeEnDec;
 import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Receiver;
+import org.apache.qpid.protonj2.client.Sender;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
 /** The methods that must be implemented by both source and sink. */
@@ -65,5 +71,47 @@ public interface AmqpCommonConfig {
    */
   default Receiver getReceiver() throws ClientException, ExecutionException, InterruptedException {
     return getReceiver(getConnection(getClient()));
+  }
+
+  /**
+   * Creates a new AMQP Sender.
+   *
+   * @param connection the AMQP connection to use for the sender.
+   * @return the new AMQP sender. Must be closed when finished.
+   * @throws ClientException if the AMQP sender can not be created.
+   * @throws ExecutionException If the sender could not be created.
+   * @throws InterruptedException If the remote server was interrupted.
+   */
+  Sender getSender(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException;
+
+  /**
+   * Creates a new AMQP Sender by creating and using a Client and Connection.
+   *
+   * @return the new AMQP sender. Must be closed when finished.
+   * @throws ClientException if the AMQP sender can not be created.
+   * @throws ExecutionException If the sender could not be created.
+   * @throws InterruptedException If the remote server was interrupted.
+   */
+  default Sender getSender() throws ClientException, ExecutionException, InterruptedException {
+    return getSender(getConnection(getClient()));
+  }
+
+  /**
+   * Gets the expected format for the AMQP message. This is the conversion strategy AMQP and Kafka
+   * message formats.
+   *
+   * @return the expected Amqp message format.
+   */
+  AmqpFormat getMessageFormat();
+
+  /**
+   * Creates the common converter with AMQP, UniqueType, Kafka, and Collection converters.
+   *
+   * @return the common converter with AMQP, UniqueType, Kafka, and Collection converters.
+   */
+  static EncoderDecoder getCommonConverter() {
+    return new EncoderDecoder.ChainedEnDec(
+        new AmqpEnDec(), new UniqueTypeEnDec(), new KafkaEnDec(), new CollectionEnDec());
   }
 }

@@ -59,8 +59,8 @@ public class AmqpSourceStorageIT extends KafkaIntegrationTestBase {
   void sourceStorageTest() throws ClientException {
     ULID ulid = new ULID();
     underTest.createStorage(STORAGE_PREFIX + getTopic());
-    underTest.writeWithKey(ulid.nextValue(), "Hello world".getBytes(StandardCharsets.UTF_8));
-    final List<NativeInfo<ULID.Value, Delivery>> lst = new ArrayList<>();
+    underTest.writeWithKey(ulid.nextULID(), "Hello world".getBytes(StandardCharsets.UTF_8));
+    final List<NativeInfo<String, Delivery>> lst = new ArrayList<>();
     await()
         .atMost(Duration.ofSeconds(5))
         .until(
@@ -85,7 +85,7 @@ public class AmqpSourceStorageIT extends KafkaIntegrationTestBase {
 
     Receiver receiver = config.getReceiver();
 
-    underTest.writeWithKey(ulid.nextValue(), "Hello world".getBytes(StandardCharsets.UTF_8));
+    underTest.writeWithKey(ulid.nextULID(), "Hello world".getBytes(StandardCharsets.UTF_8));
 
     await().atMost(Duration.ofSeconds(5)).until(() -> receiver.queuedDeliveries() > 0);
     Delivery delivery = receiver.receive();

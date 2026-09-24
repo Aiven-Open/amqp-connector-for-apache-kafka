@@ -18,7 +18,7 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
-import de.huxhorn.sulky.ulid.ULID;
+import com.google.common.annotations.VisibleForTesting;
 import io.aiven.commons.kafka.connector.source.OffsetManager;
 import java.util.HashMap;
 import java.util.List;
@@ -31,15 +31,15 @@ import org.slf4j.LoggerFactory;
 public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManagerEntry {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmqpOffsetManagerEntry.class);
 
-  private final ULID.Value primaryKey;
+  private final String primaryKey;
   private int recordCount;
   private final Map<String, Object> properties;
 
-  private static final String PRIMARY_KEY = "ulid";
-  private static final String RECORD_COUNT = "recordCount";
+  @VisibleForTesting static final String PRIMARY_KEY = "messageKey";
+  @VisibleForTesting static final String RECORD_COUNT = "recordCount";
   private static final List<String> RESTRICTED = List.of(PRIMARY_KEY, RECORD_COUNT);
 
-  AmqpOffsetManagerEntry(ULID.Value primaryKey) {
+  AmqpOffsetManagerEntry(String primaryKey) {
     Objects.requireNonNull(primaryKey, "primaryKey may not be null.");
     this.primaryKey = primaryKey;
     this.properties = new HashMap<>();
@@ -49,8 +49,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
   AmqpOffsetManagerEntry(Map<String, Object> props) {
     Object keyProp = props.get(PRIMARY_KEY);
     Objects.requireNonNull(keyProp, PRIMARY_KEY + " value not set.");
-    primaryKey =
-        keyProp instanceof ULID.Value ? (ULID.Value) keyProp : ULID.parseULID(keyProp.toString());
+    primaryKey = keyProp.toString();
     Object recCount = props.get(RECORD_COUNT);
     if (recCount == null) {
       recordCount = 0;
@@ -72,15 +71,13 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
   public AmqpOffsetManagerEntry fromProperties(Map<String, Object> properties) {
     Object keyProp = properties.get(PRIMARY_KEY);
     Objects.requireNonNull(keyProp, PRIMARY_KEY + " value not set.");
-    ULID.Value key =
-        keyProp instanceof ULID.Value ? (ULID.Value) keyProp : ULID.parseULID(keyProp.toString());
-    return new AmqpOffsetManagerEntry(key);
+    return new AmqpOffsetManagerEntry(keyProp.toString());
   }
 
   @Override
   public Map<String, Object> getProperties() {
     Map<String, Object> result = new HashMap<>(properties);
-    result.put(PRIMARY_KEY, primaryKey.toString());
+    result.put(PRIMARY_KEY, primaryKey);
     result.put(RECORD_COUNT, recordCount);
     return result;
   }
@@ -106,7 +103,7 @@ public final class AmqpOffsetManagerEntry implements OffsetManager.OffsetManager
 
   @Override
   public OffsetManager.OffsetManagerKey getManagerKey() {
-    return () -> Map.of(PRIMARY_KEY, primaryKey.toString());
+    return new OffsetManager.OffsetManagerKey(Map.of(PRIMARY_KEY, primaryKey));
   }
 
   @Override

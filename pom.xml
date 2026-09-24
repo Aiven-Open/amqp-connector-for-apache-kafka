@@ -88,7 +88,8 @@
   <modules>
     <module>common</module>
     <module>source</module>
-    <!--    <module>sink</module>-->
+    <module>sink</module>
+    <module>roundTripTests</module>
   </modules>
 
   <scm>
@@ -121,9 +122,10 @@
     <jackson.annotations.version>2.21</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
-    <aiven.kafka.framework.version>0.3.0</aiven.kafka.framework.version>
+    <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
     <slf4j.version>2.0.18</slf4j.version>
+    <spotless.plugin.version>3.5.1</spotless.plugin.version>
     <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
@@ -154,6 +156,11 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${com.google.guava.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.re2j</groupId>
@@ -267,7 +274,6 @@
         <groupId>org.apache.qpid</groupId>
         <artifactId>protonj2</artifactId>
         <version>${proton.version}</version>
-        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.qpid</groupId>
@@ -295,7 +301,7 @@
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
+        <artifactId>slf4j-simple</artifactId>
         <version>${slf4j.version}</version>
         <scope>test</scope>
       </dependency>
@@ -334,7 +340,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>
       <artifactId>de.huxhorn.sulky.ulid</artifactId>
@@ -391,6 +400,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -422,6 +436,37 @@
   </repositories>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.plugin.version}</version>
+          <configuration>
+            <java>
+              <excludes>
+                <exclude>**/Amqp*VersionInfo.java</exclude>
+              </excludes>
+              <googleJavaFormat/>
+              <removeUnusedImports/>
+            </java>
+            <pom>
+              <sortPom>
+                <expandEmptyElements>false</expandEmptyElements>
+              </sortPom>
+            </pom>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>compile</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.spdx</groupId>
@@ -529,6 +574,10 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <configuration>
@@ -595,6 +644,30 @@
             <reports>
               <report>javadoc</report>
             </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <!-- by default, id = "default" -->
+            <reports>
+              <!-- select non-aggregate reports -->
+              <report>pmd</report>
+              <report>cpd</report>
+            </reports>
+          </reportSet>
+          <reportSet>
+            <!-- aggregate reportSet, to define in poms having modules -->
+            <id>aggregate</id>
+            <!-- don't run aggregate in child modules -->
+            <reports>
+              <report>aggregate-pmd</report>
+              <report>aggregate-cpd</report>
+            </reports>
+            <inherited>false</inherited>
           </reportSet>
         </reportSets>
       </plugin>

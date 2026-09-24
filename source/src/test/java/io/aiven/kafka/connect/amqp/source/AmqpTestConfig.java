@@ -20,28 +20,37 @@ package io.aiven.kafka.connect.amqp.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.config.fragment.CommonConfigFragment;
 import io.aiven.commons.kafka.connector.source.AbstractSourceIntegrationBase;
+import io.aiven.commons.kafka.connector.source.ConsumerPropertiesBuilder;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.TestConfig;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.serialization.BytesDeserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.utils.Bytes;
+import org.apache.kafka.connect.converters.ByteArrayConverter;
 import org.apache.kafka.connect.storage.StringConverter;
 
 public class AmqpTestConfig extends TestConfig {
   private final AmqpSourceStorage sourceStorage;
+  private final Supplier<String> bootstrapServers;
   private final ULID ulid = new ULID();
 
   /** Constructor. */
-  protected AmqpTestConfig(AmqpSourceStorage sourceStorage) {
+  protected AmqpTestConfig(AmqpSourceStorage sourceStorage, Supplier<String> bootstrapServers) {
     super("AMQP standard test");
     this.sourceStorage = sourceStorage;
+    this.bootstrapServers = bootstrapServers;
   }
 
   @Override
@@ -51,10 +60,13 @@ public class AmqpTestConfig extends TestConfig {
 
   @Override
   public Map<String, String> initialConfig() {
-    return CommonConfigFragment.setter(sourceStorage.getAMQPInitialConfig())
-        .keyConverter(StringConverter.class.getName())
-        .valueConverter(StringConverter.class.getName())
-        .data();
+    Map<String, String> data =
+        CommonConfigFragment.setter(sourceStorage.getAMQPInitialConfig())
+            .keyConverter(StringConverter.class.getName())
+            .valueConverter(ByteArrayConverter.class.getName())
+            .data();
+    AmqpFragment.setter(data).setMessageFormat(AmqpFormat.BODY);
+    return data;
   }
 
   @Override
@@ -76,7 +88,7 @@ public class AmqpTestConfig extends TestConfig {
     sourceStorage.setAmqpAddress(topic);
     List<SourceStorage.WriteResult> result = new ArrayList<>();
     for (SourceStorage.TestData td : data) {
-      result.add(sourceStorage.writeWithKey(ulid.nextValue(), (byte[]) td.data()));
+      result.add(sourceStorage.writeWithKey(ulid.nextULID(), (byte[]) td.data()));
     }
     return result;
   }
@@ -89,7 +101,16 @@ public class AmqpTestConfig extends TestConfig {
       List<SourceStorage.WriteResult> writeResult,
       Duration timeout) {
 
-    List<JsonNode> result = messageConsumer.consumeJsonMessages(topic, testData.size(), timeout);
+    List<ConsumerRecord<String, Bytes>> result =
+        messageConsumer
+            .consumeMessages(
+                topic,
+                new ConsumerPropertiesBuilder(bootstrapServers.get()),
+                testData.size(),
+                timeout,
+                StringDeserializer.class,
+                BytesDeserializer.class)
+            .toList();
 
     List<String> expected =
         testData.stream()
@@ -97,18 +118,21 @@ public class AmqpTestConfig extends TestConfig {
             .map(o -> o == null ? null : new String((byte[]) o, StandardCharsets.UTF_8))
             .toList();
 
-    String actual;
-    // order is not guaranteed
-    for (int i = 0; i < result.size(); i++) {
-      JsonNode node = result.get(i);
-      if (node.path("body").isNull()) {
-        actual = null;
-      } else {
-        final String bodyBase64 = node.path("body").asText();
-        final byte[] decodedBody = Base64.getDecoder().decode(bodyBase64);
-        actual = new String(decodedBody, StandardCharsets.UTF_8);
-      }
-      assertThat(actual).isIn(expected).as(node.get("messageId").asText());
-    }
+    Object[] actualValue = result.stream().map(ConsumerRecord::value).toArray();
+    Object[] actualKey = result.stream().map(ConsumerRecord::key).toArray();
+    Object[] actualMsgId =
+        result.stream()
+            .map(cr -> new String(cr.headers().lastHeader("amqp.messageId").value()))
+            .toArray();
+
+    Object[] expectedValue =
+        testData.stream()
+            .map(td -> td.expected() == null ? null : new Bytes((byte[]) td.expected()))
+            .toArray();
+    Object[] expectedKey = writeResult.stream().map(SourceStorage.WriteResult::nativeKey).toArray();
+
+    assertThat(actualValue).containsExactlyInAnyOrder(expectedValue);
+    assertThat(actualKey).containsExactlyInAnyOrder(expectedKey);
+    assertThat(actualMsgId).containsExactlyInAnyOrder(expectedKey);
   }
 }
