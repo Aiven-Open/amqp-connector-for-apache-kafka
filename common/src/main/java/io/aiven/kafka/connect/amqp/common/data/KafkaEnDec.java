@@ -19,11 +19,13 @@
 package io.aiven.kafka.connect.amqp.common.data;
 
 import static org.apache.kafka.connect.data.Schema.Type.ARRAY;
+import static org.apache.kafka.connect.data.Schema.Type.MAP;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -118,10 +120,10 @@ public final class KafkaEnDec extends EncoderDecoder {
         return Optional.of(collection.toArray());
       }
 
-      //      if (schemaAndValue.schema().type() == MAP
-      //          && schemaAndValue.value() instanceof Map<?, ?> map) {
-      //        return Optional.of(map);
-      //      }
+      if (schemaAndValue.schema().type() == MAP
+          && schemaAndValue.value() instanceof Map<?, ?> map) {
+        return Optional.of(map);
+      }
     }
     return Optional.empty();
   }

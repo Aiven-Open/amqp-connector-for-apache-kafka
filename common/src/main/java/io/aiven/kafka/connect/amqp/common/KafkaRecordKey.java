@@ -25,7 +25,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 /**
- * A record that is used to track offsets from Kafka. Generally sued in maps to track source or sink
+ * A record that is used to track offsets from Kafka. Generally used in maps to track source or sink
  * records.
  *
  * @param topic the original topic.

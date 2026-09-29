@@ -28,7 +28,7 @@ As of this writing the AMQP sink connector supports two strategies:
 
 ## RAW
 
-The raw strategy assumes that the entire AMQP message was serialized into the Kafka message value as a `byte[]`.  The format for this buffer is found in the `AmqpConverter` code in the `connectors-common-for-amqp` package.  This strategy is intended for use with the Aiven AMQP source connector RAW format and the `AmqpConverter`.  If messages are places into the Kafka system using Aiven AMQP source connector and the RAW format and the AMQPConverter is used for the value converter then the Aiven AMQP sink connector using the RAW format and RAW strategy will place the same message on the AMQP queue.  There are some changes to the data elements for the receiving AMQP system.
+The raw strategy assumes that the entire AMQP message was serialized into the Kafka message value as a `byte[]`.  The format for this buffer is found in the `AmqpConverter` code in the `connectors-common-for-amqp` package.  This strategy is intended for use with the Aiven AMQP source connector RAW format and the `AmqpConverter`.  If messages are places into the Kafka system using Aiven AMQP source connector and the RAW format and the AMQPConverter is used for the value converter then the Aiven AMQP sink connector using the RAW format and RAW strategy will place the same message on the AMQP queue.  All properties and annotations for the message are found in the message as serialzed into the Kafka value and are not impacted by changes to the `amqp.` prefixed Kafak headers. There are some changes to the data elements for the receiving AMQP system.
 
 ### Elements that change
 

@@ -529,7 +529,7 @@ public class AmqpSourceDataTest {
     return result;
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "{index} {0}")
   @MethodSource("bodyMultiSectionTestData")
   void bodyMultiSectionTest(String name, Object obj1, Object obj2) throws Exception {
     ClientMessage<?> message = null;

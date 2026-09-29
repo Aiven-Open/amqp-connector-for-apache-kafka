@@ -233,7 +233,7 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
         .subject("subject")
         .timeToLive(timeToLive)
         .userId(rabbit.getAdminUsername().getBytes(StandardCharsets.UTF_8))
-        // annotations are a controled vocabulary -- do not try to set.
+        // annotations are a controlled vocabulary -- do not try to set.
         .footer("long", longValue)
         .footer("int", intValue)
         .footer("short", shortValue)
