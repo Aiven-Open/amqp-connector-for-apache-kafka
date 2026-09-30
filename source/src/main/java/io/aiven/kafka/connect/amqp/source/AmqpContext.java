@@ -27,8 +27,8 @@ public class AmqpContext extends Context {
   /** The key for the delivery property. */
   public static final String DELIVERY_KEY = Delivery.class.getName();
 
-  private AmqpContext(AmqpContext.Builder builder) {
-    super(builder);
+  private AmqpContext(AmqpContextBuilder amqpContextBuilder) {
+    super(amqpContextBuilder);
   }
 
   /**
@@ -41,12 +41,12 @@ public class AmqpContext extends Context {
   }
 
   @Override
-  public Builder builder() {
-    return new Builder(this);
+  public AmqpContextBuilder builder() {
+    return new AmqpContextBuilder(this);
   }
 
   /** The builder fro the AMQP Context. */
-  public static class Builder extends Context.Builder<AmqpContext.Builder> {
+  public static class AmqpContextBuilder extends Context.Builder<AmqpContextBuilder> {
 
     /** Validator for delivery property. */
     private static final Validator deliveryValidator =
@@ -58,7 +58,7 @@ public class AmqpContext extends Context {
      *
      * @param context the context to create the builder from.
      */
-    public Builder(Context context) {
+    public AmqpContextBuilder(Context context) {
       super(context);
       addValidator(deliveryValidator);
     }
@@ -69,7 +69,7 @@ public class AmqpContext extends Context {
      * @param nativeKey the native key.
      * @param delivery the Delivery object.
      */
-    public Builder(Comparable<?> nativeKey, Delivery delivery) {
+    public AmqpContextBuilder(Comparable<?> nativeKey, Delivery delivery) {
       super(nativeKey);
       delivery(delivery);
       addValidator(deliveryValidator);
@@ -81,7 +81,7 @@ public class AmqpContext extends Context {
      * @param delivery the delivery value for the context.
      * @return this.
      */
-    public Builder delivery(Delivery delivery) {
+    public AmqpContextBuilder delivery(Delivery delivery) {
       Objects.requireNonNull(delivery, "delivery must not be null");
       set(DELIVERY_KEY, delivery);
       return self();

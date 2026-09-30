@@ -48,7 +48,8 @@ public final class AmqpSourceNativeInfo extends AbstractSourceNativeInfo<String,
 
   @Override
   public AmqpContext getContext() {
-    return new AmqpContext.Builder(nativeInfo.nativeKey(), nativeInfo.nativeItem()).build();
+    return new AmqpContext.AmqpContextBuilder(nativeInfo.nativeKey(), nativeInfo.nativeItem())
+        .build();
   }
 
   @Override

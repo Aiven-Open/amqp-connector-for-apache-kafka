@@ -109,7 +109,8 @@ public class AmqpSourceDataTest {
     when(sourceConfig.getMessageFormat()).thenReturn(AmqpFormat.BODY);
 
     offsetManager = mock(OffsetManager.class);
-    context = new AmqpContext.Builder(new ULID().nextULID(), mock(Delivery.class)).build();
+    context =
+        new AmqpContext.AmqpContextBuilder(new ULID().nextULID(), mock(Delivery.class)).build();
   }
 
   @Test
