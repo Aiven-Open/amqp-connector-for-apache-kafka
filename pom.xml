@@ -118,7 +118,7 @@
     <doxia.version>2.1.0</doxia.version>
     <huxhorn.sulky.version>8.3.0</huxhorn.sulky.version>
     <proton.version>1.3.0</proton.version>
-    <jackson.version>2.21.5</jackson.version>
+    <jackson.version>2.22.3</jackson.version>
     <jackson.annotations.version>2.22</jackson.annotations.version>
     <aiven.common.util.version>0.1.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
