@@ -22,7 +22,7 @@ Sink Connector Configuration
 
 The AMQP sink connector writes Kafka messages to an AMQP queue.  It formats the messages as described in the [architecture documentation](./architecture.html).
 
-**NOTE:** At this time ${project.name} only supports queue type messages. This means that the messages will be distributed across all the tasks.  In effect the maximum number of Kafka Connect tasks becomes the number of simultaneous messages that can be processed.
+**NOTE:** At this time ${project.name} only supports queue type messages. This means that the messages will be distributed across all the tasks.  In effect the maximum number of Kafka Connect tasks becomes the number of simultaneous messages that can be processed.  Defining more than one task has a high probability of changing the order in which the messages are processed.
 
 Configuration
 ------------
