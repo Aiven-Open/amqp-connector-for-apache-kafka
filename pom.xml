@@ -124,8 +124,6 @@
     <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
     <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
-    <slf4j.version>2.0.18</slf4j.version>
-    <spotless.plugin.version>3.5.1</spotless.plugin.version>
     <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
@@ -441,7 +439,6 @@
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
-          <version>${spotless.plugin.version}</version>
           <configuration>
             <java>
               <excludes>
@@ -512,7 +509,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -691,7 +687,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.6.2</version>
             <executions>
               <execution>
                 <id>enforce-versions</id>

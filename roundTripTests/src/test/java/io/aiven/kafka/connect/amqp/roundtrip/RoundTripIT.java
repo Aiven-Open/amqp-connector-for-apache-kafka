@@ -81,6 +81,18 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
 
+/**
+ * Performs a round trip test of the source/sink pair by placing messages on a RabbitMQ connector
+ * and validating that the message placed on a different address (aka topic) on the RabbitMQ has the
+ * appropriate values.
+ *
+ * <p>The connectors support several formats and the tests are intended to show that the translation
+ * between formats works as well as where the conversions differ.
+ *
+ * <p>In addition, there is one format that allows the sink to place messages on an AMQP queue
+ * without the original data having originated on an AMQP connector. A test for this case is also
+ * provided.
+ */
 @Testcontainers
 public class RoundTripIT extends KafkaIntegrationTestBase {
 
@@ -155,6 +167,17 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     return data;
   }
 
+  /**
+   * Perform a round trip test by placing a message on the RabbitMQ queue, reading it in the source
+   * connector, creating and sending a Kafka record, reading that record in the sink connector and
+   * writing the message to a different RabbitMQ queue.
+   *
+   * @param sourceFormat THe input format for the source record.
+   * @param sinkFormat the output format for the sink record.
+   * @param sinkStrategy the write strategy for the sinke connector.
+   * @throws ClientException on AMQP read/write error.
+   * @throws IOException on Kafka setup error.
+   */
   @ParameterizedTest
   @MethodSource("roundTripData")
   void roundTrip(AmqpFormat sourceFormat, AmqpFormat sinkFormat, AmqpStrategy sinkStrategy)
@@ -189,6 +212,11 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     }
   }
 
+  /**
+   * Gets the data for the round trip. The data returned represents all the valid configurations.
+   *
+   * @return arguments for the round trip test.
+   */
   static List<Arguments> roundTripData() {
     List<Arguments> result = new ArrayList<>();
     result.add(Arguments.of(AmqpFormat.RAW, AmqpFormat.RAW, AmqpStrategy.RAW));
@@ -197,6 +225,12 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     return result;
   }
 
+  /**
+   * Creates a message to place on the queue.
+   *
+   * @return the message.
+   * @throws ClientException on AMQP error.
+   */
   private Message<?> createMessage() throws ClientException {
     final long absoluteExpiry = 1788780705417L;
     final long creationTime = 1788780700417L;
@@ -244,6 +278,13 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
         .footer("unsignedByte", UnsignedByte.valueOf((byte) unsignedByte));
   }
 
+  /**
+   * Test same as quality for RAW data transmission.
+   *
+   * @param actual the actual message.
+   * @param expected the expected message
+   * @throws ClientException on AMQP error.
+   */
   private void assertSameRaw(Message<?> actual, Message<?> expected) throws ClientException {
     assertThat(actual.absoluteExpiryTime())
         .as("absoluteExpiryTime")
@@ -281,6 +322,13 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     assertThat(actual.body()).isEqualTo(expected.body());
   }
 
+  /**
+   * Test same as quality for BODY data transmission.
+   *
+   * @param actual the actual message.
+   * @param expected the expected message
+   * @throws ClientException on AMQP error.
+   */
   private void assertSameBody(Message<?> actual, Message<?> expected, AmqpFormat sinkFormat)
       throws ClientException {
     assertThat(actual.absoluteExpiryTime())
@@ -325,6 +373,15 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
     assertThat(actual.body()).isEqualTo(expected.body());
   }
 
+  /**
+   * Create a producer record from a message. This allows us to send a message over the kafka topic
+   * without using the AMQP Source.
+   *
+   * @param message the message to send
+   * @return the ProducerRecord to send to Kafka.
+   * @throws IOException on IO error.
+   * @throws ClientException on AMQP error.
+   */
   private ProducerRecord<String, String> createProducerRecord(final Message<?> message)
       throws IOException, ClientException {
 
@@ -347,6 +404,13 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
         recordHeaders);
   }
 
+  /**
+   * Test that properly tagged Kafka messages produce the proper AMQP message. Messages are taged by
+   * using the "amqp." prefixed headers as well as placing data in the Kafka value.
+   *
+   * @throws ClientException on AMQP error.
+   * @throws IOException on IO error.
+   */
   @Test
   void notAmqpData() throws ClientException, IOException {
     KafkaManager kafkaManager = setupKafka(null, Collections.emptyMap());
