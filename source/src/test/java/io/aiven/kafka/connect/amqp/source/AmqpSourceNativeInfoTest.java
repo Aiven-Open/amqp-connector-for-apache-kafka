@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.task.Context;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -52,10 +51,10 @@ public class AmqpSourceNativeInfoTest {
   void getContext() {
     Context context = underTest.getContext();
     assertNotNull(context);
-    ULID.Value nativeKey = context.getNativeKey();
+    String nativeKey = context.getNativeKey();
     assertThat(nativeKey).isNotNull();
     Context context2 = underTest.getContext();
-    ULID.Value nativeKey2 = context2.getNativeKey();
+    String nativeKey2 = context2.getNativeKey();
     assertThat(nativeKey.compareTo(nativeKey2)).isEqualTo(0);
   }
 

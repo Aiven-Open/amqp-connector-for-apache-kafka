@@ -23,13 +23,14 @@ import io.aiven.commons.kafka.connector.source.config.SourceCommonConfig;
 import io.aiven.commons.kafka.connector.source.config.SourceConfigFragment;
 import io.aiven.commons.kafka.connector.source.task.DistributionType;
 import io.aiven.kafka.connect.amqp.common.config.AmqpCommonConfig;
+import io.aiven.kafka.connect.amqp.common.config.AmqpFormat;
 import io.aiven.kafka.connect.amqp.common.config.AmqpFragment;
-import io.aiven.kafka.connect.amqp.source.extractor.AmqpExtractor;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.apache.qpid.protonj2.client.Client;
 import org.apache.qpid.protonj2.client.Connection;
 import org.apache.qpid.protonj2.client.Receiver;
+import org.apache.qpid.protonj2.client.Sender;
 import org.apache.qpid.protonj2.client.exceptions.ClientException;
 
 /** The configuration for an AMQP Source connector. */
@@ -49,7 +50,6 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
 
   private static Map<String, String> setOverrides(Map<String, String> props) {
     SourceConfigFragment.setter(props)
-        .extractorClass(AmqpExtractor.class)
         .ringBufferSize(0)
         // TODO when STREAM flag is set this changes.
         .distributionType(DistributionType.ALL);
@@ -63,6 +63,12 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   }
 
   @Override
+  public Sender getSender(Connection connection)
+      throws ClientException, ExecutionException, InterruptedException {
+    return amqpFragment.getSender();
+  }
+
+  @Override
   public Client getClient() {
     return amqpFragment.getClient();
   }
@@ -70,6 +76,11 @@ public class AmqpSourceConfig extends SourceCommonConfig implements AmqpCommonCo
   @Override
   public Connection getConnection(Client client) throws ClientException {
     return amqpFragment.getConnection(client);
+  }
+
+  @Override
+  public AmqpFormat getMessageFormat() {
+    return amqpFragment.getMessageFormat();
   }
 
   /**

@@ -18,7 +18,6 @@
 */
 package io.aiven.kafka.connect.amqp.source;
 
-import de.huxhorn.sulky.ulid.ULID;
 import io.aiven.commons.kafka.connector.source.AbstractSourceConnectorIntegrationTest;
 import io.aiven.commons.kafka.connector.source.SourceStorage;
 import io.aiven.commons.kafka.connector.source.TestConfig;
@@ -31,7 +30,7 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
 
 @Testcontainers
 public class AmqpSourceConnectorIT
-    extends AbstractSourceConnectorIntegrationTest<ULID.Value, Delivery> {
+    extends AbstractSourceConnectorIntegrationTest<String, Delivery> {
 
   private final AmqpSourceStorage sourceStorage;
 
@@ -45,11 +44,11 @@ public class AmqpSourceConnectorIT
 
   @Override
   protected TestConfig getTestConfig() {
-    return new AmqpTestConfig(sourceStorage);
+    return new AmqpTestConfig(sourceStorage, () -> getKafkaManager().bootstrapServers());
   }
 
   @Override
-  protected SourceStorage<ULID.Value, Delivery> getSourceStorage() {
+  protected SourceStorage<String, Delivery> getSourceStorage() {
     return sourceStorage;
   }
 }

@@ -52,6 +52,10 @@
 
         <menu name="Overview" inherit="bottom" inheritAsRef="true">
             <item name="Introduction" href="./index.html"/>
+            <item name="Sink Connector" href="./sink/index.html">
+                <item name="Architecture" href="./sink/architecture.html"/>
+                <item name="Configuration" href="./sink/configuration.html"/>
+            </item>
             <item name="Source Connector" href="./source/index.html">
                 <item name="Architecture" href="./source/architecture.html"/>
                 <item name="Configuration" href="./source/configuration.html"/>
