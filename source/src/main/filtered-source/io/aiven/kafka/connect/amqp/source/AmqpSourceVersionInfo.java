@@ -34,6 +34,6 @@ public final class AmqpSourceVersionInfo  {
     public final static String NAME = "${project.name}";
     /** the Maven artifact ID for this module */
     public final static String ARTIFACT = "${project.artifactId}";
-    /** The Mave norganization name for this module */
+    /** The Maven organization name for this module */
     public final static String ORGANIZATION = "${project.organization.name}";
 }

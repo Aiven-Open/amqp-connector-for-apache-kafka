@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.aiven.commons</groupId>
     <artifactId>aiven-commons</artifactId>
-    <version>5-SNAPSHOT</version>
+    <version>5</version>
   </parent>
 
   <groupId>io.aiven.kafka.connect</groupId>
@@ -120,8 +120,8 @@
     <proton.version>1.4.0</proton.version>
     <jackson.version>2.22.4</jackson.version>
     <jackson.annotations.version>2.22</jackson.annotations.version>
-    <aiven.common.util.version>0.1.0</aiven.common.util.version>
-    <aiven.kafka.config.version>0.2.0</aiven.kafka.config.version>
+    <aiven.common.util.version>0.3.0</aiven.common.util.version>
+    <aiven.kafka.config.version>0.3.0</aiven.kafka.config.version>
     <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
     <testcontainers.version>2.0.5</testcontainers.version>
@@ -155,16 +155,16 @@
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>${com.google.guava.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.re2j</groupId>
-        <artifactId>re2j</artifactId>
-        <version>${com.google.re2j.version}</version>
-      </dependency>
+      <!--      <dependency>-->
+      <!--        <groupId>com.google.guava</groupId>-->
+      <!--        <artifactId>guava</artifactId>-->
+      <!--        <version>${com.google.guava.version}</version>-->
+      <!--      </dependency>-->
+      <!--      <dependency>-->
+      <!--        <groupId>com.google.re2j</groupId>-->
+      <!--        <artifactId>re2j</artifactId>-->
+      <!--        <version>${com.google.re2j.version}</version>-->
+      <!--      </dependency>-->
 
       <dependency>
         <groupId>io.aiven.commons</groupId>
@@ -209,11 +209,11 @@
         </exclusions>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-collections4</artifactId>
-        <version>${commons.collection4.version}</version>
-      </dependency>
+      <!--      <dependency>-->
+      <!--        <groupId>org.apache.commons</groupId>-->
+      <!--        <artifactId>commons-collections4</artifactId>-->
+      <!--        <version>${commons.collection4.version}</version>-->
+      <!--      </dependency>-->
       <dependency>
         <groupId>org.apache.kafka</groupId>
         <artifactId>connect-api</artifactId>
@@ -262,12 +262,12 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
-      <dependency>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>${plugin.resources}</version>
-        <type>maven-plugin</type>
-      </dependency>
+      <!--      <dependency>-->
+      <!--        <groupId>org.apache.maven.plugins</groupId>-->
+      <!--        <artifactId>maven-resources-plugin</artifactId>-->
+      <!--        <version>${plugin.resources}</version>-->
+      <!--        <type>maven-plugin</type>-->
+      <!--      </dependency>-->
       <dependency>
         <groupId>org.apache.qpid</groupId>
         <artifactId>protonj2</artifactId>
@@ -352,7 +352,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
-      <version>${commons.collection4.version}</version>
+      <!--      <version>${commons.collection4.version}</version>-->
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
@@ -387,7 +387,7 @@
     <dependency>
       <groupId>org.apache.qpid</groupId>
       <artifactId>protonj2-client</artifactId>
-      <version>${proton.version}</version>
+      <!--      <version>${proton.version}</version>-->
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
