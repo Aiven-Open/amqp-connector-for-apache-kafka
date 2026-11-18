@@ -124,7 +124,6 @@
     <aiven.kafka.config.version>0.3.0</aiven.kafka.config.version>
     <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
-    <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
   <dependencyManagement>
