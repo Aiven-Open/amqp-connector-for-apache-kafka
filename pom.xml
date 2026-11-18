@@ -120,10 +120,12 @@
     <proton.version>1.4.0</proton.version>
     <jackson.version>2.22.4</jackson.version>
     <jackson.annotations.version>2.22</jackson.annotations.version>
+    <netty.transport.version>4.2.19.Final</netty.transport.version>
     <aiven.common.util.version>0.3.0</aiven.common.util.version>
     <aiven.kafka.config.version>0.3.0</aiven.kafka.config.version>
-    <aiven.kafka.framework.version>0.4.0-SNAPSHOT</aiven.kafka.framework.version>
+    <aiven.kafka.framework.version>0.4.0</aiven.kafka.framework.version>
     <fasterxml.uuid.version>5.2.0</fasterxml.uuid.version>
+    <plugin.build.helper>3.8.0</plugin.build.helper>
   </properties>
 
   <dependencyManagement>
@@ -154,26 +156,23 @@
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
       </dependency>
-      <!--      <dependency>-->
-      <!--        <groupId>com.google.guava</groupId>-->
-      <!--        <artifactId>guava</artifactId>-->
-      <!--        <version>${com.google.guava.version}</version>-->
-      <!--      </dependency>-->
-      <!--      <dependency>-->
-      <!--        <groupId>com.google.re2j</groupId>-->
-      <!--        <artifactId>re2j</artifactId>-->
-      <!--        <version>${com.google.re2j.version}</version>-->
-      <!--      </dependency>-->
+      <dependency>
+        <groupId>com.fasterxml.uuid</groupId>
+        <artifactId>java-uuid-generator</artifactId>
+        <version>${fasterxml.uuid.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>common-util</artifactId>
-        <version>${aiven.common.util.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.aiven.commons</groupId>
-        <artifactId>framework-common-for-connectors</artifactId>
-        <version>${aiven.kafka.framework.version}</version>
+        <groupId>de.huxhorn.sulky</groupId>
+        <artifactId>de.huxhorn.sulky.ulid</artifactId>
+        <version>${huxhorn.sulky.version}</version>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>io.aiven.commons</groupId>
@@ -209,6 +208,21 @@
       </dependency>
 
       <!--      <dependency>-->
+      <!--        <groupId>io.netty</groupId>-->
+      <!--        <artifactId>netty-buffer</artifactId>-->
+      <!--        <version>${netty.transport.version}</version>-->
+      <!--      </dependency>-->
+      <!--      <dependency>-->
+      <!--        <groupId>io.netty</groupId>-->
+      <!--        <artifactId>netty-transport</artifactId>-->
+      <!--        <version>${netty.transport.version}</version>-->
+      <!--      </dependency>-->
+      <!--      <dependency>-->
+      <!--        <groupId>io.netty</groupId>-->
+      <!--        <artifactId>netty-transport-native-epoll</artifactId>-->
+      <!--        <version>${netty.transport.version}</version>-->
+      <!--      </dependency>-->
+      <!--      <dependency>-->
       <!--        <groupId>org.apache.commons</groupId>-->
       <!--        <artifactId>commons-collections4</artifactId>-->
       <!--        <version>${commons.collection4.version}</version>-->
@@ -243,6 +257,41 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka-clients</artifactId>
         <version>${kafka.version}</version>
+        <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-clients</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-server-common</artifactId>
+        <version>${kafka.version}</version>
+        <classifier>test</classifier>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.kafka</groupId>
+        <artifactId>kafka-server-common</artifactId>
+        <version>${kafka.version}</version>
         <classifier>test</classifier>
         <type>test-jar</type>
         <scope>test</scope>
@@ -261,12 +310,6 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
-      <!--      <dependency>-->
-      <!--        <groupId>org.apache.maven.plugins</groupId>-->
-      <!--        <artifactId>maven-resources-plugin</artifactId>-->
-      <!--        <version>${plugin.resources}</version>-->
-      <!--        <type>maven-plugin</type>-->
-      <!--      </dependency>-->
       <dependency>
         <groupId>org.apache.qpid</groupId>
         <artifactId>protonj2</artifactId>
@@ -280,6 +323,7 @@
       <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -299,6 +343,12 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-reload4j</artifactId>
+        <version>${slf4j.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -336,7 +386,6 @@
     <dependency>
       <groupId>com.fasterxml.uuid</groupId>
       <artifactId>java-uuid-generator</artifactId>
-      <version>${fasterxml.uuid.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -351,10 +400,8 @@
     <dependency>
       <groupId>de.huxhorn.sulky</groupId>
       <artifactId>de.huxhorn.sulky.ulid</artifactId>
-      <version>${huxhorn.sulky.version}</version>
       <scope>compile</scope>
     </dependency>
-
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -373,7 +420,6 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -393,12 +439,10 @@
     <dependency>
       <groupId>org.apache.qpid</groupId>
       <artifactId>protonj2-client</artifactId>
-      <!--      <version>${proton.version}</version>-->
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
