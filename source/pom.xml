@@ -66,7 +66,6 @@
     <dependency>
       <groupId>io.aiven.commons</groupId>
       <artifactId>framework-for-connectors-source-integration-tests</artifactId>
-      <version>${aiven.kafka.framework.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -91,21 +90,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-transport-native-epoll</artifactId>
-      <version>4.2.19.Final</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <type>test-jar</type>
     </dependency>
@@ -121,27 +112,23 @@
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>connect-runtime</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <type>test-jar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-server-common</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_${kafka.scala.version}</artifactId>
-      <version>${kafka.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_${kafka.scala.version}</artifactId>
-      <version>${kafka.version}</version>
       <classifier>test</classifier>
       <type>test-jar</type>
     </dependency>
@@ -168,7 +155,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-reload4j</artifactId>
-      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

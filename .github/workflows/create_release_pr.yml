@@ -73,7 +73,7 @@ jobs:
       - name: Set up Java ${{ steps.project.outputs.java_version }}
         uses: actions/setup-java@v5
         with:
-          distribution: 'adopt'
+          distribution: 'temurin'
           java-version: ${{ steps.project.outputs.java_version }}
           cache: maven
 
