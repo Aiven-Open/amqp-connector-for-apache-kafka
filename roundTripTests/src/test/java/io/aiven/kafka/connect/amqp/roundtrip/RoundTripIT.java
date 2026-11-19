@@ -201,7 +201,11 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
       // start both source and sink so we don't miss a message
       Sender sender = connection.openSender(getTopic("source"));
       Receiver receiver = connection.openReceiver(getTopic("sink"));
-      logger.info("[src:{} snk:{} strat:{}] Configuration complete", sourceFormat, sinkFormat, sinkStrategy);
+      logger.info(
+          "[src:{} snk:{} strat:{}] Configuration complete",
+          sourceFormat,
+          sinkFormat,
+          sinkStrategy);
 
       // send the message and wait for it to be received.
       sender.send(expected);
@@ -209,7 +213,10 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
 
       Delivery delivery = receiver.receive(3, TimeUnit.MINUTES);
       if (delivery == null) {
-        fail(String.format("[src:%s snk:%s strat:%s] No delivery received", sourceFormat, sinkFormat, sinkStrategy));
+        fail(
+            String.format(
+                "[src:%s snk:%s strat:%s] No delivery received",
+                sourceFormat, sinkFormat, sinkStrategy));
       }
       Message<?> actual = delivery.message();
       switch (sinkStrategy) {
