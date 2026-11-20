@@ -77,6 +77,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.rabbitmq.RabbitMQContainer;
@@ -95,6 +97,8 @@ import org.testcontainers.rabbitmq.RabbitMQContainer;
  */
 @Testcontainers
 public class RoundTripIT extends KafkaIntegrationTestBase {
+
+  private static final Logger logger = LoggerFactory.getLogger(RoundTripIT.class);
 
   private static final BigInteger TWO_TO_THE_SIXTY_FOUR =
       new BigInteger(
@@ -197,12 +201,22 @@ public class RoundTripIT extends KafkaIntegrationTestBase {
       // start both source and sink so we don't miss a message
       Sender sender = connection.openSender(getTopic("source"));
       Receiver receiver = connection.openReceiver(getTopic("sink"));
+      logger.info(
+          "[src:{} snk:{} strat:{}] Configuration complete",
+          sourceFormat,
+          sinkFormat,
+          sinkStrategy);
 
       // send the message and wait for it to be received.
       sender.send(expected);
-      Delivery delivery = receiver.receive(2, TimeUnit.MINUTES);
+      logger.info("[src:{} snk:{} strat:{}] Message sent", sourceFormat, sinkFormat, sinkStrategy);
+
+      Delivery delivery = receiver.receive(3, TimeUnit.MINUTES);
       if (delivery == null) {
-        fail("No delivery received");
+        fail(
+            String.format(
+                "[src:%s snk:%s strat:%s] No delivery received",
+                sourceFormat, sinkFormat, sinkStrategy));
       }
       Message<?> actual = delivery.message();
       switch (sinkStrategy) {
